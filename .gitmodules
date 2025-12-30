@@ -1,0 +1,6 @@
+[submodule "msp"]
+	path = msp
+	url = git@github.com:sipeed/maix_ax620e_sdk_msp.git
+[submodule "kernel"]
+	path = kernel
+	url = git@github.com:sipeed/maix_ax620e_sdk_kernel.git

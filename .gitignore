@@ -1,0 +1,12 @@
+build/out
+boot/bl1/*/*.d
+boot/bl1/*/*.o
+boot/bl1/*/*.axf
+boot/bl1/*/*.bin
+boot/bl1/*/*.dis
+boot/bl1/*/*/*.d
+boot/bl1/*/*/*.o
+boot/bl1/*/*/*/*.d
+boot/bl1/*/*/*/*.o
+rootfs/arm64/glibc/ubuntu_rootfs/*.tar.gz
+app/opal/libs/*
