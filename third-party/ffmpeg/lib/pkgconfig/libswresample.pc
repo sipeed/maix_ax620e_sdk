@@ -1,0 +1,14 @@
+prefix=/home/xinhongliang/res/ffmpeg-mp4/out
+exec_prefix=${prefix}
+libdir=/home/xinhongliang/res/ffmpeg-mp4/out/lib
+includedir=/home/xinhongliang/res/ffmpeg-mp4/out/include
+
+Name: libswresample
+Description: FFmpeg audio resampling library
+Version: 3.8.100
+Requires: 
+Requires.private: libavutil >= 56.58.100
+Conflicts:
+Libs: -L${libdir}  -lswresample 
+Libs.private: -lm
+Cflags: -I${includedir}

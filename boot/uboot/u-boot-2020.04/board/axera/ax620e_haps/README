@@ -1,0 +1,22 @@
+Introduction
+============
+
+AX620E key features we might use in U-Boot:
+* CPU: ARMv8 64bit MP4 architecture,
+* IRAM: 128KB
+* DRAM: 16GB-128MB dual-channel
+* eMMC: support eMMC 5.0/5.1, suport HS400, HS200, DDR50
+* SD/MMC: support SD 3.0, MMC 4.51
+* USB: USB2.0 EHCI host port *1
+* Display: RGB/HDMI/DP/MIPI/EDP
+
+evb key features:
+* debug console: UART0
+
+Here is the step-by-step to boot to U-Boot on AX620E.
+
+Compile the U-Boot
+==================
+
+
+You should be able to get U-Boot log message in console/UART0 now.

@@ -1,0 +1,11 @@
+--- arm-trusted-firmware-2.7/Makefile
++++ arm-trusted-firmware-2.7/Makefile
+@@ -315,7 +315,7 @@ ifneq (${DEBUG}, 0)
+ else
+         BUILD_TYPE	:=	release
+         # Use LOG_LEVEL_NOTICE by default for release builds
+-        LOG_LEVEL	:=	20
++        LOG_LEVEL	:=	10
+ endif
+ 
+ # Default build string (git branch and commit)

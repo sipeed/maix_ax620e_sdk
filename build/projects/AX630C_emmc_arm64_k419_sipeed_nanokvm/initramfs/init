@@ -1,0 +1,369 @@
+#!/bin/sh
+export PATH=/bin
+
+boot_dev=/dev/mmcblk0p16
+root_dev=/dev/mmcblk0p17
+boot_from_sd=0
+
+set_led() {
+    case "$1" in
+        recovery)
+            echo "LED set to recovery status"
+            echo heartbeat > /sys/class/leds/sys-heartbeat/trigger
+            ;;
+        upgrading)
+            echo "LED set to upgrading status"
+            echo timer > /sys/class/leds/sys-heartbeat/trigger
+            echo 500 > /sys/class/leds/sys-heartbeat/delay_off
+            echo 500 > /sys/class/leds/sys-heartbeat/delay_on
+            ;;
+        upgrade_done)
+            echo "LED set to upgrade done status"
+            echo gpio > /sys/class/leds/sys-heartbeat/trigger
+            echo 1 > /sys/class/leds/sys-heartbeat/brightness
+            ;;
+        error)
+            echo "LED set to error status"
+            echo timer > /sys/class/leds/sys-heartbeat/trigger
+            echo 30 > /sys/class/leds/sys-heartbeat/delay_off
+            echo 30 > /sys/class/leds/sys-heartbeat/delay_on
+            ;;
+        *)
+            echo "LED set to activity(default) status"
+            echo activity > /sys/class/leds/sys-heartbeat/trigger
+            ;;
+    esac
+
+}
+
+msc() {
+    echo "[initramfs] Recovery mode"
+    mkdir -p /sys/kernel/config
+    mount -t configfs configfs /sys/kernel/config
+    umount $boot_dev || true
+    umount $root_dev || true
+    # echo mmc0 > /sys/devices/platform/leds/leds/led-user/trigger
+    cd /sys/kernel/config/usb_gadget
+    mkdir g1
+    cd g1
+    echo 0x359f > idVendor
+    echo 0x2200 > idProduct
+
+    mkdir -p strings/0x409 -m 0770
+    echo "nanokvm" > strings/0x409/serialnumber
+    echo "sipeed" > strings/0x409/manufacturer
+    echo "nanokvm" > strings/0x409/product
+
+    mkdir -p configs/c.1 -m 0770
+    mkdir -p configs/c.1/strings/0x409 -m 0770
+    echo "gadget config" > configs/c.1/strings/0x409/configuration
+    echo 250 > configs/c.1/MaxPower # max 500mA
+
+    mkdir -p functions/mass_storage.disk0
+    mkdir -p functions/mass_storage.disk0/lun.0
+    ln -s functions/mass_storage.disk0 configs/c.1/
+    echo 1 > functions/mass_storage.disk0/lun.0/removable
+    if [ "$boot_from_sd" -eq 0 ]; then
+        echo /dev/mmcblk0 > functions/mass_storage.disk0/lun.0/file
+    else
+        echo /dev/mmcblk1 > functions/mass_storage.disk0/lun.0/file
+    fi
+
+    ls /sys/class/udc/ | cat > UDC
+    # echo device > /sys/class/usb_role/8000000.dwc3-role-switch/role
+    set_led recovery
+    /show_iostat $boot_from_sd &
+    cd /
+    /bin/sh
+}
+
+wait_for_device() {
+    local device="$1"
+    local retries="${2:-50}"
+    local i=0
+
+    while [ ! -e "$device" ] && [ $i -lt "$retries" ]; do
+        usleep 100000
+        i=$((i+1))
+    done
+
+    [ -e "$device" ]
+}
+
+check_sd_upgrade() {
+    echo "Check SD Update, find img file in SD's first partition ..."
+    echo "Wait for SD card ready ..."
+    if ! wait_for_device "/dev/mmcblk1p2" 20; then
+        echo "Can't find valid SD partition, exit SD upgrade mode"
+        return 1
+    fi
+
+    echo "Trying to mount /dev/mmcblk1p2..."
+    mkdir -p /realroot
+    if mount /dev/mmcblk1p2 /realroot; then
+        echo "/dev/mmcblk1p2 mounted to /realroot"
+        if find /realroot -maxdepth 1 -type f -name "*.img" | grep -q .; then
+            echo "Found .img file(s) in /realroot"
+            img_file=$(find /realroot -maxdepth 1 -type f -name "*.img" | sort -r | head -n 1)
+            echo "Starting to flash $img_file to /dev/mmcblk0..."
+
+            # Blink LED to indicate upgrading
+            set_led upgrading
+
+            dd if="$img_file" of=/dev/mmcblk0 bs=4M conv=fsync
+            if [ $? -eq 0 ]; then
+                sync
+                sleep 1
+                sync
+                blockdev --flushbufs /dev/mmcblk0 2>/dev/null || true
+                sleep 1
+                sync
+                echo "Sync completed - all data written to storage"
+
+                # flash complete, LED keep ON
+                set_led upgrade_done
+
+                # flash complete, recovery mode
+                echo "Upgrade complete, now entering into shell ..."
+                /show_iostat $boot_from_sd &
+                cd /
+                /bin/sh
+            else
+                echo "Upgrade flash failed!"
+                # blink LED fast to indicate error happens.
+                set_led error
+                return 1
+            fi
+        else
+            echo "No .img file found in SD card first partition, exit SD upgrade mode"
+            return 1
+        fi
+    else
+        echo "Failed to mount /dev/mmcblk1p2, exit SD upgrade mode"
+        return 1
+    fi
+}
+
+create_sd_boot_service() {
+    # create boot script
+    sd_boot_script=/realroot/opt/scripts/sd_boot.sh
+    block_device="${root_dev%p*}"
+    partition_num="${root_dev##*[^0-9]}"
+    if [ ! -f ${sd_boot_script} ]; then
+        echo "#!/bin/bash
+if [ -f /boot/check_resize2fs ]; then
+    echo -e "\"d\\n${partition_num}\\nn\\np\\n${partition_num}\\n\\n\\nn\\nw\\n\"" | fdisk "$block_device"
+    resize2fs ${root_dev}
+    rm /boot/check_resize2fs
+fi
+" > ${sd_boot_script}
+    chmod +x ${sd_boot_script}
+    fi
+
+    # create boot service
+    service_path=/realroot/etc/systemd/system/sd_boot.service
+    if [ ! -f ${service_path} ]; then
+        echo "[Unit]
+Description=Run sd boot
+DefaultDependencies=no
+After=boot.mount
+
+[Service]
+Type=simple
+ExecStart=/bin/bash /opt/scripts/sd_boot.sh
+Restart=no
+
+[Install]
+WantedBy=default.target" > ${service_path}
+        mkdir -p /realroot/etc/systemd/system/default.target.wants
+        ln -s ${service_path} /realroot/etc/systemd/system/default.target.wants/sd_boot.service
+    fi
+}
+
+mount -t proc proc /proc || exit 111
+mount -t sysfs sysfs /sys || exit 122
+mount -t devtmpfs devtmpfs /dev || exit 133
+
+# check boot from EMMC or SD
+for arg in $(cat /proc/cmdline); do
+    case "$arg" in
+        root=*)
+            root_device="${arg#root=}"
+            echo "Found root in cmdline: $root_device"
+            ;;
+    esac
+done
+
+if [ $root_device = /dev/mmcblk1p2 ]; then
+    boot_from_sd=1
+    boot_dev=/dev/mmcblk1p1
+    root_dev=/dev/mmcblk1p2
+fi
+
+# wait ready
+wait_for_device $boot_dev
+
+# mount boot
+mkdir -p /boot
+mount -o ro $boot_dev /boot
+if [ "$?" -ne 0 ]
+then
+    echo "Mount bootfs failed, try fsck.vfat ..."
+    fsck.vfat -a $boot_dev
+    mount -o rw $boot_dev /boot
+    mfail="$?"
+    if [ "${mfail}" -ne 0 ]
+    then
+        echo "Recover with fsck.vfat failed, enter USB upgrade mode"
+        msc
+    fi
+fi
+
+# check step into recovery mode
+if [ -e /boot/rec ]
+then
+    check_sd_upgrade
+    msc
+fi
+
+# check boot key pressed
+boot_key=0
+for arg in $(cat /proc/cmdline); do
+    case "$arg" in
+        boot_key=*)
+            boot_key="${arg#boot_key=}"
+            ;;
+    esac
+done
+
+if [ "${boot_key}" -eq 1 ] # boot key pressed
+then
+    msc
+fi
+
+
+# check need resize fs
+if [ "$boot_from_sd" -ne 1 ]; then
+    if [ -e /boot/check_resize2fs ]; then
+        echo "/boot/check_resize2fs exists, now check ..."
+        mkdir -p /realroot
+        mount -o ro $root_dev /realroot
+        rootfs_size=$(df -B1 /realroot|grep /realroot|awk '{print $2}')
+        rootpart_size=$(($(cat /sys/class/block/mmcblk0p17/size) * 512))
+        THRESHOLD=$((500 * 1024 * 1024))
+        diff=$((rootpart_size - rootfs_size))
+        if [ "$diff" -gt "$THRESHOLD" ]; then
+            echo "[initramfs] rootfs(${rootfs_size}) is smaller than partition(${rootpart_size}) by more than 500MB, resizing ..."
+            # export LD_LIBRARY_PATH=/realroot/lib/aarch64-linux-gnu:/realroot/lib
+            # chroot /realroot /usr/sbin/tune2fs -O^resize_inode "$root_dev"
+            cp /realroot/opt/e2fs-static/tune2fs /tune2fs
+            cp /realroot/opt/e2fs-static/resize2fs /resize2fs
+            umount $root_dev
+            /tune2fs -O^resize_inode "$root_dev"
+            e2fsck -fvp "$root_dev"
+            if [ "$?" -ne 0 ]; then
+                e2fsck -fvy "$root_dev"
+            fi
+            /resize2fs $root_dev
+            mount -o remount,rw /boot
+            rm -f /boot/check_resize2fs
+            rm -f /resize2fs /tune2fs
+            echo "[initramfs] resize rootfs done"
+            sync
+        else
+            umount $root_dev
+        fi
+    fi
+
+    # mount rootfs
+    mkdir -p /realroot
+    mount -o rw $root_dev /realroot
+    mfail="$?"
+    if [ "${mfail}" -ne 0 ]
+    then
+        echo "Mount rootfs failed, try e2fsck ..."
+        e2fsck -fvp $root_dev
+        if [ "$?" -ne 0 ]; then
+            e2fsck -fvy "$root_dev"
+        fi
+        mount -o rw $root_dev /realroot
+        mfail="$?"
+        if [ "${mfail}" -ne 0 ]
+        then
+            echo "Recover with e2fsck failed, enter USB upgrade mode"
+            msc
+        fi
+    fi
+else
+    # mount rootfs
+    mkdir -p /realroot
+    mount -o rw $root_dev /realroot
+    mfail="$?"
+    if [ "${mfail}" -ne 0 ]
+    then
+        echo "Mount rootfs failed, try e2fsck ..."
+        e2fsck -fvp $root_dev
+        if [ "$?" -ne 0 ]; then
+            e2fsck -fvy "$root_dev"
+        fi
+        mount -o rw $root_dev /realroot
+        mfail="$?"
+        if [ "${mfail}" -ne 0 ]
+        then
+            echo "Recover with e2fsck failed, enter USB upgrade mode"
+            msc
+        fi
+    fi
+
+    # config rootfs
+    sed -i 's/\/dev\/mmcblk0p16/\/dev\/mmcblk1p1/g' /realroot/etc/fstab
+    sed -i '/bash \/etc\/init.d\/S99checkboot start/d' /realroot/etc/rc.local
+    sed -i '/bash \/etc\/init.d\/S99checkota start/d' /realroot/etc/rc.local
+    create_sd_boot_service
+fi
+
+# check if need run e2fsck
+if dmesg | grep -q "running e2fsck is recommended"; then
+    echo "Rootfs needs e2fsck, unmount and repair ..."
+    umount /realroot 2>/dev/null || true
+
+    echo "Running e2fsck -fvp $root_dev ..."
+    e2fsck -fvp "$root_dev"
+    if [ "$?" -ne 0 ]; then
+        echo "e2fsck failed, trying with -fvy ..."
+        e2fsck -fvy "$root_dev"
+    fi
+
+    mount -o rw "$root_dev" /realroot
+    if [ "$?" -ne 0 ]; then
+        echo "Mount rootfs failed after e2fsck, entering recovery mode"
+        msc
+    fi
+fi
+
+# set device key
+device_key=$(cat /proc/ax_proc/uid | awk '{print $2}'|cut -c 3-)
+echo $device_key > /realroot/device_key
+
+# set mac addr
+mac_uid=$(sha512sum /realroot/device_key  | head -c 4)
+mac_hi=$(echo $mac_uid | cut -c 1-2)
+mac_lo=$(echo $mac_uid | cut -c 3-4)
+new_mac="48:da:35:6d:${mac_hi}:${mac_lo}"
+interfaces_file="/realroot/etc/network/interfaces"
+if grep -q "hwaddress ether" "$interfaces_file"; then
+    sed -i "s/^\(.*hwaddress ether \)[^ ]*\$/\1$new_mac/" "$interfaces_file"
+else
+    echo "hwaddress ether $new_mac" >> "$interfaces_file"
+fi
+if [ -e /boot/first_time_boot ]; then
+    echo kvm-${mac_hi}${mac_lo} > /realroot/etc/hostname
+    mount -o remount,rw /boot
+    rm -f /boot/first_time_boot
+    sync
+fi
+
+# umount boot
+umount $boot_dev
+
+exec switch_root /realroot /sbin/init

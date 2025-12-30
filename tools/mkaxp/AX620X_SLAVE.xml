@@ -1,0 +1,62 @@
+<Config>
+	<Project alias="AX620_SLAVE" name="AX620_SLAVE" version="V1.0">
+		<ResetAddr>0x40008000</ResetAddr>
+		<ImgList>
+			<Img flag="2" name="INIT" select="1">
+				<ID>INIT</ID>
+				<Type>INIT</Type>
+				<Block>
+					<Base>0x0</Base>
+					<Size>0x0</Size>
+				</Block>
+				<File />
+				<Auth algo="0" />
+				<Description>Handshake with romcode</Description>
+			</Img>
+			<Img flag="3" name="FDL" select="1">
+				<ID>FDL</ID>
+				<Type>FDL</Type>
+				<Block>
+					<Base>0x800</Base>
+					<Size>0x0</Size>
+				</Block>
+				<File>fdl.bin</File>
+				<Auth algo="0" />
+				<Description>Download FDL image file</Description>
+			</Img>
+			<Img flag="1" name="KERNEL" select="1">
+				<ID>KERNEL</ID>
+				<Type>CODE</Type>
+				<Block>
+					<Base>0x40008000</Base>
+					<Size>0x0</Size>
+				</Block>
+				<File>Image</File>
+				<Auth algo="0" />
+				<Description>Download kernel image file</Description>
+			</Img>
+			<Img flag="1" name="DTB" select="1">
+				<ID>DTB</ID>
+				<Type>CODE</Type>
+				<Block>
+					<Base>0x48008000</Base>
+					<Size>0x0</Size>
+				</Block>
+				<File>AX620_slave.dtb</File>
+				<Auth algo="0" />
+				<Description>Download DTB image file</Description>
+			</Img>
+			<Img flag="1" name="RAMDISK" select="1">
+				<ID>RAMDISK</ID>
+				<Type>CODE</Type>
+				<Block>
+					<Base>0x50000000</Base>
+					<Size>0x0</Size>
+				</Block>
+				<File>rootfs.ext4</File>
+				<Auth algo="0" />
+				<Description>Download ramdisk image file</Description>
+			</Img>
+		</ImgList>
+	</Project>
+</Config>

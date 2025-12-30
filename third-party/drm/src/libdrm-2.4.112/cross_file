@@ -1,0 +1,18 @@
+[binaries]
+c = 'aarch64-none-linux-gnu-gcc'
+cpp = 'aarch64-none-linux-gnu-g++'
+ar = 'aarch64-none-linux-gnu-ar'
+ld = 'aarch64-none-linux-gnu-ld'
+strip = 'aarch64-none-linux-gnu-strip'
+
+[host_machine]
+system = 'linux'
+cpu_family = 'arm'
+cpu = 'armv8'
+endian = 'little'
+
+[build_machine]
+system = 'linux'
+cpu_family = 'x86_64'
+cpu = 'x86_64'
+endian = 'little'

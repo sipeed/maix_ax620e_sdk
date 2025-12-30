@@ -1,0 +1,28 @@
+export PATH="/bin:/sbin:/usr/bin:/usr/sbin:/opt/bin:/opt/usr/bin:/opt/scripts:/soc/bin:/soc/scripts:/usr/local/bin"
+export LD_LIBRARY_PATH="/usr/local/lib:/usr/lib:/opt/lib:/opt/usr/lib:/soc/lib"
+
+ulimit -s 2048
+ulimit -c unlimited
+echo /opt/data/core-%e-%p-%t > /proc/sys/kernel/core_pattern
+
+if [ "$PS1" ]; then
+	if [ "`id -u`" -eq 0 ]; then
+		export PS1='$PWD # '
+	else
+		export PS1='$PWD $ '
+	fi
+fi
+export EDITOR='/bin/vi'
+ulimit -s 2048
+ulimit -c unlimited
+# Source configuration files from /etc/profile.d
+for i in /etc/profile.d/*.sh ; do
+	if [ -r "$i" ]; then
+		. $i
+	fi
+done
+unset i
+
+if [ -r /customer/.profile ]; then
+	source /customer/.profile
+fi

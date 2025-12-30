@@ -1,0 +1,164 @@
+#include <ddr_sys.h>
+#include <platform_def.h>
+#include "wakeup_source.h"
+#include "pll.h"
+#include <sleep_stage.h>
+
+int ddr_sys_sleep(void)
+{
+	int ret = 0;
+	unsigned int state = 0;
+	writel(AX_SLEEP_STAGE_08, SLEEP_STAGE_STORE_ADDR);
+
+	writel(BIT_DDR_SYS_CLKG_BYPASS_DDRC_REF_CLR, DDR_SYS_CLKG_BYPASS_CLR_ADDR);
+	writel(BIT_DDR_SYS_CLKG_BYPASS_AXI_CLR, DDR_SYS_CLKG_BYPASS_CLR_ADDR);
+	writel(BIT_DDR_SYS_CLKG_BYPASS_DDRPHY_CLR, DDR_SYS_CLKG_BYPASS_CLR_ADDR);
+	writel(BIT_DDR_SYS_CLKG_BYPASS_DDRC_CLR, DDR_SYS_CLKG_BYPASS_CLR_ADDR);
+
+	writel(BIT_DDR_SYS_AXICLK_OFF_HW_EN_SET, DDR_SYS_AXICLK_OFF_SET_ADDR);
+	writel(BIT_DDR_SYS_CORECLK_OFF_HW_EN_SET, DDR_SYS_CORECLK_OFF_SET_ADDR);
+
+	writel(BIT_DDR_SYS_LPC_DATA_BUS_IDLE_EN_SET, DDR_SYS_LPC_DATA_SET_ADDR);
+	//writel(BIT_DDR_SYS_SLP_IGNORE_CPU_EN_CLR, DDR_SYS_SLP_IGNORE_CPU_CLR_ADDR);
+	writel(BIT_DDR_SYS_SLP_IGNORE_CPU_EN_SET, DDR_SYS_SLP_IGNORE_CPU_SET_ADDR);
+
+
+	writel(BIT_COMMON_SYS_COMMON2_DDR_BUS_IDLE_SW, COMMON_SYS_COMMON2_DDR_BUS_IDLE_SW_ADDR);
+	writel(BIT_COOMON_SYS_COMMON2_DDR_BUS_IDLE_MASK, COMMON_SYS_COMMON2_DDR_BUS_IDLE_MASK_ADDR);
+
+	pmu_module_sleep_en(MODULE_DDR, SLP_EN_SET);
+
+	while (!(ret = pmu_get_module_state(MODULE_DDR, &state)) && (state != PWR_STATE_OFF));
+	writel(AX_SLEEP_STAGE_09, SLEEP_STAGE_STORE_ADDR);
+
+	return ret;
+}
+
+int ddr_sys_wakeup(void)
+{
+	int ret = 0, val = 0;
+
+	unsigned int cpu_clk_mux_0_reserve;
+	unsigned int cpu_clk_eb_0_reserve;
+	unsigned int cpu_clk_eb_1_reserve;
+	unsigned int cpu_clk_div_0_reserve;
+	unsigned int common_clk_mux_0_reserve;
+	unsigned int common_clk_mux_2_reserve;
+
+	writel(AX_WAKEUP_STAGE_0C, SLEEP_STAGE_STORE_ADDR);
+
+	/* set pll clock gating eb */
+	writel(0x7e, PLL_GRP_PLL_RE_OPEN_SET_ADDR);
+	writel(0x1, DPLL_PLL_RE_OPEN_ADDR);
+
+	//cpu sys wakeup and clock restore
+	cpu_clk_mux_0_reserve = readl(CPU_CLK_MUX_0_ADDR);
+	cpu_clk_eb_0_reserve = readl(CPU_CLK_EB_0_ADDR);
+	cpu_clk_eb_1_reserve = readl(CPU_CLK_EB_1_ADDR);
+	cpu_clk_div_0_reserve = readl(CPU_CLK_DIV_0_ADDR);
+	common_clk_mux_0_reserve = readl(COMMON_CLK_MUX_0_ADDR);
+	common_clk_mux_2_reserve = readl(COMMON_CLK_MUX_2_ADDR);
+
+	writel(cpu_clk_mux_0_reserve, CPU_SYS_GLB_BASE_ADDR);
+	writel(cpu_clk_eb_0_reserve, CPU_SYS_CLK_EB_0_ADDR);
+	writel(cpu_clk_eb_1_reserve, CPU_SYS_CLK_EB_1_ADDR);
+	writel(cpu_clk_div_0_reserve, CPU_SYS_CLK_DIV_0_ADDR);
+	writel(common_clk_mux_0_reserve, COMMON_SYS_CLK_MUX_0_ADDR);
+	writel(common_clk_mux_2_reserve, COMMON_SYS_CLK_MUX_2_ADDR);
+
+	writel(BIT_CPU_SYS_CA53_CLUSTER_INT_DISABLE_CLR | BIT_CPU_SYS_CA53_CPU_INT_DISABLE_CLR, CPU_SYS_INT_MSK_CLR_ADDR);
+	writel(BIT_CPU_SYS_DATA_IDLE_EN_CLR, CPU_SYS_LPC_CFG_2_CLR_ADDR);
+	writel(BIT_CPU_SYS_DATA_BUS_IDLE_EN_CLR, CPU_SYS_LPC_CFG_1_CLR_ADDR);
+	writel(BIT_CPU_SYS_DATA_NOC_TIMEOUT_EN_CLR, CPU_SYS_LPC_CFG_1_CLR_ADDR);
+
+	writel(BIT_CPU_SYS_CFG_BUS_IDLE_EN_CLR, CPU_SYS_LPC_CFG_0_CLR_ADDR);
+	writel(BIT_CPU_SYS_CFG_NOC_TIMEOUT_EN_CLR, CPU_SYS_LPC_CFG_0_CLR_ADDR);
+
+	writel(BIT_CPU_SYS_SLP_EN_CLR, CPU_SYS_LPC_CFG_2_CLR_ADDR);
+
+	pmu_module_sleep_en(MODULE_CPU, SLP_EN_CLR);
+
+	writel(AX_WAKEUP_STAGE_0D, SLEEP_STAGE_STORE_ADDR);
+
+	//ddr sys wakeup
+	pmu_module_sleep_en(MODULE_DDR, SLP_EN_CLR);
+	ret = pmu_module_wakeup(MODULE_DDR);
+
+	writel(AX_WAKEUP_STAGE_0E, SLEEP_STAGE_STORE_ADDR);
+
+	writel(BIT_DDR_SYS_LPC_DATA_BUS_IDLE_EN_CLR, DDR_SYS_LPC_DATA_CLR_ADDR);
+
+	writel(BIT_DDR_SYS_DDRC_WAKEUP_SW_SET, DDR_SYS_DDRC_WAKEUP_SET_ADDR);
+	writel(BIT_DDR_SYS_DPLL_LPC_OFF_CLR, DDR_SYS_DDR_DEEP_SLEEP_LATCH_CLR_ADDR);
+
+	while((readl(DDR_SYS_PLL_RDY_STS_ADDR) & BIT_DDR_STS_DPLL_RSY) != 0x1) {
+		;
+	}
+
+	writel(AX_WAKEUP_STAGE_0F, SLEEP_STAGE_STORE_ADDR);
+
+	writel(BIT_DDR_SYS_DDRC_WAKEUP_SW_CLR, DDR_SYS_DDRC_WAKEUP_CLR_ADDR);
+
+	val = readl(DDRC_DDRMC_PORT0_CFG0_ADDR);
+	val |= BIT_DDRC_RF_AUTO_SLP_EN_PORT0;
+	writel(val, DDRC_DDRMC_PORT0_CFG0_ADDR);
+
+	val = readl(DDRC_DDRMC_PORT1_CFG0_ADDR);
+	val |= BIT_DDRC_RF_AUTO_SLP_EN_PORT1;
+	writel(val, DDRC_DDRMC_PORT1_CFG0_ADDR);
+
+	val = readl(DDRC_DDRMC_PORT2_CFG0_ADDR);
+	val |= BIT_DDRC_RF_AUTO_SLP_EN_PORT2;
+	writel(val, DDRC_DDRMC_PORT2_CFG0_ADDR);
+
+	val = readl(DDRC_DDRMC_PORT3_CFG0_ADDR);
+	val |= BIT_DDRC_RF_AUTO_SLP_EN_PORT3;
+	writel(val, DDRC_DDRMC_PORT3_CFG0_ADDR);
+
+	val = readl(DDRC_DDRMC_PORT4_CFG0_ADDR);
+	val |= BIT_DDRC_RF_AUTO_SLP_EN_PORT4;
+	writel(val, DDRC_DDRMC_PORT4_CFG0_ADDR);
+
+	val = readl(DDRC_DDRMC_CFG22_ADDR);
+	val |= BIT_DDRC_RF_AUTO_SLP_EN;
+	writel(val, DDRC_DDRMC_CFG22_ADDR);
+
+	writel(BITS_DDR_SYS_DDR_AXI_LP_REQ_SET, DDR_SYS_DDR_AXI_SET_ADDR);
+	writel(BIT_DDR_SYS_DDRC_SLP_SW_SET, DDR_SYS_DDRC_SLP_SET_ADDR);
+
+	while((readl(DDR_SYS_LP_DDRC_ADDR) & BITS_DDR_SYS_LP_DDRC_STATE) \
+	 	!= DDR_SYS_LP_DDRC_ENTER_LIGHT_SLP);
+
+	writel(AX_WAKEUP_STAGE_10, SLEEP_STAGE_STORE_ADDR);
+
+	writel(BIT_DDR_SYS_DDRPHY_PD_LATCH_CLR_SET, DDR_SYS_DDR_DEEP_SLP_LATCH_CLR_SET_ADDR);
+
+	writel(BITS_DDR_SYS_DDR_AXI_LP_REQ_CLR, DDR_SYS_DDR_AXI_CLR_ADDR);
+	writel(BIT_DDR_SYS_DDRC_SLP_SW_CLR, DDR_SYS_DDRC_SLP_CLR_ADDR);
+	//writel(BIT_DDR_SYS_DDRC_WAKEUP_SW_SET, DDR_SYS_DDRC_WAKEUP_SET_ADDR);
+
+	while((readl(DDR_SYS_LP_DDRC_ADDR) & 0xf) \
+	 	!= DDR_SYS_LP_DDRC_EXIT_LIGHT_SLP);
+
+	writel(AX_WAKEUP_STAGE_11, SLEEP_STAGE_STORE_ADDR);
+
+	writel(BIT_DDR_SYS_AXICLK_OFF_HW_EN_CLR, DDR_SYS_AXICLK_OFF_CLR_ADDR);
+	writel(BIT_DDR_SYS_CORECLK_OFF_HW_EN_CLR, DDR_SYS_CORECLK_OFF_CLR_ADDR);
+
+	//writel(BIT_DDR_SYS_LPC_DATA_BUS_IDLE_EN_CLR, DDR_SYS_LPC_DATA_CLR_ADDR);
+	//writel(BIT_DDR_SYS_SLP_IGNORE_CPU_EN_CLR, DDR_SYS_SLP_IGNORE_CPU_CLR_ADDR);
+	writel(BIT_DDR_SYS_SLP_IGNORE_CPU_EN_SET, DDR_SYS_SLP_IGNORE_CPU_SET_ADDR);
+
+	writel(BIT_CPU_SYS_DATA_IDLE_EN_CLR, CPU_SYS_LPC_CFG_2_CLR_ADDR);
+	writel(0, COMMON_SYS_COMMON2_DDR_BUS_IDLE_SW_ADDR);
+	writel(0, COMMON_SYS_COMMON2_DDR_BUS_IDLE_MASK_ADDR);
+
+	writel(AX_WAKEUP_STAGE_12, SLEEP_STAGE_STORE_ADDR);
+
+	return ret;
+}
+
+int ddr_sys_helper(void)
+{
+	return 0;
+}

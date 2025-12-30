@@ -1,0 +1,6 @@
+Middleware Abstraction Layer
+FIX-ME: 注意事项关键词
+
+TODO:
+1. pipeline config 中增加 pool 的配置文件路径。当前为内置
+2. pool 数据结构中是否需要增加旋转使能？如何确认Size按照旋转使能的计算？当前默认旋转使能（即90/270支持）

@@ -1,0 +1,28 @@
+@dir: rootfs/$(ARCH)/$(LIBC)/rootfs
+usr/bin/fw_printenv
+usr/bin/fw_setenv
+bin/axbox
+bin/axdmesg
+bin/busybox
+usr/bin/axver
+usr/bin/ax_clk
+etc/ax_syslog.conf
+etc/init.d/axsyslogd
+etc/init.d/axklogd
+sbin/axsyslogd
+sbin/axklogd
+lib/libax_syslog.so
+lib/libatomic.so*
+-opt/*
+@dir: rootfs/$(ARCH)/$(LIBC)/rootfs_tools
+*
+
+@dir: build/projects
+$(PROJECT)/rootfs/etc/* etc/
+$(PROJECT)/rootfs/maixapp/* maixapp/
+$(PROJECT)/rootfs/root/* root/
+$(PROJECT)/rootfs/usr/* usr/
+$(PROJECT)/rootfs/opt/* opt/
+
+@dir: tools
+ax_lookat/bin/CHIP_AX620E/$(ARCH)/$(LIBC)/ax_lookat usr/bin

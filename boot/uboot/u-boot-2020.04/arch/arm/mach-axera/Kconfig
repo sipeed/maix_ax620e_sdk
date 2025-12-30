@@ -1,0 +1,29 @@
+if ARCH_AXERA
+
+config AXERA_INSTR_ARM
+	bool "use ARM instruction set"
+	default n
+	help
+	The AXERA AX620E use ARM instruction set
+
+config AXERA_AX620E
+	bool "Support AXERA AX620E"
+	select CPU_V7A if AXERA_INSTR_ARM
+	select ARM64 if !AXERA_INSTR_ARM
+	help
+	  The AXERA AX620E is a ARM-based SoC with quad-core Cortex-A53.
+	  including NEON, 512KB L2 cache, two video interfaces supporting
+	  HDMI, several LPDDR4 options and video codec support. Peripherals include
+	  Gigabit Ethernet, USB2 host and OTG, SDIO, I2S, UARTs, SPI, I2C and PWMs.
+	select OF_CONTROL
+	select SUPPORT_SPL
+
+config SYS_VENDOR
+        default "axera"
+
+config SYS_SOC
+        default "axera"
+
+source "arch/arm/mach-axera/ax620e/Kconfig"
+
+endif

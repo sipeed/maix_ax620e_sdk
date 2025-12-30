@@ -1,0 +1,129 @@
+/*
+ * (C) Copyright 2020 AXERA Co., Ltd
+ *
+ * SPDX-License-Identifier:     GPL-2.0
+ */
+
+/dts-v1/;
+#include <dt-bindings/pwm/pwm.h>
+#include "ax620e.dtsi"
+
+/ {
+	model = "AXERA AX620E_emmc Board";
+	compatible = "AXERA,AX620E", "axera,ax620e";
+
+	chosen {
+		stdout-path = &uart0;
+	};
+
+	emmc: mmc@1B40000 {
+		compatible = "axera,ax620e-sdhc";
+		reg = <0x0 0x1B40000 0x0 0x1000>;
+		interrupts = <0 9 4>;
+		bus-width = <8>;
+		sdhci-caps-mask = <0x2 0x03200000>;
+		sdhci-caps = <0x0 0x00040000>;
+		non-removable;
+		cdns,phy-input-delay-sd-highspeed = <2>;
+		cdns,phy-input-delay-legacy = <4>;
+		cdns,phy-input-delay-sd-uhs-sdr12 = <1>;
+		cdns,phy-input-delay-sd-uhs-sdr25 = <2>;
+		cdns,phy-input-delay-sd-uhs-sdr50 = <1>;
+		cdns,phy-input-delay-sd-uhs-ddr50 = <2>;
+		cdns,phy-input-delay-mmc-legacy = <1>;
+		cdns,phy-input-delay-mmc-highspeed = <2>;
+		cdns,phy-input-delay-mmc-ddr = <2>;
+		cdns,phy-dll-delay-sdclk = <0>;
+		cdns,phy-dll-delay-sdclk-hsmmc = <23>;
+		cdns,phy-dll-delay-strobe = <18>;
+		status = "okay";
+	};
+
+	sd: mmc@104E0000 {
+		compatible = "axera,ax620e-sdhc";
+		reg = <0x0 0x104E0000 0x0 0x1000>;
+		interrupts = <0 74 4>;
+
+		bus-width = <4>;
+		cap-sd-highspeed;
+		/*sd-uhs-sdr12;
+		sd-uhs-sdr25;
+		sd-uhs-sdr50;*/
+		no-sdio;
+		no-mmc;
+		disable-wp;
+		no-1-8-v;
+		broken-cd;
+
+		cdns,phy-input-delay-sd-highspeed = <2>;
+		cdns,phy-input-delay-legacy = <3>;
+		cdns,phy-input-delay-sd-uhs-sdr12 = <3>;
+		cdns,phy-input-delay-sd-uhs-sdr25 = <2>;
+		cdns,phy-input-delay-sd-uhs-sdr50 = <0>;
+		cdns,phy-input-delay-sd-uhs-ddr50 = <0>;
+		cdns,phy-dll-delay-sdclk = <0>;
+
+		status = "okay";
+	};
+
+	eth0: ethernet@0x104C0000{
+		compatible = "axera,ax620e-eqos";
+		status = "okay";
+	};
+};
+
+&spi2 {
+    status = "okay";
+	panel_spi@0 {
+		compatible = "sipeed,for_jd9853";
+		spi-tx-bus-width = <1>;
+		spi-rx-bus-width = <1>;
+		spi-max-frequency = <20000000>;
+		reg = <0>;    /*SPI channel 0*/
+		/* spi_addr delay cmd_len cmd data */
+		panel-init-seq = [
+			FF 00 03 DF 98 53
+			FF 00 02 B2 23
+			FF 00 05 B7 00 47 00 6F
+			FF 00 07 BB 1C 1A 55 73 63 F0
+			FF 00 03 C0 44 A4
+			FF 00 02 C1 12
+			FF 00 09 C3 7D 07 14 06 CF 71 72 77
+			FF 00 0D C4 00 00 A0 79 0B 0A 16 79 0B 0A 16 82
+			FF 00 21 C8 3F 32 29 29 27 2B 27 28 28 26 25 17 12 0D 04 00 3F 32 29 29 27 2B 27 28 28 26 25 17 12 0D 04 00
+			FF 00 06 D0 04 06 6B 0F 00
+			FF 00 03 D7 00 30
+			FF 00 02 E6 14
+			FF 00 02 DE 01
+			FF 00 06 B7 03 13 EF 35 35
+			FF 00 04 C1 14 15 C0
+			FF 00 03 C2 06 3A
+			FF 00 03 C4 72 12
+			FF 00 02 BE 00
+			FF 00 02 DE 02
+			FF 00 04 E5 00 02 00
+			FF 00 04 E5 01 02 00
+			FF 00 02 DE 00
+			FF 00 01 34
+			FF 00 03 44 00 00
+			FF 00 02 35 00
+			FF 00 03 44 00 00
+			FF 00 02 3A 55
+			FF 00 02 36 00
+			FF 00 05 2A 00 22 00 CD
+			FF 00 05 2B 00 00 01 3F
+			FF 00 02 35 00
+			FF 00 01 2C
+			FF 78 01 11
+			FF 00 02 DE 02
+			FF 00 04 E5 00 02 00
+			FF 00 02 DE 00
+			FF 0A 01 29
+			FF 00 05 2A 00 22 00 CD
+			FF 00 05 2B 00 00 01 3F
+		];
+		dc = <1 11 1>;
+		rst = <1 9 0>;
+		bl = <1 8 1>;
+	};
+};

@@ -1,0 +1,34 @@
+software =
+{
+	version = "0.1.0";
+
+	hardware-compatibility: [ "1.0" ];
+	stable : {
+		copy : {
+			images: (
+				{
+					filename = "AX620Q_minions_fastnor_arm32_k419_signed.dtb";
+					device = "/dev/mtdblock6";
+					type = "raw";
+				},
+				{
+					filename = "boot_signed.bin";
+					device = "/dev/mtdblock7";
+					type = "raw";
+				},
+			);
+			scripts: (
+				{
+					filename = "recovery.sh";
+					type = "shellscript";
+				},
+			);
+			uboot: (
+				{
+					name = "upgrade_available";
+					value = "1";
+				},
+			);
+		};
+	};
+}

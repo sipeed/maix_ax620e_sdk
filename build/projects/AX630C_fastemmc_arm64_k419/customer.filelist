@@ -1,0 +1,18 @@
+@dir: msp/out/$(MSP_OUT_DIR)
+bin/* bin/
+-data/avscalid
+etc/* etc/
+data/*.json data/
+data/audio data/
+data/ives data/
+data/npu data/
+data/uvc data/
+data/ivps data/
+third-party/bin usr/
+third-party/lib usr/
+data/qsdemo/res/* qsres/
+
+@dir: msp/out/$(MSP_OUT_DIR)
+lib/*.so lib/
+-lib/libax_faac.so
+

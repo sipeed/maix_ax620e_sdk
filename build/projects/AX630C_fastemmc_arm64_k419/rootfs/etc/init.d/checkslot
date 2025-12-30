@@ -1,0 +1,8 @@
+#!/bin/sh
+
+bootsystem=$(devmem 0x2390024)
+if [ "${bootsystem: ${#bootsystem}-1:1}" = "4" ]; then
+	echo "Currently on system A."
+elif [ "${bootsystem: ${#bootsystem}-1:1}" = "8" ]; then
+	echo "Currently on system B."
+fi

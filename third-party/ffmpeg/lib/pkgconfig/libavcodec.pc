@@ -1,0 +1,14 @@
+prefix=/home/xinhongliang/res/ffmpeg-mp4/out
+exec_prefix=${prefix}
+libdir=/home/xinhongliang/res/ffmpeg-mp4/out/lib
+includedir=/home/xinhongliang/res/ffmpeg-mp4/out/include
+
+Name: libavcodec
+Description: FFmpeg codec library
+Version: 58.101.100
+Requires: 
+Requires.private: libswresample >= 3.8.100, libavutil >= 56.58.100
+Conflicts:
+Libs: -L${libdir}  -lavcodec 
+Libs.private: -pthread -lm
+Cflags: -I${includedir}

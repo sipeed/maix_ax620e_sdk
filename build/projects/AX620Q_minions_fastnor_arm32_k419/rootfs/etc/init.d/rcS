@@ -1,0 +1,59 @@
+#!/bin/sh
+mkdir -p /var/log/AXSyslog/kernel
+mkdir -p /tmp/cron.d
+cp /etc/.ax_syslog.conf /var/log/AXSyslog/ax_syslog.conf
+cp /etc/.syslog.conf /var/log/AXSyslog/syslog.conf
+hwclock -s &
+
+# set TOP_CHIPMODE_GLB_BACKUP0_CLR clr BOOT_KERNEL_FAIL bit
+devmem 0x239002C 32 0x80
+
+/etc/init.d/axsyslogd start
+/etc/init.d/axklogd start &
+export PATH="/bin:/sbin:/usr/bin:/usr/sbin:/opt/bin:/opt/usr/bin:/opt/scripts:/soc/bin:/soc/scripts:/usr/local/bin"
+export LD_LIBRARY_PATH="/usr/local/lib:/usr/lib:/opt/lib:/opt/usr/lib:/soc/lib"
+
+rcS_end=`devmem 0x4820000`
+devmem 0x92c 32 $rcS_end &
+#echo ulog 42 5 > /proc/ax_proc/logctl
+
+# coredump settings
+ulimit -c unlimited
+echo /mnt/core-%e-%p-%t > /proc/sys/kernel/core_pattern
+insmod /soc/ko/spi-axera-module.ko
+mount -t jffs2 /dev/mtdblock9 /customer
+if [ -e "/customer/qsres/run.sh" ]; then
+	/customer/qsres/run.sh
+else
+	echo "not found /customer/qsres/run.sh"
+fi
+
+/soc/scripts/usb_load.sh &
+#/soc/scripts/net_load.sh &
+insmod /soc/ko/sdhci-axera.ko
+
+for i in /etc/init.d/S??* ;do
+
+     # Ignore dangling symlinks (if any).
+     [ ! -f "$i" ] && continue
+
+     case "$i" in
+	*.sh)
+	    # Source shell script for speed.
+	    (
+		trap - INT QUIT TSTP
+		set start
+		. $i
+	    )
+	    ;;
+	*)
+	    # No sh extension, so fork subprocess.
+	    $i start
+	    ;;
+    esac
+done
+
+if [ -e "/customer/logger.sh" ]; then
+	chmod +x /customer/logger.sh
+	/customer/logger.sh &
+fi

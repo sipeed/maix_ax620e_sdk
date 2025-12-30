@@ -1,0 +1,64 @@
+#ifndef __FDL_FRAME_H
+#define __FDL_FRAME_H
+#include "common.h"
+
+#define FRAME_DATA_MAXLEN            (1024*50)	//50K max
+
+typedef enum {
+	FDL_CMD_TYPE_MIN = 0,
+	FDL_CMD_CONNECT = FDL_CMD_TYPE_MIN,
+	FDL_CMD_START_TRANSFER = 1,
+	FDL_CMD_TRANSFERRING_DATA = 2,
+	FDL_CMD_START_TRANSFER_END = 3,
+	FDL_CMD_REBOOT = 5,
+	FDL_CMD_POWER_OFF = 6,
+	FDL_CMD_READ_CHIP_ID = 7,
+	FDL_CMD_CHG_BAUDRATE = 9,
+	FDL_CMD_ERASE_FLASH = 0xA,
+	FDL_CMD_REPATITION = 0xB,
+	FDL_CMD_READ_CHIP_UID = 0xC,
+	FDL_CMD_START_READ_FLASH = 0x10,
+	FDL_CMD_READING_FLASH = 0x11,
+	FDL_CMD_END_READ_FLASH = 0x12,
+	FDL_CMD_TYPE_MAX,
+
+	FDL_RESP_TYPE_MIN = 0x80,
+	FDL_RESP_ACK = FDL_RESP_TYPE_MIN,
+	FDL_RESP_VERSION = 0x81,
+	FDL_RESP_INVLID_CMD = 0x82,
+	FDL_RESP_UNKNOWN_CMD = 0x83,
+	FDL_RESP_OPERATION_FAIL = 0x84,
+	FDL_RESP_SECURE_SIGNATURE_ERR = 0x88,
+	FDL_RESP_DEST_ERR = 0x89,
+	FDL_RESP_SIZE_ERR = 0x8A,
+	FDL_RESP_VERIFY_CHEKSUM_ERROR = 0x8B,
+	FDL_RESP_INVALID_PARTITION = 0x8C,
+	FDL_RESP_FLASH_DATA = 0x93,
+	FDL_RESP_CHIP_ID = 0x94,
+	FDL_RESP_CHIP_UID = 0x95,
+	FDL_RESP_COMPATIBILITY_DATA = 0x96,
+	FDL_RESP_TYPE_MAX
+} CMD_TYPE;
+
+struct fdl_frame {
+	u32 magic_num;
+	u16 data_len;
+	u16 cmd_index;
+	u8 data[FRAME_DATA_MAXLEN];	//checksum add to the end of data
+	//u16 check_sum;
+} __attribute__ ((aligned(ARCH_DMA_MINALIGN)));
+typedef struct fdl_frame fdl_frame_t;
+
+#define FDL_MAGIC_SIZE            4
+#define FDL_DATALEN_SIZE          2
+#define FDL_CMDIDX_SIZE           2
+#define FDL_CHECKSUM_SIZE         2
+//FDL_MAGIC_SIZE + FDL_DATALEN_SIZE + FDL_CMDIDX_SIZE + FDL_CHECKSUM_SIZE
+#define FRAME_EXCEPT_DATA_SIZE    10
+#define FRAME_MAX_SIZE            (FRAME_EXCEPT_DATA_SIZE + FRAME_DATA_MAXLEN)
+
+int frame_send_version(void);
+int frame_send_respone(CMD_TYPE resp);
+int frame_send_data(CMD_TYPE resp, char *buffer, u64 len);
+fdl_frame_t *frame_get(void);
+#endif

@@ -1,0 +1,18 @@
+@dir: rootfs/$(ARCH)/$(LIBC)/rootfs
+opt/scripts/* scripts/
+
+@dir: build/projects
+$(PROJECT)/soc/scripts/* scripts/
+
+@dir: build/out/$(PROJECT)/objs/kernel/linux
+ko/spi-axera-module.ko.xz     ko/spi-axera-module.ko
+ko/dwc3-axera.ko.xz    ko/dwc3-axera.ko
+ko/dwc3.ko.xz          ko/dwc3.ko
+ko/grace.ko.xz     ko/grace.ko
+ko/lockd.ko.xz     ko/lockd.ko
+ko/nfs.ko.xz       ko/nfs.ko
+ko/nfsv2.ko.xz     ko/nfsv2.ko
+ko/nfsv3.ko.xz     ko/nfsv3.ko
+ko/sunrpc.ko.xz    ko/sunrpc.ko
+ko/sdhci-axera.ko.xz  ko/sdhci-axera.ko
+ko/dwmac-axera-plat.ko.xz       ko/dwmac-axera-plat.ko

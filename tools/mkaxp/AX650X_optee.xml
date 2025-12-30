@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--  [tag] FDLLevel: 1, one level FDL; 2, two level FDL                    -->
+<!--  [tag] Partitions:                                                     -->
+<!--        [attribute]   strategy: 0, not partition                        -->
+<!--                                1, partition                            -->
+<!--  [tag] Img:                                                            -->
+<!--        [attribute]   name: GUI display                                 -->
+<!--        [attribute] select: 0, GUI selected                             -->
+<!--                            1, GUI not selected                         -->
+<!--        [attribute]   flag: mask value combined by below options (|)    -->
+<!--                            0x01, need input a file                     -->
+<!--                            0x02, must be selected                      -->
+<!--              [tag]     ID: Internel used, not changed                  -->
+<!--              [tag]   Type: Internel used, not changed                  -->
+<!--              [tag]   Auth:                                             -->
+<!--                      [attribute] algo: 0, No Auth                      -->
+<!--                                        1, MD5                          -->
+<!--                                        2, crc16                        -->
+<!--              [tag]   File: Download file name                          -->
+<!--              [tag]   Description: GUI display                          -->
+<Config>
+	<Project alias="AX650X" name="AX650X" version="1.0">
+		<FDLLevel>1</FDLLevel>
+		<!-- Unit: 0, 1M Byte; 1, 512K Byte; 2, 1K Byte; 3, 1 Byte; 4, 1Sector -->
+		<Partitions strategy="1" unit="1">
+			<Partition gap="0" id="uboot" size="3" />
+			<Partition gap="0" id="uboot_bk" size="3" />
+			<Partition gap="0" id="env" size="2" />
+			<Partition gap="0" id="param" size="40" />
+			<Partition gap="0" id="logo" size="12" />
+			<Partition gap="0" id="dtb" size="2" />
+			<Partition gap="0" id="kernel" size="128" />
+			<Partition gap="0" id="atf" size="2" />
+			<Partition gap="0" id="optee" size="2" />
+			<Partition gap="0" id="rootfs" size="9472" />
+			<Partition gap="0" id="soc" size="768" />
+			<Partition gap="0" id="opt" size="0xffffffff" />
+		</Partitions>
+		<ImgList>
+			<Img flag="2" name="INIT" select="1">
+				<ID>INIT</ID>
+				<Type>INIT</Type>
+				<Block>
+					<Base>0x0</Base>
+					<Size>0x0</Size>
+				</Block>
+				<File />
+				<Auth algo="0" />
+				<Description>Handshake with romcode</Description>
+			</Img>
+			<Img flag="1" name="EIP" select="0">
+				<ID>EIP</ID>
+				<Type>EIP</Type>
+				<Block>
+					<Base>0x14000C00</Base>
+					<Size>0x0</Size>
+				</Block>
+				<File />
+				<Auth algo="0" />
+				<Description>Download eip image file</Description>
+			</Img>
+			<Img flag="3" name="FDL" select="1">
+				<ID>FDL</ID>
+				<Type>FDL</Type>
+				<Block>
+					<Base>0x14000C00</Base>
+					<Size>0x0</Size>
+				</Block>
+				<File />
+				<Auth algo="0" />
+				<Description>Download FDL image file</Description>
+			</Img>
+			<Img flag="1" name="UBOOT" select="1">
+				<ID>UBOOT</ID>
+				<Type>CODE</Type>
+				<Block id="uboot">
+					<Base>0x0</Base>
+					<Size>0x0</Size>
+				</Block>
+				<File />
+				<Auth algo="0" />
+				<Description>Download UBOOT image file</Description>
+			</Img>
+			<Img flag="1" name="UBOOT_BK" select="1">
+				<ID>UBOOT_BK</ID>
+				<Type>CODE</Type>
+				<Block id="uboot_bk">
+					<Base>0x0</Base>
+					<Size>0x0</Size>
+				</Block>
+				<File />
+				<Auth algo="0" />
+				<Description>Download UBOOT_BK image file</Description>
+			</Img>
+			<Img flag="1" name="LOGO" select="1">
+				<ID>LOGO</ID>
+				<Type>CODE</Type>
+				<Block id="logo">
+					<Base>0x0</Base>
+					<Size>0x0</Size>
+				</Block>
+				<File />
+				<Auth algo="0" />
+				<Description>Download logo file</Description>
+			</Img>
+			<Img flag="1" name="DTB" select="1">
+				<ID>DTB</ID>
+				<Type>CODE</Type>
+				<Block id="dtb">
+					<Base>0x0</Base>
+					<Size>0x0</Size>
+				</Block>
+				<File />
+				<Auth algo="0" />
+				<Description>Download kernel dtb file</Description>
+			</Img>
+			<Img flag="1" name="KERNEL" select="1">
+				<ID>KERNEL</ID>
+				<Type>CODE</Type>
+				<Block id="kernel">
+					<Base>0x0</Base>
+					<Size>0x0</Size>
+				</Block>
+				<File />
+				<Auth algo="0" />
+				<Description>Download kernel image file</Description>
+			</Img>
+			<Img flag="1" name="ATF" select="1">
+				<ID>ATF</ID>
+				<Type>CODE</Type>
+				<Block id="atf">
+					<Base>0x0</Base>
+					<Size>0x0</Size>
+				</Block>
+				<File />
+				<Auth algo="0" />
+				<Description>Download atf-bl31 image file</Description>
+			</Img>
+			<Img flag="1" name="OPTEE" select="1">
+				<ID>OPTEE</ID>
+				<Type>CODE</Type>
+				<Block id="optee">
+					<Base>0x0</Base>
+					<Size>0x0</Size>
+				</Block>
+				<File />
+				<Auth algo="0" />
+				<Description>Download optee image file</Description>
+			</Img>
+			<Img flag="1" name="ROOTFS" select="1">
+				<ID>ROOTFS</ID>
+				<Type>CODE</Type>
+				<Block id="rootfs">
+					<Base>0x0</Base>
+					<Size>0x0</Size>
+				</Block>
+				<File />
+				<Auth algo="0" />
+				<Description>Download rootfs image file</Description>
+			</Img>
+			<Img flag="1" name="PARAM" select="1">
+				<ID>PARAM</ID>
+				<Type>CODE</Type>
+				<Block id="param">
+					<Base>0x0</Base>
+					<Size>0x0</Size>
+				</Block>
+				<File />
+				<Auth algo="0" />
+				<Description>Download param image file</Description>
+			</Img>
+			<Img flag="1" name="SOC" select="1">
+				<ID>SOC</ID>
+				<Type>CODE</Type>
+				<Block id="soc">
+					<Base>0x0</Base>
+					<Size>0x0</Size>
+				</Block>
+				<File>soc.ext4</File>
+				<Auth algo="0" />
+				<Description>Download soc image file</Description>
+			</Img>
+			<Img flag="1" name="OPT" select="1">
+				<ID>OPT</ID>
+				<Type>CODE</Type>
+				<Block id="opt">
+					<Base>0x0</Base>
+					<Size>0x0</Size>
+				</Block>
+				<File />
+				<Auth algo="0" />
+				<Description>Download opt image file</Description>
+			</Img>
+		</ImgList>
+	</Project>
+</Config>

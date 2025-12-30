@@ -1,0 +1,46 @@
+#!/bin/sh
+#
+# Start linuxptp
+#
+
+start() {
+    printf "Starting linuxptp daemon: "
+    start-stop-daemon -S -b -m -q -p /var/run/linuxptp-ptp4l.pid \
+        -x /usr/sbin/ptp4l -- -f /etc/linuxptp.cfg
+    [ $? = 0 ] && echo "OK" || echo "FAIL"
+
+    printf "Starting linuxptp system clock synchronization: "
+    start-stop-daemon -S -b -m -q -p /var/run/linuxptp-phc2sys.pid \
+        -x /usr/sbin/phc2sys -- -c eth0 -s CLOCK_REALTIME -O 0 -S 1.0 -u 16
+    [ $? = 0 ] && echo "OK" || echo "FAIL"
+}
+
+stop() {
+    printf "Stopping linuxptp system clock synchronization: "
+    start-stop-daemon -K -q -p /var/run/linuxptp-phc2sys.pid \
+        -x /usr/sbin/phc2sys
+    [ $? = 0 ] && echo "OK" || echo ""
+
+    printf "Stopping linuxptp daemon: "
+    start-stop-daemon -K -q -p /var/run/linuxptp-ptp4l.pid \
+        -x /usr/sbin/ptp4l
+    [ $? = 0 ] && echo "OK" || echo ""
+}
+
+case "$1" in
+  start)
+    start
+    ;;
+  stop)
+    stop
+    ;;
+  restart|reload)
+    stop
+    start
+    ;;
+  *)
+    echo "Usage: $0 {start|stop|restart}"
+    exit 1
+esac
+
+exit $?

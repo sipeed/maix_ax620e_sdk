@@ -1,0 +1,8 @@
+@dir: msp/out/$(MSP_OUT_DIR)
+#etc/models/aiisp/SC235HAI_HDR_1920x1080*.axmodel
+etc/models/aiisp/SC235HAI_SDR_1920x1080_10b_LCG_ISP1_A116X_I1-32X_0000_MULTI5_00000655144_240402_AX620E.axmodel
+etc/sc235hai_hdr_2lane.ini
+etc/sc235hai_sdr_2lane.ini
+etc/sc235hai_single_hdr_2lane_entry.ini
+etc/sc235hai_single_sdr_2lane_entry.ini
+

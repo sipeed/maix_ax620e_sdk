@@ -1,0 +1,13 @@
+@dir: rootfs/$(ARCH)/$(LIBC)/rootfs
+*
+-opt/*
+@dir: rootfs/$(ARCH)/$(LIBC)/rootfs_extend
+*
+@dir: rootfs/$(ARCH)/$(LIBC)/rootfs_tools
+*
+@dir: build/projects
+$(PROJECT)/rootfs/etc/* etc/
+$(PROJECT)/rootfs/opt/* opt/
+
+@dir: tools
+ax_lookat/bin/CHIP_AX620E/$(ARCH)/$(LIBC)/ax_lookat usr/bin

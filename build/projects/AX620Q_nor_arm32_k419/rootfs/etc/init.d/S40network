@@ -1,0 +1,49 @@
+#!/bin/sh
+#
+# Start the network....
+#
+
+# resolv.conf is not allowed to be modified by other process.
+# chattr +i /etc/resolv.conf
+
+# enable RFS&RPS
+#echo 3 > /sys/class/net/eth0/queues/rx-0/rps_cpus
+#echo 32768 > /proc/sys/net/core/rps_sock_flow_entries
+#echo 32768 > /sys/class/net/eth0/queues/rx-0/rps_flow_cnt
+
+# enlarge bql limit_min for queue timeout issue
+echo 500000 > /sys/class/net/eth0/queues/tx-0/byte_queue_limits/limit_min
+
+# fix warning: Permissions 0777 for '/etc/ssh/ssh_host_rsa_key' are too open.
+[ -r "/etc/ssh/ssh_host_rsa_key" ] && chmod 700 /etc/ssh/*_key
+
+case "$1" in
+  start)
+        printf "Starting network...\n"
+        /etc/init.d/ifplugd start
+        /sbin/ifup -a
+        ;;
+
+  stop)
+        printf "Stopping network...\n"
+        killall udhcpc
+        # wait to release IP
+        sleep 0.5
+
+        /sbin/ifdown -a
+        ifconfig eth0 down
+        /etc/init.d/ifplugd stop
+        ;;
+
+  restart|reload)
+        printf "restarting network...\n"
+        "$0" stop
+        "$0" start
+        ;;
+
+  *)
+        echo "Usage: $0 {start|stop|restart}"
+        exit 1
+esac
+
+exit $?

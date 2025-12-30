@@ -1,0 +1,377 @@
+/**************************************************************************************************
+ *
+ * Copyright (c) 2019-2024 Axera Semiconductor Co., Ltd. All Rights Reserved.
+ *
+ * This source file is the property of Axera Semiconductor Co., Ltd. and
+ * may not be copied or distributed in any isomorphic form without the prior
+ * written consent of Axera Semiconductor Co., Ltd.
+ *
+ **************************************************************************************************/
+#ifndef _AX_OPAL_MAL_DEF_H_
+#define _AX_OPAL_MAL_DEF_H_
+
+#include "ax_opal_type.h"
+
+#include "ax_opal_queue.h"
+#include "ax_opal_thread.h"
+
+typedef enum {
+    AX_OPAL_MAINCMD_INIT = 0,
+    AX_OPAL_MAINCMD_DEINIT,
+    AX_OPAL_MAINCMD_START,
+    AX_OPAL_MAINCMD_STOP,
+
+    /* video begin */
+    AX_OPAL_MAINCMD_VIDEO_BEGIN,
+    /* - sensor */
+    AX_OPAL_MAINCMD_VIDEO_GETSNSATTR,
+    AX_OPAL_MAINCMD_VIDEO_SETSNSATTR,
+    AX_OPAL_MAINCMD_VIDEO_GETSNSSOFTPHOTOSENSITIVITYATTR,
+    AX_OPAL_MAINCMD_VIDEO_SETSNSSOFTPHOTOSENSITIVITYATTR,
+    AX_OPAL_MAINCMD_VIDEO_REGISTERSNSSOFTPHOTOSENSITIVITYCALLBACK,
+    AX_OPAL_MAINCMD_VIDEO_UNREGISTERSNSSOFTPHOTOSENSITIVITYCALLBACK,
+    AX_OPAL_MAINCMD_VIDEO_GETSNSHOTNOISEBALANCEATTR,
+    AX_OPAL_MAINCMD_VIDEO_SETSNSHOTNOISEBALANCEATTR,
+    /* - channel */
+    AX_OPAL_MAINCMD_VIDEO_GETCHNATTR,
+    AX_OPAL_MAINCMD_VIDEO_SETCHNATTR,
+    AX_OPAL_MAINCMD_VIDEO_REGISTERPACKETCALLBACK,
+    AX_OPAL_MAINCMD_VIDEO_UNREGISTERPACKETCALLBACK,
+    AX_OPAL_MAINCMD_VIDEO_REQUESTIDR,
+    AX_OPAL_MAINCMD_VIDEO_SNAPSHOT,
+    AX_OPAL_MAINCMD_VIDEO_CAPTUREFRAME,
+    AX_OPAL_MAINCMD_VIDEO_GETSVCPARAM,
+    AX_OPAL_MAINCMD_VIDEO_SETSVCPARAM,
+    AX_OPAL_MAINCMD_VIDEO_SETSVCREGION,
+    /* - algo */
+    AX_OPAL_MAINCMD_VIDEO_ALGOGETPARAM,
+    AX_OPAL_MAINCMD_VIDEO_ALGOSETPARAM,
+    AX_OPAL_MAINCMD_VIDEO_REGISTERALGOCALLBACK,
+    AX_OPAL_MAINCMD_VIDEO_UNREGISTERALGOCALLBACK,
+    AX_OPAL_MAINCMD_VIDEO_ALGOCAPTUREFACERECOGNIZEINFO,
+    /* - osd */
+    AX_OPAL_MAINCMD_VIDEO_OSDCREATE,
+    AX_OPAL_MAINCMD_VIDEO_OSDUPDATE,
+    AX_OPAL_MAINCMD_VIDEO_OSDDESTROY,
+    AX_OPAL_MAINCMD_VIDEO_OSDDRAWRECT,
+    AX_OPAL_MAINCMD_VIDEO_OSDCLEARRECT,
+    AX_OPAL_MAINCMD_VIDEO_OSDDRAWPOLYGON,
+    AX_OPAL_MAINCMD_VIDEO_OSDCLEARPOLYGON,
+    /* video finish */
+    AX_OPAL_MAINCMD_VIDEO_FINISH,
+
+    /* audio begin */
+    AX_OPAL_MAINCMD_AUDIO_BEGIN,
+    AX_OPAL_MAINCMD_AUDIO_GETATTR,
+    AX_OPAL_MAINCMD_AUDIO_SETATTR,
+    AX_OPAL_MAINCMD_AUDIO_PLAY,
+    AX_OPAL_MAINCMD_AUDIO_PLAYFILE,
+    AX_OPAL_MAINCMD_AUDIO_STOPPLAY,
+    AX_OPAL_MAINCMD_AUDIO_GETCAPVOLUME,
+    AX_OPAL_MAINCMD_AUDIO_SETCAPVOLUME,
+    AX_OPAL_MAINCMD_AUDIO_GETPLAYVOLUME,
+    AX_OPAL_MAINCMD_AUDIO_SETPLAYVOLUME,
+    AX_OPAL_MAINCMD_AUDIO_GETENCODERATTR,
+    AX_OPAL_MAINCMD_AUDIO_GETPLAYPIPEATTR,
+    AX_OPAL_MAINCMD_AUDIO_SETPLAYPIPEATTR,
+    AX_OPAL_MAINCMD_AUDIO_REGISTERPACKETCALLBACK,
+    AX_OPAL_MAINCMD_AUDIO_UNREGISTERPACKETCALLBACK,
+    /* audio finish */
+    AX_OPAL_MAINCMD_AUDIO_FINISH,
+
+    AX_OPAL_MAINCMD_BUTT,
+} AX_OPAL_MAIN_CMD_E;
+
+typedef enum {
+    AX_OPAL_SUBCMD_NON = 0,
+    AX_OPAL_SUBCMD_PREPROC,   // venc/jenc stop and reset; ivps disable
+    AX_OPAL_SUBCMD_POSTPROC,  // venc/jenc start; ivps enable
+    /* video */
+    /* sensor */
+    AX_OPAL_SUBCMD_SNSATTR_SDRHDRMODE,
+    AX_OPAL_SUBCMD_SNSATTR_FLIP,
+    AX_OPAL_SUBCMD_SNSATTR_MIRROR,
+    AX_OPAL_SUBCMD_SNSATTR_FPS,
+    AX_OPAL_SUBCMD_SNSATTR_DAYNIGHT,
+    AX_OPAL_SUBCMD_SNSATTR_ROTATION,
+    AX_OPAL_SUBCMD_SNSATTR_COLOR,
+    AX_OPAL_SUBCMD_SNSATTR_LDC,
+    AX_OPAL_SUBCMD_SNSATTR_DIS,
+    AX_OPAL_SUBCMD_SNSATTR_EZOOM,
+    /* vecn chn */
+    AX_OPAL_SUBCMD_CHNATTR_ENABLE,
+    AX_OPAL_SUBCMD_CHNATTR_ENCTYPE,
+    AX_OPAL_SUBCMD_CHNATTR_RESOLUTION,
+    AX_OPAL_SUBCMD_CHNATTR_ENCCFG,
+    AX_OPAL_SUBCMD_CHNATTR_FPS,
+
+    AX_OPAL_SUBCMD_BUTT,
+} AX_OPAL_SUB_CMD_E;
+
+typedef struct _AX_OPAL_AUDIO_PKT_CALLBACK_T {
+    AX_OPAL_AUDIO_PKT_CALLBACK callback;
+    AX_VOID *pUserData;
+} AX_OPAL_AUDIO_PKT_CALLBACK_T;
+
+typedef struct _AX_OPAL_AUDIO_FRAME_CALLBACK_T {
+    AX_OPAL_AUDIO_FRAME_CALLBACK callback;
+    AX_VOID *pUserData;
+} AX_OPAL_AUDIO_FRAME_CALLBACK_T;
+
+typedef struct _AX_OPAL_AUDIO_SETAACDECODERCONFIGBUF_T {
+    AX_U8 *pConfBuf;
+    AX_U32 nDataSize;
+} AX_OPAL_AUDIO_SETAACDECODERCONFIGBUF_T;
+
+typedef struct _AX_OPAL_AUDIO_GETAACENCODERCONFIGBUF_T {
+    AX_U8 **ppConfBuf;
+    AX_U32 *pDataSize;
+} AX_OPAL_AUDIO_GETAACENCODERCONFIGBUF_T;
+
+typedef struct _AX_OPAL_AUDIO_GETVOLUME_T {
+    AX_F32 *pfVol;
+} AX_OPAL_AUDIO_GETVOLUME_T;
+
+typedef struct _AX_OPAL_AUDIO_SETVOLUME_T {
+    AX_F32 fVol;
+} AX_OPAL_AUDIO_SETVOLUME_T;
+
+typedef struct _AX_OPAL_AUDIO_PLAYFILE_T {
+    AX_PAYLOAD_TYPE_E eType;
+    AX_CHAR *pstrFileName;
+    AX_S32 nLoop;
+    AX_OPAL_AUDIO_PLAYFILERESULT_CALLBACK callback;
+    AX_VOID *pUserData;
+} AX_OPAL_AUDIO_PLAYFILE_T;
+
+typedef struct _AX_OPAL_AUDIO_PLAY_T {
+    AX_PAYLOAD_TYPE_E eType;
+    AX_U8 *pData;
+    AX_U32 nDataSize;
+} AX_OPAL_AUDIO_PLAY_T;
+
+typedef struct _AX_OPAL_VIDEO_OSD_DRAWPOLYGON_T {
+    AX_U32 nPolygonSize;
+    AX_OPAL_POLYGON_T* pstPolygons;
+    AX_U32 nLineWidth;
+    AX_U32 nARGB;
+} AX_OPAL_VIDEO_OSD_DRAWPOLYGON_T;
+
+typedef struct _AX_OPAL_VIDEO_OSD_DRAWRECT_T {
+    AX_U32 nRectSize;
+    AX_OPAL_RECT_T* pstRects;
+    AX_U32 nLineWidth;
+    AX_U32 nARGB;
+} AX_OPAL_VIDEO_OSD_DRAWRECT_T;
+
+typedef struct _AX_OPAL_VIDEO_OSD_DESTROY_T {
+    AX_OPAL_HANDLE OsdHandle;
+} AX_OPAL_VIDEO_OSD_DESTROY_T;
+
+typedef struct _AX_OPAL_VIDEO_OSD_UPDATE_T {
+    AX_OPAL_HANDLE OsdHandle;
+    AX_OPAL_OSD_ATTR_T* pstAttr;
+} AX_OPAL_VIDEO_OSD_UPDATE_T;
+
+typedef struct _AX_OPAL_VIDEO_OSD_CREATE_T {
+    AX_OPAL_OSD_ATTR_T* pstAttr;
+    AX_OPAL_HANDLE OsdHandle;
+} AX_OPAL_VIDEO_OSD_CREATE_T;
+
+typedef struct _AX_OPAL_VIDEO_ALGO_CALLBACK_T {
+    AX_OPAL_VIDEO_ALGO_CALLBACK callback;
+    AX_VOID *pUserData;
+} AX_OPAL_VIDEO_ALGO_CALLBACK_T;
+
+typedef struct _AX_OPAL_VIDEO_CAPTUREFRAME_T {
+    AX_VOID *pFrameBuf;
+    AX_U32 nFrameBufSize;
+    AX_U32 *pActSize;
+    AX_U32 nWidth;
+    AX_U32 nHeight;
+} AX_OPAL_VIDEO_CAPTUREFRAME_T;
+
+typedef struct _AX_OPAL_VIDEO_SNAPSHOT_T {
+    AX_VOID *pImageBuf;
+    AX_U32 nImageBufSize;
+    AX_U32 *pActSize;
+    AX_U32 nQpLevel;
+} AX_OPAL_VIDEO_SNAPSHOT_T;
+
+typedef struct _AX_OPAL_VIDEO_SOFTPHOTOSENSITIVITY_CALLBACK_T {
+    AX_OPAL_VIDEO_SNS_SOFTPHOTOSENSITIVITY_CALLBACK callback;
+    AX_VOID *pUserData;
+} AX_OPAL_VIDEO_SOFTPHOTOSENSITIVITY_CALLBACK_T;
+
+typedef struct _AX_OPAL_VIDEO_PKT_CALLBACK_T {
+    AX_OPAL_VIDEO_PKT_CALLBACK callback;
+    AX_VOID *pUserData;
+} AX_OPAL_VIDEO_PKT_CALLBACK_T;
+
+typedef struct _AX_OPAL_MAL_AUDIO_PLAY_T {
+    AX_OPAL_QUEUE_T *pFileQueue;
+    AX_OPAL_THREAD_T *pFileThread;
+} AX_OPAL_MAL_AUDIO_PLAY_T;
+
+typedef struct _AX_OPAL_MAL_AUDIO_PLAY_PARAM_T {
+    AX_OPAL_AUDIO_ATTR_T* pstAttr;
+    AX_OPAL_MAL_AUDIO_PLAY_T *pMalPlayFile;
+    AX_OPAL_AUDIO_PLAYFILE_T stPlayFile;
+} AX_OPAL_MAL_AUDIO_PLAY_PARAM_T;
+
+#define AX_OPAL_MAX_GRP_CNT         (1)
+#define AX_OPAL_MAX_CHN_CNT         (5)
+#define AX_OPAL_MAX_ELE_CNT         (5)
+#define AX_OPAL_MAX_LINK_CNT        (AX_OPAL_MAX_GRP_CNT*AX_OPAL_MAX_CHN_CNT*AX_OPAL_MAX_ELE_CNT)
+#define AX_OPAL_MAX_SUBPPL_CNT      (2)
+#define AX_OPAL_MAL_OBS_CNT         (3)
+
+typedef AX_VOID* AX_OPAL_MAL_PPL_HANDLE;
+typedef AX_VOID* AX_OPAL_MAL_SUBPPL_HANDLE;
+typedef AX_VOID* AX_OPAL_MAL_ELE_HANDLE;
+
+typedef enum {
+    AX_OPAL_SUBPPL = 0,
+    AX_OPAL_ELE_SYS,
+    AX_OPAL_ELE_CAM,
+    AX_OPAL_ELE_IVPS,
+    AX_OPAL_ELE_VENC,
+    AX_OPAL_ELE_ALGO,
+    AX_OPAL_ELE_AUDIO,
+    AX_OPAL_UNIT_TYPE_BUTT,
+} AX_OPAL_UNIT_TYPE_E;
+
+typedef enum {
+    AX_OPAL_SUBPPL_IN = 0,
+    AX_OPAL_SUBPPL_OUT,
+    AX_OPAL_ELE_LINK,
+    AX_OPAL_ELE_NONLINK_FRM,
+    AX_OPAL_ELE_NONLINK_PKT,
+    AX_OPAL_LINK_BUTT,
+} AX_OPAL_UNITLINK_TYPE_E;
+
+typedef struct _AX_OPAL_MAL_OBS_T {
+    AX_OPAL_UNITLINK_TYPE_E eLinkType;
+    AX_OPAL_MAL_ELE_HANDLE pEleHdl;
+} AX_OPAL_MAL_OBS_T;
+
+typedef struct _AXOP_LINK_ATTR_T {
+    /* src */
+    AX_OPAL_UNIT_TYPE_E eSrcType;
+    AX_S32 nSrcEleId;
+    AX_S32 nSrcGrpId;
+    AX_S32 nSrcChnId;
+
+    /* dst */
+    AX_OPAL_UNIT_TYPE_E eDstType;
+    AX_S32 nDstEleId;
+    AX_S32 nDstGrpId;
+    AX_S32 nDstChnId;
+
+    /* link type */
+    AX_OPAL_UNITLINK_TYPE_E eLinkType;
+} AX_OPAL_LINK_ATTR_T;
+
+typedef struct _AXOP_GRP_ATTR_T {
+    AX_S32 nGrpId;
+    AX_S32 nChnCnt;
+    AX_S32 nChnId[AX_OPAL_MAX_CHN_CNT];
+
+    AX_S32 nUniGrpId;
+    AX_S32 nUniChnId[AX_OPAL_MAX_CHN_CNT];
+    AX_OPAL_MAL_OBS_T arrObs[AX_OPAL_MAX_CHN_CNT][AX_OPAL_MAL_OBS_CNT];
+} AX_OPAL_GRP_ATTR_T;
+
+/* element */
+typedef struct _AXOP_ELEMENT_ATTR_T {
+    AX_S32 nId;
+    AX_OPAL_UNIT_TYPE_E eType;
+    /* input and output */
+    AX_S32 nGrpCnt;
+    AX_OPAL_GRP_ATTR_T arrGrpAttr[AX_OPAL_MAX_GRP_CNT];
+
+    AX_CHAR *pConfigIniPath;
+} AX_OPAL_ELEMENT_ATTR_T;
+
+/* sub pipeline */
+typedef struct _AX_OPAL_SUBPPL_ATTR_T {
+    AX_S32 nId;
+
+    /* input and output */
+    AX_S32 nGrpCnt;
+    AX_OPAL_GRP_ATTR_T arrGrpAttr[AX_OPAL_MAX_GRP_CNT];
+
+    /* main channel in w&h */
+    AX_S32 nInWidth;
+    AX_S32 nInHeight;
+    /* main channel out w&h */
+    AX_S32 nOutWidth;
+    AX_S32 nOutHeight;
+
+    /* element */
+    AX_S32 nEleCnt;
+    AX_OPAL_ELEMENT_ATTR_T arrEleAttr[AX_OPAL_MAX_ELE_CNT];
+
+    /* link */
+    AX_S32 nLinkCnt;
+    AX_OPAL_LINK_ATTR_T arrLinkAttr[AX_OPAL_MAX_LINK_CNT];
+
+} AX_OPAL_SUBPPL_ATTR_T;
+
+/* pipeline */
+typedef struct _AX_OPAL_PPL_ATTR_T {
+    AX_S32 nSubPplCnt;
+    AX_OPAL_SUBPPL_ATTR_T arrSubPplAttr[AX_OPAL_MAX_SUBPPL_CNT];
+} AX_OPAL_PPL_ATTR_T;
+
+typedef struct _AX_OPAL_MAL_PROCESS_DATA_T {
+    AX_S32 nUniGrpId;
+    AX_S32 nUniChnId;
+    AX_OPAL_MAIN_CMD_E eMainCmdType;
+    AX_OPAL_SUB_CMD_E eSubCmdType;
+    AX_VOID *pData;
+    AX_S32 nDataSize;
+} AX_OPAL_MAL_PROCESS_DATA_T;
+
+typedef struct _AX_OPAL_MAL_PPL_T {
+    AX_S32 nSubPplCnt;
+    AX_OPAL_MAL_SUBPPL_HANDLE arrSubPpl[AX_OPAL_MAX_SUBPPL_CNT];
+    AX_OPAL_MAL_SUBPPL_HANDLE audioPpl;
+    AX_OPAL_ATTR_T stOpalAttr;
+    AX_OPAL_PPL_ATTR_T stPplAttr;
+} AX_OPAL_MAL_PPL_T;
+
+// interface vtable
+typedef struct {
+    // TODO
+} AX_OPAL_MAL_SUBPPL_Interface;
+
+typedef struct _AX_OPAL_MAL_SUBPPL_T {
+    AX_OPAL_MAL_SUBPPL_Interface *vTable;
+    AX_S32 nId;
+    AX_OPAL_MAL_PPL_HANDLE pParent;
+
+    AX_S32 nEleCnt;
+    AX_OPAL_MAL_ELE_HANDLE arrEle[AX_OPAL_MAX_ELE_CNT];
+
+    AX_OPAL_SUBPPL_ATTR_T stAttr;
+} AX_OPAL_MAL_SUBPPL_T;
+
+// interface vtable
+typedef struct {
+    AX_S32 (*start)(AX_OPAL_MAL_ELE_HANDLE self);
+    AX_S32 (*stop)(AX_OPAL_MAL_ELE_HANDLE self);
+    AX_S32 (*event_proc)(AX_OPAL_MAL_ELE_HANDLE self, AX_OPAL_MAL_PROCESS_DATA_T *pPorcessData);
+    AX_S32 (*data_proc)(AX_OPAL_MAL_ELE_HANDLE self, AX_S32 nUniGrpId, AX_S32 nUniChnId, AX_OPAL_UNITLINK_TYPE_E eLinkType, AX_VOID* pData, AX_U32 nSize);
+} AX_OPAL_MAL_ELE_Interface;
+
+typedef struct _AX_OPAL_MAL_ELE_T {
+    AX_OPAL_MAL_ELE_Interface* vTable;
+
+    AX_S32 nId;
+    AX_OPAL_MAL_SUBPPL_HANDLE pParent;
+    AX_BOOL bStart;
+    AX_OPAL_ELEMENT_ATTR_T stAttr;
+} AX_OPAL_MAL_ELE_T;
+
+#endif // _AX_OPAL_MAL_DEF_H_

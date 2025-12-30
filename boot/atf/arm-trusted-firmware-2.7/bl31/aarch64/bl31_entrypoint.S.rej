@@ -1,0 +1,10 @@
+--- arm-trusted-firmware-2.7/bl31/aarch64/bl31_entrypoint.S
++++ arm-trusted-firmware-2.7/bl31/aarch64/bl31_entrypoint.S
+@@ -103,6 +103,7 @@ func bl31_entrypoint
+ 	 * Jump to main function
+ 	 * --------------------------------------------------------------------
+ 	 */
++
+ 	bl	bl31_main
+ 
+ 	/* --------------------------------------------------------------------

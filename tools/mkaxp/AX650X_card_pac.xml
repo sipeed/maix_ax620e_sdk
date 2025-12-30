@@ -1,0 +1,61 @@
+<Config>
+	<Project alias="AX650X" name="AX650X" version="V1.0">
+		<ImgList>
+			<Img flag="1" name="UBOOT" select="1">
+				<ID>UBOOT</ID>
+				<Type>CODE</Type>
+				<Block>
+					<Base>0x14001000</Base>
+					<Size>0x0</Size>
+				</Block>
+				<File>u-boot.bin</File>
+				<Auth algo="0" />
+				<Description>Download UBOOT image file</Description>
+			</Img>
+			<Img flag="1" name="DTB" select="1">
+				<ID>DTB</ID>
+				<Type>CODE</Type>
+				<Block>
+					<Base>0x110080000</Base>
+					<Size>0x0</Size>
+				</Block>
+				<File>AX650_card.dtb</File>
+				<Auth algo="0" />
+				<Description>Download DTB image file</Description>
+			</Img>
+			<Img flag="1" name="ATF" select="1">
+				<ID>ATF</ID>
+				<Type>CODE</Type>
+				<Block>
+					<Base>0x11ff10000</Base>
+					<Size>0x0</Size>
+				</Block>
+				<File>atf_bl31.img</File>
+				<Auth algo="0" />
+				<Description>Download ATF image file</Description>
+			</Img>
+			<Img flag="1" name="KERNEL" select="1">
+				<ID>KERNEL</ID>
+				<Type>CODE</Type>
+				<Block>
+					<Base>0x100200000</Base>
+					<Size>0x0</Size>
+				</Block>
+				<File>Image</File>
+				<Auth algo="0" />
+				<Description>Download KERNEL image file</Description>
+			</Img>
+			<Img flag="1" name="ROOTFS" select="1">
+				<ID>ROOTFS</ID>
+				<Type>CODE</Type>
+				<Block>
+					<Base>0x140000000</Base>
+					<Size>0x0</Size>
+				</Block>
+				<File>rootfs.ext4</File>
+				<Auth algo="0" />
+				<Description>Download ROOTFS image file</Description>
+			</Img>
+		</ImgList>
+	</Project>
+</Config>

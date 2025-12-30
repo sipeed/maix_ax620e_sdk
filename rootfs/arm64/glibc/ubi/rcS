@@ -1,0 +1,42 @@
+#!/bin/sh
+
+
+mknod /dev/null c 1 3
+
+ubiattach /dev/ubi_ctrl -m 6
+mount -t ubifs /dev/ubi1_0 /param
+
+mkdir -p /opt/data/AXSyslog/kernel
+mount -t pstore pstore /sys/fs/pstore
+
+hwclock -s &
+chmod 755 /soc/scripts/auto_load_all_drv.sh
+/soc/scripts/auto_load_all_drv.sh
+
+for i in /etc/init.d/S??* ;do
+
+     # Ignore dangling symlinks (if any).
+     [ ! -f "$i" ] && continue
+
+     case "$i" in
+	*.sh)
+	    # Source shell script for speed.
+	    (
+		trap - INT QUIT TSTP
+		set start
+		. $i
+	    )
+	    ;;
+	*)
+	    # No sh extension, so fork subprocess.
+	    $i start
+	    ;;
+    esac
+done
+
+chmod 755 /soc/scripts/npu_set_bw_limiter.sh
+/soc/scripts/npu_set_bw_limiter.sh start
+
+/soc/scripts/usb-acm.sh start
+/etc/init.d/axsyslogd start
+/etc/init.d/axklogd start

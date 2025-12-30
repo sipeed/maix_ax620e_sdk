@@ -1,0 +1,14 @@
+[Unit]
+Description=Run usb gadget
+DefaultDependencies=no
+After=boot.mount
+Requires=boot.mount
+
+[Service]
+Type=forking
+ExecStart=/opt/scripts/usb-gadget.sh start
+ExecStop=/opt/scripts/usb-gadget.sh stop
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

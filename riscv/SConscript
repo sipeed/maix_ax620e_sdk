@@ -1,0 +1,27 @@
+# for module compiling
+import os
+from building import *
+
+cwd  = GetCurrentDir()
+objs = []
+list = os.listdir(cwd)
+
+for d in list:
+    path = os.path.join(cwd, d)
+    if os.path.isfile(os.path.join(path, 'SConscript')):
+        objs = objs + SConscript(os.path.join(d, 'SConscript'))
+
+LIBPATH = ['../libs']
+LIBS    = ['rtthread', 'cpu', 'ax_app', 'ax_drivers']
+CPPPATH = ['drivers/header',
+           'risc-v',
+           'rt-thread',
+           'rt-thread/include',
+           'rt-thread/components/finsh',
+           'rt-thread/components/drivers/include',
+           'rt-thread/components/dfs/include',
+           'rt-thread/components/libc/compilers/common',
+           'rt-thread/components/utilities/ulog']
+group   = DefineGroup('', objs, depend = [''], CPPPATH = CPPPATH, LIBS = LIBS, LIBPATH = LIBPATH)
+
+Return('group')

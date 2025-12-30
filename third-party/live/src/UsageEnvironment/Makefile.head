@@ -1,0 +1,4 @@
+INCLUDES = -Iinclude -I../groupsock/include
+PREFIX = $(HOME_PATH)/live/out/$(ARCH)/$(LIBC)
+LIBDIR = $(PREFIX)/lib
+##### Change the following for your environment:

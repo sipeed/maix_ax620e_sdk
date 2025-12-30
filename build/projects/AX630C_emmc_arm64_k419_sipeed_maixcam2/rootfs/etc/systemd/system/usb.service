@@ -1,0 +1,15 @@
+[Unit]
+Description=Run usb
+DefaultDependencies=no
+After=boot.mount
+Requires=boot.mount
+
+[Service]
+Type=simple
+ExecStart=/opt/scripts/usb.sh start
+ExecStop=/opt/scripts/usb.sh stop
+Restart=no
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

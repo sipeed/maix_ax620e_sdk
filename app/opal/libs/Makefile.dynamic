@@ -1,0 +1,189 @@
+CUR_PATH            := $(shell pwd)
+HOME_PATH           := $(abspath $(CUR_PATH)/../../..)
+
+include $(HOME_PATH)/build/color.mk
+include $(HOME_PATH)/build/config.mak
+
+SRC_PATH            := $(CUR_PATH)
+
+PRJ_OUT_HOME        := $(HOME_PATH)/build/out/$(PROJECT)
+OBJ_OUT_PATH        := $(PRJ_OUT_HOME)/objs
+LIB_PATH            := $(MSP_OUT_PATH)/lib
+INC_PATH            := $(MSP_OUT_PATH)/include
+SRC_RELATIVE_PATH   := $(subst $(HOME_PATH)/,,$(CUR_PATH))
+TARGET_OUT_PATH     := $(OBJ_OUT_PATH)/$(SRC_RELATIVE_PATH)
+GENERATED_PATH      := $(TARGET_OUT_PATH)/generated
+3RD_PATH            := $(HOME_PATH)/third-party
+
+# opal
+OPAL_PATH           := $(HOME_PATH)/app/opal
+OPAL_INC_PATH       := $(OPAL_PATH)/libs/inc
+OPAL_SRC_PATH       := $(OPAL_PATH)/libs/src
+
+OPAL_API_PATH       := $(OPAL_SRC_PATH)/api
+OPAL_COM_PATH       := $(OPAL_SRC_PATH)/com
+OPAL_3RD_PATH       := $(OPAL_SRC_PATH)/3rd
+OPAL_CFG_PATH       := $(OPAL_SRC_PATH)/cfg
+OPAL_HAL_PATH       := $(OPAL_SRC_PATH)/hal
+OPAL_MAL_PATH       := $(OPAL_SRC_PATH)/mal
+
+soversion            = yes
+
+# output
+MOD_NAME            := ax_opal
+OUTPUT              := $(TARGET_OUT_PATH)/.obj
+
+# source
+SRCS                := $(wildcard $(OPAL_API_PATH)/*.c)
+SRCS                += $(wildcard $(OPAL_COM_PATH)/queue/*.c)
+SRCS                += $(wildcard $(OPAL_COM_PATH)/fifo/*.c)
+SRCS                += $(wildcard $(OPAL_COM_PATH)/thread/*.c)
+SRCS                += $(wildcard $(OPAL_COM_PATH)/ini_parser/*.c)
+SRCS                += $(wildcard $(OPAL_COM_PATH)/osd/*.c)
+SRCS                += $(wildcard $(OPAL_COM_PATH)/osd/font/*.c)
+SRCS                += $(wildcard $(OPAL_COM_PATH)/json/*.c)
+SRCS                += $(wildcard $(OPAL_COM_PATH)/utils/*.c)
+SRCS                += $(wildcard $(OPAL_HAL_PATH)/cam/*.c)
+SRCS                += $(wildcard $(OPAL_HAL_PATH)/sys/*.c)
+SRCS                += $(wildcard $(OPAL_HAL_PATH)/ivps/*.c)
+SRCS                += $(wildcard $(OPAL_HAL_PATH)/venc/*.c)
+SRCS                += $(wildcard $(OPAL_HAL_PATH)/algo/*.c)
+SRCS                += $(wildcard $(OPAL_HAL_PATH)/audio/*.c)
+SRCS                += $(wildcard $(OPAL_MAL_PATH)/*.c)
+
+# include
+CINCLUDE            := -I$(INC_PATH)
+CINCLUDE            += -I$(OPAL_INC_PATH)
+CINCLUDE            += -I$(OPAL_API_PATH)
+CINCLUDE            += -I$(OPAL_COM_PATH)/ini_parser
+CINCLUDE            += -I$(OPAL_COM_PATH)/queue
+CINCLUDE            += -I$(OPAL_COM_PATH)/fifo
+CINCLUDE            += -I$(OPAL_COM_PATH)/thread
+CINCLUDE            += -I$(OPAL_COM_PATH)/log
+CINCLUDE            += -I$(OPAL_COM_PATH)/osd
+CINCLUDE            += -I$(OPAL_COM_PATH)/osd/font
+CINCLUDE            += -I$(OPAL_COM_PATH)/json
+CINCLUDE            += -I$(OPAL_COM_PATH)/utils
+
+CINCLUDE            += -I$(OPAL_HAL_PATH)/cam
+CINCLUDE            += -I$(OPAL_HAL_PATH)/sys
+CINCLUDE            += -I$(OPAL_HAL_PATH)/ivps
+CINCLUDE            += -I$(OPAL_HAL_PATH)/venc
+CINCLUDE            += -I$(OPAL_HAL_PATH)/algo
+CINCLUDE            += -I$(OPAL_HAL_PATH)/audio
+
+CINCLUDE            += -I$(OPAL_MAL_PATH)
+
+CINCLUDE            += -I$(LIVE_PATH)/include/BasicUsageEnvironment
+CINCLUDE            += -I$(LIVE_PATH)/include/groupsock
+CINCLUDE            += -I$(LIVE_PATH)/include/liveMedia
+CINCLUDE            += -I$(LIVE_PATH)/include/UsageEnvironment
+CINCLUDE            += -I$(SSL_PATH)/include
+
+CINCLUDE            += -I$(HOME_PATH)/third-party/tinyalsa/include \
+                       -I$(HOME_PATH)/third-party/libsamplerate/include
+
+ifeq ($(CHIP_TYPE), AX620Q)
+CINCLUD             += -I$(HOME_PATH)/third-party/faac/include
+else
+CINCLUDE            += -I$(HOME_PATH)/third-party/opus/include/opus \
+                       -I$(HOME_PATH)/third-party/fdk-aac/include/fdk-aac
+endif
+
+ifeq ($(USE_OPENSSL),yes)
+CINCLUDE            += -I$(SSL_PATH)/include
+endif
+CINCLUDE            += -I$(GENERATED_PATH)
+
+ifeq ($(FONT_USE_FREETYPE),yes)
+CINCLUDE            += -I$(OPAL_3RD_PATH)/inc/freetype2
+CINCLUDE            += -I$(OPAL_3RD_PATH)/inc/freetype2/freetype
+CINCLUDE            += -I$(OPAL_3RD_PATH)/inc/freetype2/freetype/config
+endif
+
+OBJS                := $(SRCCPPS:%.cpp=$(OUTPUT)/%.o)
+OBJS                += $(SRCS:%.c=$(OUTPUT)/%.o)
+
+DEPS                := $(OBJS:%.o=%.d)
+
+# dynamic lib version (must)
+SONAME              := lib$(MOD_NAME).so
+STRIPPED_TARGET     := $(SONAME)
+DEBUG_TARGET        := lib$(MOD_NAME).debug
+
+# build flags
+#CPPFLAGS           := -Werror -Wall --std=c++11 -fvisibility=hidden -Wunused-function
+#CFLAGS             := $(DYNAMIC_FLAG) -lstdc++ $(CPPFLAGS)
+CFLAGS              := $(DYNAMIC_FLAG) -lstdc++ -Werror -Wall -fvisibility=hidden -Wunused-function
+CFLAGS              += -DOPAL_BUILD_VERSION=\"$(SDK_VERSION)\"
+
+ifeq ($(debug),yes)
+CFLAGS              += -O0 -ggdb3
+else
+CFLAGS              += -O2
+endif
+
+ifeq ($(TUNING_CTRL_SUPPORT),yes)
+CFLAGS              += -DTUNING_CTRL
+endif
+
+ifeq ($(FONT_USE_FREETYPE),yes)
+CFLAGS              += -DFONT_USE_FREETYPE
+endif
+
+# dependency
+CLIB                := -Wl,-rpath-link=$(LIB_PATH)
+CLIB                += -L$(LIB_PATH)
+CLIB                += -lax_sys
+CLIB                += -lax_proton
+CLIB                += -lax_mipi
+CLIB                += -lax_venc
+CLIB                += -lax_ivps
+CLIB                += -lax_ae
+CLIB                += -lax_awb
+CLIB                += -lax_af
+CLIB                += -lax_engine
+CLIB                += -lax_ives
+CLIB                += -lax_skel
+
+CLIB              += -lax_nt_stream
+CLIB              += -lax_nt_ctrl
+
+CLIB                += -lrt -lm -ldl -lpthread -lstdc++
+
+CLIB		    	+= -lax_audio
+CLIB		    	+= -lax_audio_3a
+CLIB		    	+= -lax_sys
+
+# aac
+ifeq ($(APP_AAC_SUPPORT), faac)
+CFLAGS          += -DAPP_FAAC_SUPPORT
+CLIB            += -L$(3RD_PATH)/faac/lib/$(ARCH)/$(LIBC) -lfaac
+CLIB            += -lax_faac
+else ifeq ($(APP_AAC_SUPPORT), fdk)
+CFLAGS          += -DAPP_FDK_SUPPORT
+CLIB            += -L$(3RD_PATH)/fdk-aac/lib/$(ARCH)/$(LIBC) -lfdk-aac
+CLIB            += -lax_fdk
+endif
+
+# opus
+ifeq ($(APP_OPUS_SUPPORT),yes)
+CFLAGS          += -DAPP_OPUS_SUPPORT
+CLIB            += -lax_opus
+endif
+
+
+ifeq ($(FONT_USE_FREETYPE),yes)
+CLIB                += -L$(OPAL_3RD_PATH)/lib/$(ARCH)/$(LIBC) -l:libfreetype.a
+endif
+
+# install
+INSTALL_LIB         := $(STRIPPED_TARGET) $(DEBUG_TARGET)
+MV_TARGET           := $(INSTALL_LIB)
+INSTALL_INC         += $(OPAL_INC_PATH)/ax_opal_api.h
+INSTALL_INC         += $(OPAL_INC_PATH)/ax_opal_type.h
+
+# link
+LINK = $(CC)
+
+include $(HOME_PATH)/build/rules.mak

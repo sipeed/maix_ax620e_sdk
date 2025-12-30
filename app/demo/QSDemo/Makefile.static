@@ -1,0 +1,212 @@
+CUR_PATH		:= $(shell pwd)
+HOME_PATH		:= $(abspath $(CUR_PATH)/../../..)
+include $(HOME_PATH)/build/color.mk
+include $(HOME_PATH)/build/config.mak
+
+PRJ_OUT_HOME	:= $(HOME_PATH)/build/out/$(PROJECT)
+OBJ_OUT_PATH	:= $(PRJ_OUT_HOME)/objs
+SRC_RELATIVE_PATH	:= $(subst $(HOME_PATH)/,,$(CUR_PATH))
+TARGET_OUT_PATH		:= $(OBJ_OUT_PATH)/$(SRC_RELATIVE_PATH)
+SRC_PATH		:= $(CUR_PATH)/src
+OUT_PATH		:= $(MSP_OUT_PATH)
+LIVE_PATH		:= $(HOME_PATH)/third-party/live/out/$(ARCH)/$(LIBC)
+SSL_PATH		:= $(HOME_PATH)/third-party/openssl/$(ARCH)/$(LIBC)
+MP4_PATH		:= $(HOME_PATH)/third-party/mp4
+LIB_PATH		:= $(OUT_PATH)/lib
+
+ifeq ($(strip $(AXERA_SDK_RELEASE)),TRUE)
+SRC_SWITCH_PATH     := $(HOME_PATH)/msp/component/isp_proton/sensor/mipi_switch
+else
+SRC_SWITCH_PATH     := $(HOME_PATH)/msp/component/isp_proton/sensor/platform/mipi_switch
+endif
+
+USE_OPENSSL         := no
+
+# output
+MOD_NAME 		:= qsdemo_s
+OUTPUT 			:= $(TARGET_OUT_PATH)/.obj
+
+# source
+SRCS 			:= $(wildcard $(SRC_PATH)/*.c)
+SRCS 			+= $(wildcard $(SRC_PATH)/utils/*.c)
+SRCS 			+= $(wildcard $(SRC_PATH)/com/*.c)
+SRCS 			+= $(wildcard $(SRC_PATH)/osd/*.c)
+SRCS 			+= $(wildcard $(SRC_PATH)/osd/font/*.c)
+SRCS			+= $(SRC_SWITCH_PATH)/mipi_switch.c
+SRCCPPS			:= $(wildcard $(SRC_PATH)/rtsp/*.cpp)
+
+ifeq ($(QSDEMO_MP4ENC_SUPPORT),yes)
+SRCCPPS			+= $(wildcard $(SRC_PATH)/mp4/*.cpp)
+endif
+
+vpath %.c $(addsuffix :,$(dir $(patsubst %.c,%.o,$(SRCS)))))
+
+CINCLUDE		+= -I$(SRC_PATH) \
+			-I$(SRC_SWITCH_PATH) \
+			-I$(OUT_PATH)/include \
+			-I$(SRC_PATH)/rtsp \
+			-I$(SRC_PATH)/utils \
+			-I$(SRC_PATH)/com \
+			-I$(SRC_PATH)/osd \
+			-I$(SRC_PATH)/osd/font \
+			-I$(OUT_PATH)/include \
+			-I$(LIVE_PATH)/include/BasicUsageEnvironment \
+			-I$(LIVE_PATH)/include/groupsock \
+			-I$(LIVE_PATH)/include/liveMedia \
+			-I$(LIVE_PATH)/include/UsageEnvironment \
+			-I$(SSL_PATH)/include
+
+ifeq ($(QSDEMO_MP4ENC_SUPPORT),yes)
+CINCLUDE		+= -I$(SRC_PATH)/mp4
+CINCLUDE		+= -I$(MP4_PATH)/include
+endif
+
+OBJS 			:= $(addprefix $(OUTPUT)/,$(notdir $(patsubst %.c,%.o,$(SRCS))))
+OBJS 			+= $(SRCCPPS:%.cpp=$(OUTPUT)/%.o)
+DEPS			:= $(OBJS:%.o=%.d)
+
+# exec
+
+ifeq ($(STRIP_APP),yes)
+STRIPPED_TARGET   := $(TARGET_OUT_PATH)/$(MOD_NAME)
+DEBUG_TARGET      := $(TARGET_OUT_PATH)/$(MOD_NAME)_debug
+else
+TARGET            := $(TARGET_OUT_PATH)/$(MOD_NAME)
+endif
+
+CFLAGS			:= ${EXEC_FLAG}
+
+ifeq ($(strip $(FLASH_TYPE)), nor)
+CFLAGS			+= -DAX620E_NOR
+endif
+ifeq ($(strip $(FLASH_TYPE)), emmc)
+CFLAGS			+= -DAX620E_EMMC
+endif
+ifeq ($(strip $(FLASH_TYPE)), nand)
+CFLAGS			+= -DAX620E_NAND
+endif
+
+# build flags
+ifeq ($(debug),yes)
+CFLAGS			+= -Wall -O0 -ggdb3
+else
+CFLAGS			+= -Wall -O2 -ggdb3
+endif
+
+ifneq ($(asan),yes)
+CFLAGS			+= -static
+else
+CFLAGS			+= -static-libasan
+endif
+
+CFLAGS			+= -D_FILE_OFFSET_BITS=64
+
+ifeq ($(USE_OPENSSL),no)
+CFLAGS			+= -DNO_OPENSSL
+endif
+
+ifeq ($(strip $(AX_RISCV_LOAD_MODEL_SUPPORT)),TRUE)
+CFLAGS			+= -DAX_RISCV_LOAD_MODEL_SUPPORT
+endif
+
+# dependency
+CLIB			+= -Wl,-rpath-link=$(OUT_PATH)/lib
+CLIB			+= -L$(OUT_PATH)/lib
+CLIB			+= -l:libax_ae.a
+CLIB			+= -l:libax_awb.a
+CLIB			+= -l:libax_proton.a
+
+ifeq ($(AX_BOOT_OPTIMIZATION_SUPPORT), TRUE)
+CLIB			+= -l:libax_skel_tiny.a
+CLIB			+= -l:libax_engine_tiny.a
+else
+CLIB			+= -l:libax_skel.a
+CLIB			+= -l:libax_engine.a
+endif
+
+CLIB			+= -l:libax_interpreter.a
+CLIB			+= -l:libax_mipi.a
+CLIB			+= -l:libax_venc.a
+CLIB			+= -l:libax_ivps.a
+CLIB			+= -l:libax_ives.a
+
+ifeq ($(SENSOR_TYPE), sc200ai sc200ai sc200ai)
+CFLAGS			+= -DSAMPLE_SNS_SC200AI_TRIPLE
+CLIB			+= -l:libsns_sc200ai.a
+else ifeq ($(SENSOR_TYPE), sc200ai sc200ai)
+CFLAGS			+= -DSAMPLE_SNS_SC200AI_DOUBLE
+CLIB			+= -l:libsns_sc200ai.a
+else ifeq ($(SENSOR_TYPE), sc200ai)
+CFLAGS			+= -DSAMPLE_SNS_SC200AI_SINGLE
+CLIB			+= -l:libsns_sc200ai.a
+else ifeq ($(SENSOR_TYPE), sc235hai)
+CFLAGS			+= -DSAMPLE_SNS_SC235HAI_SINGLE
+CLIB			+= -l:libsns_sc235hai.a
+else ifeq ($(SENSOR_TYPE), sc850sl)
+CFLAGS			+= -DSAMPLE_SNS_SC850SL_SINGLE
+CLIB			+= -l:libsns_sc850sl.a
+else ifeq ($(SENSOR_TYPE), sc500ai)
+CFLAGS			+= -DSAMPLE_SNS_SC500AI_SINGLE
+CLIB			+= -l:libsns_sc500ai.a
+else ifeq ($(SENSOR_TYPE), sc450ai)
+CFLAGS			+= -DSAMPLE_SNS_SC450AI_SINGLE
+CLIB			+= -l:libsns_sc450ai.a
+else ifeq ($(SENSOR_TYPE), sc850sl os04a10)
+CFLAGS			+= -DSAMPLE_SNS_SC850SL_OS04A10
+CLIB			+= -l:libsns_sc850sl.a
+CLIB			+= -l:libsns_os04a10.a
+else ifeq ($(SENSOR_TYPE), os04d10)
+CFLAGS			+= -DSAMPLE_SNS_OS04D10_SINGLE
+CLIB			+= -l:libsns_os04d10.a
+else ifeq ($(SENSOR_TYPE), os04a10 os04a10)
+CFLAGS			+= -DSAMPLE_SNS_OS04A10_DOUBLE
+CLIB			+= -l:libsns_os04a10.a
+else
+CFLAGS			+= -DSAMPLE_SNS_OS04A10_SINGLE
+CLIB			+= -l:libsns_os04a10.a
+endif
+
+ifeq ($(QSDEMO_AUDIO_SUPPORT),yes)
+CFLAGS			+= -DQSDEMO_AUDIO_SUPPORT
+CLIB			+= -l:libax_audio.a
+CLIB			+= -l:libax_audio_3a.a
+CLIB			+= -L$(HOME_PATH)/third-party/tinyalsa/lib/$(ARCH)/$(LIBC)
+CLIB			+= -l:libtinyalsa.a
+CLIB			+= -L$(HOME_PATH)/third-party/libsamplerate/lib/$(ARCH)/$(LIBC)
+CLIB			+= -l:libsamplerate.a
+ifeq ($(QSDEMO_AUDIO_AAC_SUPPORT),yes)
+CFLAGS			+= -DQSDEMO_AUDIO_AAC_SUPPORT
+CLIB			+= -l:libax_faac.a
+CLIB			+= -L$(HOME_PATH)/third-party/faac/lib/$(ARCH)/$(LIBC)
+CLIB			+= -l:libfaac.a
+endif
+endif
+
+ifeq ($(QSDEMO_MP4ENC_SUPPORT),yes)
+CFLAGS			+= -DQSDEMO_MP4ENC_SUPPORT
+CLIB			+= -L$(MP4_PATH)/lib/$(ARCH)/$(LIBC) -l:libmp4.a
+endif
+
+CLIB			+= -l:libax_sys.a
+
+CLIB            += -lrt
+CLIB			+= -lm
+CLIB			+= -lpthread
+CLIB            += -ldl
+CLIB            += -lstdc++
+
+CLIB			+= -L$(LIVE_PATH)/lib -lliveMedia -lgroupsock -lBasicUsageEnvironment -lUsageEnvironment
+
+# install
+ifeq ($(STRIP_APP),yes)
+INSTALL_TARGET  := $(STRIPPED_TARGET)
+else
+INSTALL_TARGET  := $(TARGET)
+endif
+INSTALL_BIN	:= $(INSTALL_TARGET)
+INSTALL_DIR := $(ROOTFS_TARGET_PATH)/bin
+
+# link
+LINK = $(CPP)
+
+include $(HOME_PATH)/build/rules.mak

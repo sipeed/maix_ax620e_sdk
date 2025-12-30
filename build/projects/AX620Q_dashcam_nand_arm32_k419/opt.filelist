@@ -1,0 +1,57 @@
+@dir: msp/out/$(MSP_OUT_DIR)
+third-party/lib/libfdk-aac.so* usr/lib/
+third-party/lib/libsamplerate.so* usr/lib/
+third-party/lib/libtinyalsa.so* usr/lib/
+
+@dir: msp/out/$(MSP_OUT_DIR)
+bin/sample_vin bin/
+bin/sample_vo bin/
+bin/ax_analyzer bin/
+
+@dir: msp/out/$(MSP_OUT_DIR)
+etc/vo.ini etc/
+
+@dir: msp/out/$(MSP_OUT_DIR)
+lib/libax_ae.so
+lib/libax_awb.so
+lib/libax_af.so
+lib/libax_audio_3a.so
+lib/libax_audio.so
+lib/libax_engine.so
+lib/libax_interpreter.so
+lib/libax_ivps.so
+lib/libax_mipi.so
+lib/libax_nt_ctrl.so
+lib/libax_nt_stream.so
+lib/libax_proton.so
+lib/libax_sys.so
+lib/libax_venc.so
+lib/libax_vdec.so
+lib/libax_ives.so
+lib/libax_vo.so
+lib/libax_fdk.so
+
+@dir: camera-kit/out/$(MSP_OUT_DIR)
+lib/app_config.json bin/app_config.json
+lib/app_config_p107.json bin/app_config_p107.json
+lib/sns_info.json bin/sns_info.json
+lib/sns_info_p107.json bin/sns_info_p107.json
+lib/lvgl_config.json bin/lvgl_config.json
+lib/dtcf_config_q_nand.json bin/config/dtcf_config.json
+lib/key_config.json bin/config/key_config.json
+lib/comp_config.json bin/config/comp_config.json
+lib/*.bmp bin/icon/
+lib/libax_common.so
+lib/libax_rtsp.so
+lib/libaxck*.so lib/
+lib/libexif* lib/
+lib/liblvgl.so
+
+@dir: camera-kit/out/$(MSP_OUT_DIR)
+bin/axck_service
+bin/axck_gui
+bin/axck_test
+bin/lang/* bin/ui/lang/
+bin/icon/* bin/ui/icon/
+bin/ppl_config.json
+bin/ppl_config_p107.json

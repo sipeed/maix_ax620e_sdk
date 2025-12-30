@@ -1,0 +1,5 @@
+NAME=Buildroot
+VERSION=AX620_SDK_V0.8.0-1-g33ea1f74-dirty
+ID=buildroot
+VERSION_ID=2021.08
+PRETTY_NAME="Buildroot 2021.08"

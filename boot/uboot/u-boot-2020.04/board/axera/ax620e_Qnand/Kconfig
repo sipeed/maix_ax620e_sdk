@@ -1,0 +1,16 @@
+if TARGET_AX620E_QNAND
+
+config SYS_BOARD
+	default "ax620e_Qnand"
+
+config SYS_VENDOR
+	default "axera"
+
+config SYS_CONFIG_NAME
+	default "ax620e_Qnand"
+
+config BOARD_SPECIFIC_OPTIONS # dummy
+	def_bool y
+
+
+endif

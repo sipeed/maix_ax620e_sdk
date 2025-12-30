@@ -1,0 +1,6 @@
+AX620E_HAPS
+M:      junqiang wang <junqiang.wang@aixin-chip.com>
+S:      Maintained
+F:      board/axera/ax620e_haps
+F:      include/configs/ax620e_haps.h
+F:      configs/AX620E_haps_defconfig

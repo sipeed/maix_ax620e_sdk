@@ -1,0 +1,6 @@
+AX620E_NOR
+M:      junqiang wang <junqiang.wang@aixin-chip.com>
+S:      Maintained
+F:      board/axera/ax620e_nor
+F:      include/configs/ax620e_nor.h
+F:      configs/AX620E_nor_defconfig

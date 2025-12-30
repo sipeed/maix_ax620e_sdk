@@ -1,0 +1,18 @@
+--- arm-trusted-firmware-2.7/lib/psci/psci_on.c
++++ arm-trusted-firmware-2.7/lib/psci/psci_on.c
+@@ -78,7 +78,6 @@ int psci_cpu_on_start(u_register_t target_cpu,
+ 
+ 	/* Protect against multiple CPUs trying to turn ON the same target CPU */
+ 	psci_spin_lock_cpu(target_idx);
+-
+ 	/*
+ 	 * Generic management: Ensure that the cpu is off to be
+ 	 * turned on.
+@@ -100,7 +99,6 @@ int psci_cpu_on_start(u_register_t target_cpu,
+ 	rc = cpu_on_validate_state(psci_get_aff_info_state_by_idx(target_idx));
+ 	if (rc != PSCI_E_SUCCESS)
+ 		goto exit;
+-
+ 	/*
+ 	 * Call the cpu on handler registered by the Secure Payload Dispatcher
+ 	 * to let it do any bookeeping. If the handler encounters an error, it's

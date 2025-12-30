@@ -1,0 +1,11 @@
+@dir: msp/out/$(MSP_OUT_DIR)
+#etc/models/aiisp/SC200AI_HDR_1920x1080*.axmodel
+etc/models/aiisp/SC200AI_HDR_1920x1080_10b_HCG_ISP1_A2-8X_0000_00000695646_240308_AX620E.axmodel
+etc/models/aiisp/SC200AI_SDR_1920x1080_10b_LCG_ISP1_A54X_I1-16X_0300_MULTI2_00000000000_240413_AX620E.axmodel
+etc/sc200ai_sdr_2lane.ini
+etc/sc200ai_single_sdr_2lane_entry.ini
+etc/sc200ai_double_sdr_2lane_entry.ini
+#etc/sc200ai_hdr_2lane.ini
+#etc/sc200ai_single_hdr_2lane_entry.ini
+#etc/sc200ai_double_hdr_2lane_entry.ini
+

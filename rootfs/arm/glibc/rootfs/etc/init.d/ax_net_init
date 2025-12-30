@@ -1,0 +1,5 @@
+/etc/init.d/S40network
+/etc/init.d/ifplugd
+/etc/init.d/S50crontabs
+/etc/init.d/S50telnet
+/etc/init.d/S50sshd

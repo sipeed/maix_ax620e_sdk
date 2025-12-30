@@ -1,0 +1,51 @@
+<Config>
+	<Project alias="PreISP" name="AX170A" version="rtos_v1.0">
+		<ResetAddr>0x40000000</ResetAddr>
+		<ImgList>
+			<Img flag="2" name="INIT" select="1">
+				<ID>INIT</ID>
+				<Type>INIT</Type>
+				<Block>
+					<Base>0x0</Base>
+					<Size>0x0</Size>
+				</Block>
+				<File />
+				<Auth algo="0" />
+				<Description>Handshake with romcode</Description>
+			</Img>
+			<Img flag="3" name="FDL" select="1">
+				<ID>FDL</ID>
+				<Type>FDL</Type>
+				<Block>
+					<Base>0x800</Base>
+					<Size>0x0</Size>
+				</Block>
+				<File>fdl.bin</File>
+				<Auth algo="0" />
+				<Description>Download FDL image file</Description>
+			</Img>
+			<Img flag="1" name="RTT" select="1">
+				<ID>RTT</ID>
+				<Type>CODE</Type>
+				<Block>
+					<Base>0x40000000</Base>
+					<Size>0x0</Size>
+				</Block>
+				<File>rtthread.bin</File>
+				<Auth algo="0" />
+				<Description>Download firmware image file</Description>
+			</Img>
+			<Img flag="1" name="RAMDISK" select="1">
+				<ID>RAMDISK</ID>
+				<Type>CODE</Type>
+				<Block>
+					<Base>0x4F600000</Base>
+					<Size>0x0</Size>
+				</Block>
+				<File>ramdisk.img</File>
+				<Auth algo="0" />
+				<Description>Download ramdisk image file</Description>
+			</Img>
+		</ImgList>
+	</Project>
+</Config>

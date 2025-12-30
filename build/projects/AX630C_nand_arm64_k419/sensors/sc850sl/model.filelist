@@ -1,0 +1,19 @@
+@dir: msp/out/$(MSP_OUT_DIR)
+etc/models/aiisp/SC850SL_HDR_3840x2160*.axmodel
+etc/models/aiisp/SC850SL_SDR_3840x2160_10b_LCG_ISP1_A1-8X__0300_MULTI5_00000876771_240808_AX620E.axmodel
+etc/sc850sl_hdr_online.ini
+etc/sc850sl_hdr_online_620q.ini
+etc/sc850sl_single_sdr_online_entry.ini
+etc/sc850sl_single_sdr_online_entry_620q.ini
+etc/sc850sl_sdr_online.ini
+etc/sc850sl_sdr_online_620q.ini
+etc/sc850sl_single_hdr_online_entry.ini
+etc/sc850sl_single_hdr_online_entry_620q.ini
+etc/sc850sl_switch_os04a10_double_hdr_online_entry.ini
+etc/sc850sl_switch_os04a10_double_sdr_online_entry.ini
+etc/sc850sl_single_hdr_2lane_15fps_entry.ini
+etc/sc850sl_sdr_2lane_15fps.ini
+etc/sc850sl_hdr_2lane_15fps.ini
+etc/sc850sl_sdr_mode3_switch_mode7.bin
+etc/sc850sl_hdr_2x_ratio_1to1.bin
+etc/sc850sl_hdr_2x_ratio_default.bin

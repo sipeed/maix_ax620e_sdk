@@ -1,0 +1,43 @@
+#!/bin/sh
+
+crontab_add(){
+cron_path="$1"
+cat > /etc/cron.d/$cron_path<<EOF
+* * * * * /usr/sbin/ntpd -n -q -p cn.pool.ntp.org
+* * * * * /sbin/hwclock -w -f /dev/rtc0
+EOF
+}
+
+check_crontab(){
+    rm -rf /etc/cron.d/$1
+    crontab_add  "$1"
+}
+
+case "$1" in
+  start)
+        printf "Starting crontabs: "
+        mkdir -p /var/spool/cron/crontabs
+        mkdir -p /etc/cron.d
+        check_crontab "$1"
+        crontab /etc/cron.d/$1
+        crond
+        [ $? = 0 ] && echo "OK" || echo "FAIL"
+       ;;
+
+  stop)
+        printf "Stopping crontabs: "
+        killall crond
+        [ $? = 0 ] && echo "OK" || echo "FAIL"
+        ;;
+
+  restart|reload)
+        "$0" stop
+        "$0" start
+        ;;
+
+  *)
+        echo "Usage: $0 {start|stop|restart}"
+        exit 1
+esac
+
+exit $?

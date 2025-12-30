@@ -1,0 +1,6 @@
+#ifndef __DEBUG_SYS_H_
+#define __DEBUG_SYS_H_
+#define DEBUG_SYS_GLB_BASE_ADDR		0x1800000
+#define DEBUG_SYS_AUTO_GT_EN		(DEBUG_SYS_GLB_BASE_ADDR + 0x14)
+#define DEBUG_SYS_AUTO_GT_EN_VAL	0x1
+#endif

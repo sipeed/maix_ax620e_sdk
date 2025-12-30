@@ -1,0 +1,79 @@
+#**********************************************************************************
+#* Copyright (c) 2019-2020 Beijing AXera Technology Co., Ltd. All Rights Reserved.
+#*
+#* This source file is the property of Beijing AXera Technology Co., Ltd. and
+#* may not be copied or distributed in any isomorphic form without the prior
+#* written consent of Beijing AXera Technology Co., Ltd.
+#*
+#**********************************************************************************/
+
+menuconfig VIDEO_AXERA
+	bool "Enable AXERA Video Support"
+	depends on DM_VIDEO
+	help
+	  AXERA SoCs provide video output capabilities for High-Definition
+	  Multimedia Interface (HDMI), Low-voltage Differential Signalling
+	  (LVDS), embedded DisplayPort (eDP) and Display Serial Interface (DSI).
+
+	  This driver supports the on-chip video output device, and targets AXERA.
+
+config VIDEO_AXERA_MAX_XRES
+        int "Maximum horizontal resolution (for memory allocation purposes)"
+	depends on VIDEO_AXERA
+	default 2048
+	help
+	  The maximum horizontal resolution to support for the framebuffer.
+	  This configuration is used for reserving/allocating memory for the
+	  framebuffer during device-model binding/probing.
+
+config VIDEO_AXERA_MAX_YRES
+        int "Maximum vertical resolution (for memory allocation purposes)"
+	depends on VIDEO_AXERA
+	default 2048
+	help
+	  The maximum vertical resolution to support for the framebuffer.
+	  This configuration is used for reserving/allocating memory for the
+	  framebuffer during device-model binding/probing.
+
+config VIDEO_AXERA_DISPLAY_WIDTH
+        int "display horizontal resolution (for screen)"
+	depends on VIDEO_AXERA
+	default 800
+	help
+	  The display width for screen show.
+
+config VIDEO_AXERA_DISPLAY_HEIGHT
+        int "display vertical resolution (for screen)"
+	depends on VIDEO_AXERA
+	default 480
+	help
+	  The display height for screen show.
+
+if VIDEO_AXERA
+
+choice
+	prompt "Select display port"
+	default DISPLAY_AXERA_DPI
+	help
+	  Choose the display port
+
+	config DISPLAY_AXERA_DPI
+		bool "DPI Port"
+		depends on VIDEO_AXERA
+		help
+		  This enables DPI display support.
+
+	config DISPLAY_AXERA_MIPI
+		bool "MIPI Port"
+		depends on VIDEO_AXERA
+		help
+		  This enables Mobile Industry Processor Interface(MIPI) display support.
+
+	config DISPLAY_AXERA_BT656
+		bool "BT656 Port"
+		depends on VIDEO_AXERA
+		help
+		  This enables BT656 display support.
+
+endchoice
+endif

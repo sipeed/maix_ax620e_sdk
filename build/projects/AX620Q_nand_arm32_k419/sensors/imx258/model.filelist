@@ -1,0 +1,5 @@
+@dir: msp/out/$(MSP_OUT_DIR)
+#etc/models/aiisp/IMX258_HDR_4208x3120*.axmodel
+#etc/models/aiisp/IMX258_SDR_4208x3120*.axmodel
+etc/imx258_sdr_online.ini
+etc/imx258_single_sdr_online_entry.ini

@@ -1,0 +1,14 @@
+[Unit]
+Description=Run udhcpc service
+DefaultDependencies=no
+After=boot.mount
+Requires=boot.mount wifi.service
+
+[Service]
+Type=simple
+ExecStart=/sbin/udhcpc -i wlan0 -s /usr/share/udhcpc/default.script -f -p /run/udhcpc.wlan0.pid
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,14 @@
+prefix=/home/xinhongliang/res/ffmpeg-mp4/out
+exec_prefix=${prefix}
+libdir=/home/xinhongliang/res/ffmpeg-mp4/out/lib
+includedir=/home/xinhongliang/res/ffmpeg-mp4/out/include
+
+Name: libswscale
+Description: FFmpeg image rescaling library
+Version: 5.8.100
+Requires: 
+Requires.private: libavutil >= 56.58.100
+Conflicts:
+Libs: -L${libdir}  -lswscale 
+Libs.private: -lm
+Cflags: -I${includedir}

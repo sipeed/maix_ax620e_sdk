@@ -1,0 +1,103 @@
+if ARCH_AXERA
+
+config TARGET_AX620E_HAPS
+	bool "AX620E_HAPS evaluation board"
+	help
+	  AX620E_haps is a evaluation board for AXERA AX620e,
+	  with full function and phisical connectors support like
+	  usb2.0 host ports, JTAG, MAC, SDcard, HDMI, USB-2-serial...
+
+config TARGET_AX620E_EMMC
+	bool "AX620E_EMMC evaluation board"
+	help
+	  AX620E_haps is a evaluation board for AXERA AX620e,
+	  with full function and phisical connectors support like
+	  usb2.0 host ports, JTAG, MAC, SDcard, HDMI, USB-2-serial...
+
+config TARGET_AX620E_NAND
+        bool "AX620E_NAND evaluation board"
+        help
+          AX620E_haps is a evaluation board for AXERA AX620e,
+          with full function and phisical connectors support like
+          usb2.0 host ports, JTAG, MAC, SDcard, HDMI, USB-2-serial...
+
+config TARGET_AX620E_NOR
+        bool "AX620E_NOR evaluation board"
+        help
+          AX620E_haps is a evaluation board for AXERA AX620e,
+          with full function and phisical connectors support like
+          usb2.0 host ports, JTAG, MAC, SDcard, HDMI, USB-2-serial...
+
+config TARGET_AX620E_QNAND
+        bool "AX620E_QNAND evaluation board"
+        help
+          AX620E_haps is a evaluation board for AXERA AX620e,
+          with full function and phisical connectors support like
+          usb2.0 host ports, JTAG, MAC, SDcard, HDMI, USB-2-serial...
+
+config AXERA_MEMORY_DUMP_EMMC
+	bool "axera memory dump to emmc"
+	depends on TARGET_AX620E_EMMC && FS_EXT4
+	help
+	  save dump file to emmc
+
+config AXERA_AX630C_DDR4_RETRAIN
+	bool "axera DDR4 retrain function support."
+	depends on TARGET_AX620E_EMMC || TARGET_AX620E_NAND
+	help
+	  The AXERA AX620E_EMMC use DDR4 retrain function
+
+config AX620Q_EMMC
+	bool "axera AX620Q emmc support, diff for ddr size."
+	depends on TARGET_AX620E_EMMC
+	help
+	  The AXERA AX620E_EMMC Distinguish different configurations of ddr size
+
+config AXERA_MEMORY_DUMP_SD
+	bool "axera memory dump to SDcard"
+	depends on FS_FAT
+	help
+	  save dump file to SDcard
+
+config AXERA_SUPPORT_MEMORY_DUMP
+	bool "axera support memory dump"
+	default y if AXERA_MEMORY_DUMP_SD || AXERA_MEMORY_DUMP_EMMC || AXERA_MEMORY_DUMP_USB_STORAGE
+	help
+	support memory dump
+
+config SUPPORT_AB
+	bool "axera AB partition support"
+	depends on TARGET_AX620E_EMMC
+	help
+	  support ab partition
+
+config AXERA_DTB_IMG_ADDR
+	  hex "The kernel dtb addr is placed here."
+	  depends on AXERA_AX620E
+	  help
+	    The AXERA AX620E use kernel dtb addr
+
+config AXERA_KERNEL_IMG_ADDR
+	  hex "The kernel addr is placed here."
+	  depends on AXERA_AX620E
+	  help
+	    The AXERA AX620E use kernel addr
+
+config SUPPORT_RECOVERY
+	bool "axera RECOVERY support"
+	help
+	  support recovery
+
+config BOOT_OPTIMIZATION_SUPPORT
+	bool "axera fast boot to uboot support"
+	help
+	  support fast boot to uboot
+
+source "board/axera/ax620e_haps/Kconfig"
+source "board/axera/ax620e_emmc/Kconfig"
+source "board/axera/ax620e_nand/Kconfig"
+source "board/axera/ax620e_nor/Kconfig"
+source "board/axera/ax620e_Qnand/Kconfig"
+
+endif
+

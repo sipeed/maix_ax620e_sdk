@@ -1,0 +1,6 @@
+@dir: msp/out/$(MSP_OUT_DIR)
+etc/models/aiisp/multi3_sdr_mass_pack_1716951878_240529_ax620e.axmodel
+etc/os04d10_sdr_online_620q.ini
+etc/os04d10_sdr_online.ini
+etc/os04d10_single_sdr_online_entry_620q.ini
+etc/os04d10_single_sdr_online_entry.ini

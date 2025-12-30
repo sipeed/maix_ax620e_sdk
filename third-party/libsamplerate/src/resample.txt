@@ -1,0 +1,1 @@
+./configure --with-pic=yes --host=arm-linux --enable-example --disable-sinc-medium --disable-sinc-best CC=aarch64-none-linux-gnu-gcc CXX=aarch64-none-linux-gnu-g++ CFLAGS='-Os -DNDEBUG' CXXFLAGS='-Os -DNDEBUG' --prefix=./isntall

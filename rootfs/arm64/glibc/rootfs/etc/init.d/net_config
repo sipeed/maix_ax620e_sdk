@@ -1,0 +1,13 @@
+#!/bin/sh
+
+# configure network
+
+# getting ip mode
+# dhcp: default, get ip from server
+# static: static IP, we need to configure following variable
+
+# eth0
+ipaddr0=
+netdev0=
+netmask0=
+gateway0=

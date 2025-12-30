@@ -1,0 +1,1 @@
+./configure --with-pic=yes --host=aarch64-none-linux --enable-shared=yes --enable-static=yes --enable-fixed-point CC=arm-AX620E-linux-uclibcgnueabihf-gcc CXX=arm-AX620E-linux-uclibcgnueabihf-g++ CFLAGS='-Os -DNDEBUG' CXXFLAGS='-Os -DNDEBUG' --prefix=./install

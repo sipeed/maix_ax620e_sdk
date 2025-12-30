@@ -1,0 +1,47 @@
+#!/bin/sh
+
+start() {
+	# set TOP_CHIPMODE_GLB_BACKUP0_CLR clr BOOT_KERNEL_FAIL bit
+	devmem 0x239002C 32 0x80
+
+	bootsystem=$(devmem 0x2390024)
+	if [ "${bootsystem: ${#bootsystem}-1:1}" = "4" ]; then
+		devmem 0x2390028 32 0x10
+	elif [ "${bootsystem: ${#bootsystem}-1:1}" = "8" ]; then
+		devmem 0x2390028 32 0x20
+	fi
+}
+
+switch_systema() {
+	devmem 0x2390028 32 0x14
+	devmem 0x239002C 32 0x8
+	echo "you can reboot, switch to system A"
+}
+
+switch_systemb() {
+	devmem 0x2390028 32 0x28
+	devmem 0x239002C 32 0x4
+	echo "you can reboot, switch to system B"
+}
+
+stop() {
+	echo "check boot stop"
+}
+
+case "$1" in
+	start)
+		start
+		;;
+	systemA)
+		switch_systema
+		;;
+	systemB)
+		switch_systemb
+		;;
+	stop)
+		stop
+		;;
+	*)
+		exit 1
+esac
+exit $?

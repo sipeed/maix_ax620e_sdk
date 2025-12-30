@@ -1,0 +1,49 @@
+#!/bin/sh
+function get_env() {
+	fw_printenv | grep ${1}= | awk -F = '{ print $2 }'
+}
+
+start() {
+	upgrade_available=$(fw_printenv | grep upgrade_available | cut -d'=' -f2)
+	bootable=`get_env "bootable"`
+
+	if [ "$upgrade_available" != "" ]; then
+		echo "Starting recovery check"
+		echo "bootable:$bootable"
+		if [ "$bootable" == "normal" ]; then
+			if [ "$upgrade_available" == "1" ]; then
+				echo "===== recovery upgrade successful ====="
+				fw_setenv upgrade_available
+			else
+				echo "===== recovery upgrade fail re-entering recovery ====="
+				/usr/bin/bootable-set.sh recovery
+				reboot
+			fi
+		fi
+		if [ "$bootable" == "recovery" ]; then
+			echo "===== recovery upgrade fail re-entering recovery ====="
+			/usr/bin/bootable-set.sh recovery
+			reboot
+		fi
+	fi
+}
+
+stop() {
+	echo "check recovery stop"
+}
+
+case "$1" in
+	start)
+		start
+		;;
+	stop)
+		stop
+		;;
+	restart|reload)
+		stop
+		start
+		;;
+	*)
+		exit 1
+esac
+exit $?

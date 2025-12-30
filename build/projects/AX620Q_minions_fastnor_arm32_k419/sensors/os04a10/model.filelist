@@ -1,0 +1,7 @@
+@dir: msp/out/$(MSP_OUT_DIR)
+etc/models/aiisp/OS04A10_SDR_2688x1520_10b_HCG_ISP1_A16X_I1-16X_0300_MULTI4_00000785502_240522_AX620E.axmodel
+# etc/models/aiisp/OS04A10_HDR_2688x1520*.axmodel
+etc/os04a10_sdr_online_2lane.ini
+etc/os04a10_double_sdr_online_entry.ini
+etc/os04a10_single_sdr_online_entry.ini
+etc/os04a10_sdr_online.ini

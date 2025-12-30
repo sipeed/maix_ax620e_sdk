@@ -1,0 +1,556 @@
+/*
+ * (C) Copyright 2020 AXERA Co., Ltd
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
+ */
+
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/interrupt-controller/arm-gic.h>
+#include <dt-bindings/interrupt-controller/irq.h>
+#define USB_CLASS_HUB			9
+
+/ {
+	compatible = "axera,ax620e";
+
+	interrupt-parent = <&gic>;
+	#address-cells = <2>;
+	#size-cells = <2>;
+
+	aliases {
+		serial0 = &uart0;
+		serial1 = &uart1;
+		i2c0 = &i2c0;
+		i2c1 = &i2c1;
+		i2c2 = &i2c2;
+		i2c3 = &i2c3;
+		i2c4 = &i2c4;
+		i2c5 = &i2c5;
+		i2c6 = &i2c6;
+		i2c7 = &i2c7;
+		spi1 = &spi1;
+		spi2 = &spi2;
+		mmc0 = &emmc;
+		mmc1 = &sd;
+	};
+
+	cpus {
+		#address-cells = <2>;
+		#size-cells = <0>;
+
+		cpu-map {
+			core0 {
+				cpu = <&cpu0>;
+			};
+			core1 {
+				cpu = <&cpu1>;
+			};
+		};
+
+		cpu0: cpu@0 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a53", "arm,armv8";
+			reg = <0x0 0x0>;
+			enable-method = "spin-table";
+			#cooling-cells = <2>; /* min followed by max */
+			//clocks = <&cru ARMCLKL>;
+		};
+
+		cpu1: cpu@1 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a53", "arm,armv8";
+			reg = <0x0 0x1>;
+			enable-method = "spin-table";
+			//clocks = <&cru ARMCLKL>;
+		};
+	};
+
+	psci {
+		compatible = "arm,psci-1.0";
+		method = "smc";
+	};
+
+	timer {
+		compatible = "arm,armv8-timer";
+		interrupts = <GIC_PPI 13 IRQ_TYPE_LEVEL_LOW>,
+			     <GIC_PPI 14 IRQ_TYPE_LEVEL_LOW>,
+			     <GIC_PPI 11 IRQ_TYPE_LEVEL_LOW>,
+			     <GIC_PPI 10 IRQ_TYPE_LEVEL_LOW>;
+	};
+
+	xin24m: xin24m {
+		compatible = "fixed-clock";
+		clock-frequency = <24000000>;
+		clock-output-names = "xin24m";
+		#clock-cells = <0>;
+	};
+
+	sysclk: clk10000000 {
+		compatible = "fixed-clock";
+			#clock-cells = <0>;
+			clock-frequency = <10000000>;
+			clock-output-names = "sysclk";
+	};
+	ap_clk: ap_clk {
+		compatible = "fixed-clock";
+		#clock-cells = <0>;
+		clock-frequency = <208000000>;
+		clock-output-names = "ap_clk";
+	};
+	gic: interrupt-controller@1850000 {
+		compatible = "arm,gic-400";
+		#interrupt-cells = <3>;
+		#address-cells = <2>;
+		#size-cells = <2>;
+		ranges;
+		interrupt-controller;
+
+		reg = <0x0 0x1851000 0x0 0x1000>,
+		      <0x0 0x1852000 0x0 0x1000>,
+		      <0x0 0x1854000 0x0 0x2000>,
+		      <0x0 0x1856000 0x0 0x2000>;
+
+		interrupts = <GIC_PPI 9 IRQ_TYPE_LEVEL_HIGH>;
+		its: interrupt-controller@1850000 {
+			compatible = "arm,gic-v3-its";
+			msi-controller;
+			reg = <0x0 0x1850000 0x0 0x8000>;
+		};
+	};
+
+	i2c0: i2c@4850000 {
+		compatible = "snps,designware-i2c";
+		reg = <0x0 0x4850000 0x0 0x400>,
+		      <0x0 0x4870000 0x0 0x10000>;
+		clk = <0x08 8>, <0xC 17>;
+		reset = <0x18 18>, <0x18 19>;
+		interrupts = <GIC_SPI 135 IRQ_TYPE_LEVEL_HIGH>;
+		clock-frequency = <400000>;
+		clocks = <&ap_clk>;
+		/* setting 100K , i2c-sda-hold-time-ns = <2000>;
+		 * setting 400K , i2c-sda-hold-time-ns = <500>;
+		 * setting  1M  , i2c-sda-hold-time-ns = <100>;
+		 * setting 3.4M , i2c-sda-hold-time-ns = <20>;
+		*/
+		i2c-sda-hold-time-ns = <500>;
+		status = "disabled";
+	};
+
+	i2c1: i2c@4851000 {
+		compatible = "snps,designware-i2c";
+		reg = <0x0 0x4851000 0x0 0x400>,
+		      <0x0 0x4870000 0x0 0x10000>;
+		clk = <0x08 9>, <0xC 18>;
+		reset = <0x18 20>, <0x18 21>;
+		interrupts = <GIC_SPI 136 IRQ_TYPE_LEVEL_HIGH>;
+		clock-frequency = <400000>;
+		clocks = <&ap_clk>;
+		/* setting 100K , i2c-sda-hold-time-ns = <2000>;
+		 * setting 400K , i2c-sda-hold-time-ns = <500>;
+		 * setting  1M  , i2c-sda-hold-time-ns = <100>;
+		 * setting 3.4M , i2c-sda-hold-time-ns = <20>;
+		*/
+		i2c-sda-hold-time-ns = <500>;
+		status = "disabled";
+	};
+
+	i2c2: i2c@4852000 {
+		compatible = "snps,designware-i2c";
+		reg = <0x0 0x4852000 0x0 0x400>,
+		      <0x0 0x4870000 0x0 0x10000>;
+		clk = <0x08 10>, <0xC 19>;
+		reset = <0x18 22>, <0x18 23>;
+		interrupts = <GIC_SPI 137 IRQ_TYPE_LEVEL_HIGH>;
+		clock-frequency = <400000>;
+		clocks = <&ap_clk>;
+		/* setting 100K , i2c-sda-hold-time-ns = <2000>;
+		 * setting 400K , i2c-sda-hold-time-ns = <500>;
+		 * setting  1M  , i2c-sda-hold-time-ns = <100>;
+		 * setting 3.4M , i2c-sda-hold-time-ns = <20>;
+		*/
+		i2c-sda-hold-time-ns = <500>;
+		status = "disabled";
+	};
+
+	i2c3: i2c@4853000 {
+		compatible = "snps,designware-i2c";
+		reg = <0x0 0x4853000 0x0 0x400>,
+		      <0x0 0x4870000 0x0 0x10000>;
+		clk = <0x08 11>, <0xC 20>;
+		reset = <0x18 24>, <0x18 25>;
+		interrupts = <GIC_SPI 138 IRQ_TYPE_LEVEL_HIGH>;
+		clock-frequency = <400000>;
+		clocks = <&ap_clk>;
+		/* setting 100K , i2c-sda-hold-time-ns = <2000>;
+		 * setting 400K , i2c-sda-hold-time-ns = <500>;
+		 * setting  1M  , i2c-sda-hold-time-ns = <100>;
+		 * setting 3.4M , i2c-sda-hold-time-ns = <20>;
+		*/
+		i2c-sda-hold-time-ns = <500>;
+		status = "disabled";
+	};
+	i2c4: i2c@4854000 {
+		compatible = "snps,designware-i2c";
+		reg = <0x0 0x4854000 0x0 0x400>,
+		      <0x0 0x4870000 0x0 0x10000>;
+		clk = <0x08 12>, <0xC 21>;
+		reset = <0x18 26>, <0x18 27>;
+		interrupts = <GIC_SPI 139 IRQ_TYPE_LEVEL_HIGH>;
+		clock-frequency = <400000>;
+		clocks = <&ap_clk>;
+		/* setting 100K , i2c-sda-hold-time-ns = <2000>;
+		 * setting 400K , i2c-sda-hold-time-ns = <500>;
+		 * setting  1M  , i2c-sda-hold-time-ns = <100>;
+		 * setting 3.4M , i2c-sda-hold-time-ns = <20>;
+		*/
+		i2c-sda-hold-time-ns = <500>;
+		status = "disabled";
+	};
+
+	i2c5: i2c@4855000 {
+		compatible = "snps,designware-i2c";
+		reg = <0x0 0x4855000 0x0 0x400>,
+		      <0x0 0x4870000 0x0 0x10000>;
+		clk = <0x08 13>, <0xC 22>;
+		reset = <0x18 28>, <0x18 29>;
+		interrupts = <GIC_SPI 140 IRQ_TYPE_LEVEL_HIGH>;
+		clock-frequency = <400000>;
+		clocks = <&ap_clk>;
+		/* setting 100K , i2c-sda-hold-time-ns = <2000>;
+		 * setting 400K , i2c-sda-hold-time-ns = <500>;
+		 * setting  1M  , i2c-sda-hold-time-ns = <100>;
+		 * setting 3.4M , i2c-sda-hold-time-ns = <20>;
+		*/
+		i2c-sda-hold-time-ns = <500>;
+		status = "disabled";
+	};
+
+	i2c6: i2c@4856000 {
+		compatible = "snps,designware-i2c";
+		reg = <0x0 0x4856000 0x0 0x400>,
+		      <0x0 0x4870000 0x0 0x10000>;
+		clk = <0x08 14>, <0xC 23>;
+		reset = <0x18 30>, <0x18 31>;
+		interrupts = <GIC_SPI 141 IRQ_TYPE_LEVEL_HIGH>;
+		clock-frequency = <400000>;
+		clocks = <&ap_clk>;
+		/* setting 100K , i2c-sda-hold-time-ns = <2000>;
+		 * setting 400K , i2c-sda-hold-time-ns = <500>;
+		 * setting  1M  , i2c-sda-hold-time-ns = <100>;
+		 * setting 3.4M , i2c-sda-hold-time-ns = <20>;
+		*/
+		i2c-sda-hold-time-ns = <500>;
+		status = "disabled";
+	};
+
+	i2c7: i2c@4857000 {
+		compatible = "snps,designware-i2c";
+		reg = <0x0 0x4857000 0x0 0x400>,
+		      <0x0 0x4870000 0x0 0x10000>;
+		clk = <0x08 15>, <0xC 24>;
+		reset = <0x1C 0>, <0x1C 1>;
+		interrupts = <GIC_SPI 142 IRQ_TYPE_LEVEL_HIGH>;
+		clock-frequency = <400000>;
+		clocks = <&ap_clk>;
+		/* setting 100K , i2c-sda-hold-time-ns = <2000>;
+		 * setting 400K , i2c-sda-hold-time-ns = <500>;
+		 * setting  1M  , i2c-sda-hold-time-ns = <100>;
+		 * setting 3.4M , i2c-sda-hold-time-ns = <20>;
+		*/
+		i2c-sda-hold-time-ns = <500>;
+		status = "disabled";
+	};
+
+	uart0: serial@4880000 {
+		compatible = "snps,dw-apb-uart";
+		reg = <0x0 0x4880000 0x0 0x400>;
+		interrupts = <GIC_SPI 118 IRQ_TYPE_LEVEL_HIGH>;
+		reg-shift = <2>;
+		reg-io-width = <4>;
+		clocks = <&sysclk>;
+		clock-names = "baudclk";
+		status = "okay";
+	};
+
+	uart1: serial@4881000 {
+		compatible = "snps,dw-apb-uart";
+		reg = <0x0 0x4881000 0x0 0x400>;
+		interrupts = <GIC_SPI 119 IRQ_TYPE_LEVEL_HIGH>;
+		reg-shift = <2>;
+		reg-io-width = <4>;
+		clocks = <&sysclk>;
+		clock-names = "baudclk";
+		status = "disabled";
+	};
+	uart2: serial@4882000  {
+		compatible = "snps,dw-apb-uart";
+		reg = <0x0 0x4882000  0x0 0x400>;
+		interrupts = <GIC_SPI 120 IRQ_TYPE_LEVEL_HIGH>;
+		reg-shift = <2>;
+		reg-io-width = <4>;
+		clocks = <&sysclk>;
+		clock-names = "baudclk";
+		status = "disabled";
+	};
+	uart3: serial@6080000  {
+		compatible = "snps,dw-apb-uart";
+		reg = <0x0 0x6080000  0x0 0x400>;
+		interrupts = <GIC_SPI 121 IRQ_TYPE_LEVEL_HIGH>;
+		reg-shift = <2>;
+		reg-io-width = <4>;
+		clocks = <&sysclk>;
+		clock-names = "baudclk";
+		status = "disabled";
+	};
+	uart4: serial@6081000   {
+		compatible = "snps,dw-apb-uart";
+		reg = <0x0 0x6081000 0x0 0x400>;
+		interrupts = <GIC_SPI 122 IRQ_TYPE_LEVEL_HIGH>;
+		reg-shift = <2>;
+		reg-io-width = <4>;
+		clocks = <&sysclk>;
+		clock-names = "baudclk";
+		status = "disabled";
+	};
+	uart5: serial@6082000   {
+		compatible = "snps,dw-apb-uart";
+		reg = <0x0 0x6082000 0x0 0x400>;
+		interrupts = <GIC_SPI 123 IRQ_TYPE_LEVEL_HIGH>;
+		reg-shift = <2>;
+		reg-io-width = <4>;
+		clocks = <&sysclk>;
+		clock-names = "baudclk";
+		status = "disabled";
+	};
+	spi1: spi@6071000 {
+		compatible = "snps,dw-apb-ssi";
+		reg = <0x0 0x6071000 0x0 0x400>;
+		interrupts = <GIC_SPI 152 IRQ_TYPE_LEVEL_HIGH>;
+		cs-gpio = <&ax_gpio0 2 0>; /*GPIO0-A2 for apb_ssi's cs0 , default select cs0 */
+		#address-cells = <1>;
+		#size-cells = <0>;
+		clocks =  <&sysclk>;
+		clock-names = "baudclk";
+		status = "disabled";
+
+		led_strip@0 {
+			compatible = "spidev";
+			reg = <0>;
+			spi-max-frequency = <8000000>;
+			status = "okay";
+		};
+	};
+	spi2: spi@6072000 {
+		compatible = "snps,dw-apb-ssi";
+		reg = <0x0 0x6072000 0x0 0x400>;
+		interrupts = <GIC_SPI 153 IRQ_TYPE_LEVEL_HIGH>;
+		spi-max-frequency = <20000000>;
+		cs-gpio = <&port0a 27 0>; /*GPIO0-A27 for apb_ssi's cs0 , default select cs0 */
+		#address-cells = <1>;
+		#size-cells = <0>;
+		clocks =  <&ap_clk>;
+		clock-names = "baudclk";
+		status = "disabled";
+	};
+	spi4: spi@1a00000 {
+		compatible = "snps,dw-ssi";
+		reg = <0x0 0x1a00000 0x0 0x1000>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		clocks =  <&sysclk>;
+		clock-names = "baudclk";
+		cs-gpio = <&port2a 29 0>; //cs0:GPIO2_A29
+		//cs-gpio = <&port2a 25 0>; //cs1:GPIO2_A25
+		status = "okay";
+		spi_flash@0 {
+			#address-cells = <1>;
+			#size-cells = <1>;
+			compatible = "jedec,spi-nor";
+			spi-tx-bus-width = <4>;
+			spi-rx-bus-width = <4>;
+			reg = <0>;
+			spi-max-frequency = <50000000>;
+		};
+		spi_nand@1 {
+			#address-cells = <1>;
+			#size-cells = <1>;
+			compatible = "spi-nand";
+			spi-cpha = <1>;
+			spi-cpol = <1>;
+			spi-tx-bus-width = <4>;
+			spi-rx-bus-width = <4>;
+			reg = <0>;
+			spi-max-frequency = <50000000>;
+		};
+	};
+
+	hdmi: hdmi@5660000 {
+		compatible = "axera,hdmi-plat";
+		u-boot,dm-pre-reloc;
+		reg = <0x0 0x5660000 0x0 0x10000>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		#sound-dai-cells = <0>;
+		clocks =  <&sysclk>;
+		clock-names = "baudclk";
+		reg-io-width = <1>;
+		status = "okay";
+		port {
+			reg = <0x0>;
+			hdmi_out: endpoint {
+				remote-endpoint = <&hdmi_in>;
+			};
+		};
+	};
+
+	dispc: dispc@5690000 {
+		compatible = "axera,dispc-plat";
+		u-boot,dm-pre-reloc;
+		reg = <0x0 0x5690000 0x0 0x400>, <0x0 0x5020000 0x0 0x200>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		clocks =  <&sysclk>;
+		clock-names = "baudclk";
+		clockreg = <0x5680004>;
+		status = "okay";
+		port {
+			reg = <0x0>;
+			hdmi_in: endpoint {
+				remote-endpoint = <&hdmi_out>;
+			};
+		};
+	};
+
+	pwm0: pwm@6060000 {
+		compatible = "axera,ax620e-pwm";
+		//u-boot,dm-pre-reloc;
+		/* first is timer register, second is clk register */
+		reg = <0x0 0x6060000 0x0 0x400>, <0x0 0x4870000 0x0 0x1000>;
+		/* channel clock enable */
+		chan-en = <0x08 19>, <0x08 20>, <0x08 21>, <0x08 22>;
+		/* channel clock freq selection */
+		freq-sel = <0x0 13 1>;
+		/* channel gate enable */
+		gate-en = <0x04 9>;
+		/* channel global clock enable */
+		chan-glb-en = <0xC 31>;
+		/* channel global reset */
+		chan-glb-rst = <0x1C 19>;
+		/* channel reset */
+		chan-rst = <0x1C 15>, <0x1C 16>, <0x1C 17>, <0x1C 18>;
+		#pwm-cells = <2>;
+	};
+
+	pwm1: pwm@6061000 {
+		compatible = "axera,ax620e-pwm";
+		//u-boot,dm-pre-reloc;
+		reg = <0x0 0x6061000 0x0 0x400>, <0x0 0x4870000 0x0 0x1000>;
+		chan-en = <0x08 23>, <0x08 24>, <0x08 25>, <0x08 26>;
+		freq-sel = <0x0 13 1>;
+		gate-en = <0x4 9>;
+		chan-glb-en = <0x10 0>;
+		chan-glb-rst = <0x1C 24>;
+		chan-rst = <0x1C 20>, <0x1C 21>, <0x1C 22>, <0x1C 23>;
+		#pwm-cells = <2>;
+	};
+
+	pwm2: pwm@0x6062000 {
+		compatible = "axera,ax620e-pwm";
+		//u-boot,dm-pre-reloc;
+		reg = <0x0 0x6062000 0x0 0x400>, <0x0 0x4870000 0x0 0x1000>;
+		chan-en = <0x08 27>, <0x08 28>, <0x08 29>, <0x08 30>;
+		freq-sel = <0x0 13 1>;
+		gate-en = <0x4 9>;
+		chan-glb-en = <0x10 1>;
+		chan-glb-rst = <0x1C 29>;
+		chan-rst = <0x1C 25>, <0x1C 26>, <0x1C 27>, <0x1C 28>;
+		#pwm-cells = <2>;
+	};
+
+	ax_gpio0: gpio@4800000 {
+		compatible = "axera,ax-apb-gpio";
+		/* index0 is gpio reg; index1 is clk_rst_base */
+		reg = <0x0 0x4800000 0x0 0x400>;
+		port0a: gpio-controller@0 {
+			gpio-controller;
+			#gpio-cells = <2>;
+			ax,gpios = <32>;
+			bank-name = "GPIO0";
+		};
+	};
+
+	ax_gpio1: gpio@4801000 {
+		compatible = "axera,ax-apb-gpio";
+		/* index0 is gpio reg */
+		reg = <0x0 0x4801000 0x0 0x400>;
+		port1a: gpio-controller@0 {
+			gpio-controller;
+			#gpio-cells = <2>;
+			ax,gpios = <32>;
+			bank-name = "GPIO1";
+		};
+	};
+
+	ax_gpio2: gpio@6000000 {
+		compatible = "axera,ax-apb-gpio";
+		/* index0 is gpio reg*/
+		reg = <0x0 0x6000000 0x0 0x400>;
+		port2a: gpio-controller@0 {
+			gpio-controller;
+			#gpio-cells = <2>;
+			ax,gpios = <32>;
+			bank-name = "GPIO2";
+		};
+	};
+
+	ax_gpio3: gpio@6001000 {
+		compatible = "axera,ax-apb-gpio";
+		/* index0 is gpio reg */
+		reg = <0x0 0x6001000 0x0 0x400>;
+		port3a: gpio-controller@0 {
+			gpio-controller;
+			#gpio-cells = <2>;
+			ax,gpios = <32>;
+			bank-name = "GPIO3";
+		};
+	};
+
+	ahci: sata@31000000 {
+		compatible = "axera,ax620e-ahci";
+		reg = <0x0 0x31000000 0x0 0x10000>;
+		status = "okay";
+	};
+
+	eth0: ethernet@0x104C0000 {
+		compatible = "axera,ax620e-eqos";
+		reg = <0x0 0x104C0000 0x0 0x10000>;
+
+		emac-bus-clock = <312000000>;
+		phy-rst-gpio = <&port1a 27 0>; /* GPIO1_A27 */
+		phy-mode = "rgmii";
+		id = <0>;
+		status = "disabled";
+	};
+
+	adc: adc@2000000{
+		compatible = "axera,ax620e-adc";
+		reg = <0x0 0x2000000 0x0 0x100000>;
+		status = "okay";
+	};
+	usb:usb{
+		compatible = "axera,ax620e-dwc3";
+		#address-cells = <1>;
+		#size-cells = <1>;
+		status = "okay";
+		usb2: dwc3@0x8000000 {
+			compatible = "snps,dwc3";
+			reg = <0x8000000 0x100000>;
+			interrupts = <0 76 4>;
+
+			dr_mode = "host";
+			phy_type = "utmi";
+			maximum-speed = "high-speed";
+			status = "okay";
+		};
+	};
+
+};

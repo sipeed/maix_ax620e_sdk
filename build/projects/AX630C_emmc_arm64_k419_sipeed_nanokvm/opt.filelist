@@ -1,0 +1,21 @@
+@dir: msp/out/$(MSP_OUT_DIR)
+# bin/* bin/
+-data/avscalid
+etc/* etc/
+-etc/skelModels/ax_ax620E_bv_algo_model_*.axmodel
+data/*.json data/
+data/audio data/
+data/ives data/
+data/npu data/
+data/uvc data/
+data/ivps data/
+data/avs data/
+data/skel data/
+third-party/bin usr/
+third-party/lib/*.so* usr/lib/
+
+@dir: msp/out/$(MSP_OUT_DIR)
+lib/*.so lib/
+
+@dir: build/projects
+$(PROJECT)/opt/lib/* lib/

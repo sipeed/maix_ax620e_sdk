@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--  [tag] FDLLevel: 1, one level FDL; 2, two level FDL                    -->
+<!--  [tag] Partitions:                                                     -->
+<!--        [attribute]   strategy: 0, not partition                        -->
+<!--                                1, partition                            -->
+<!--  [tag] Img:                                                            -->
+<!--        [attribute]   name: GUI display                                 -->
+<!--        [attribute] select: 0, GUI selected                             -->
+<!--                            1, GUI not selected                         -->
+<!--        [attribute]   flag: mask value combined by below options (|)    -->
+<!--                            0x01, need input a file                     -->
+<!--                            0x02, must be selected                      -->
+<!--              [tag]     ID: Internel used, not changed                  -->
+<!--              [tag]   Type: Internel used, not changed                  -->
+<!--              [tag]   Auth:                                             -->
+<!--                      [attribute] algo: 0, No Auth                      -->
+<!--                                        1, MD5                          -->
+<!--                                        2, crc16                        -->
+<!--              [tag]   File: Download file name                          -->
+<!--              [tag]   Description: GUI display                          -->
+<Config>
+	<Project name="AX630X" version="1.0" alias="AX630X">
+		<FDLLevel>2</FDLLevel>
+		<Partitions strategy="1" unit="0"> <!-- 0, 1M Byte; 1, 512K Byte; 2, 1K Byte; 3, 1 Byte; 4, 1Sector -->
+			<Partition id="env" size="1" gap="0"/>
+			<Partition id="kernel" size="30" gap="0"/>
+			<Partition id="param" size="5" gap="0"/>
+			<Partition id="rootfs" size="256" gap="0"/>
+			<Partition id="opt" size="1024" gap="0"/>
+		</Partitions>
+		<ImgList>
+			<Img name="INIT" select="1" flag="2">
+				<ID>INIT</ID>
+				<Type>INIT</Type>
+				<Block>
+					<Base>0x0</Base>
+					<Size>0x0</Size>
+				</Block>
+				<File/>
+				<Auth algo="0"/>
+				<Description>Handshake with romcode</Description>
+			</Img>
+			<Img name="EIP" select="1" flag="3">
+				<ID>EIP</ID>
+				<Type>EIP</Type>
+				<Block>
+					<Base>0x100000</Base>
+					<Size>0x0</Size>
+				</Block>
+				<File/>
+				<Auth algo="0"/>
+				<Description>Download eip image file</Description>
+			</Img>
+			<Img name="FDL1" select="1" flag="3">
+				<ID>FDL1</ID>
+				<Type>FDL1</Type>
+				<Block>
+					<Base>0x100000</Base>
+					<Size>0x0</Size>
+				</Block>
+				<File/>
+				<Auth algo="0"/>
+				<Description>Download FDL1 image file</Description>
+			</Img>
+			<Img name="FDL2" select="1" flag="3">
+				<ID>FDL2</ID>
+				<Type>FDL2</Type>
+				<Block>
+					<Base>0x400200000</Base>
+					<Size>0x0</Size>
+				</Block>
+				<File/>
+				<Auth algo="0"/>
+				<Description>Download FDL2 image file</Description>
+			</Img>
+			<Img name="UBOOT" select="1" flag="1">
+				<ID>UBOOT</ID>
+				<Type>CODE</Type>
+				<Block id="uboot">
+					<Base>0x0</Base>
+					<Size>0x0</Size>
+				</Block>
+				<File/>
+				<Auth algo="0"/>
+				<Description>Download UBOOT image file</Description>
+			</Img>
+			<Img name="ERASEENV" select="0" flag="0">
+				<ID>ERASEENV</ID>
+				<Type>ERASEFLASH</Type>
+				<Block id="env">
+					<Base>0x0</Base>
+					<Size>0x0</Size>
+				</Block>
+				<File/>
+				<Auth algo="0"/>
+				<Description>Erase env partition</Description>
+			</Img>
+			<Img name="KERNEL" select="1" flag="1">
+				<ID>KERNEL</ID>
+				<Type>CODE</Type>
+				<Block id="kernel">
+					<Base>0x0</Base>
+					<Size>0x0</Size>
+				</Block>
+				<File/>
+				<Auth algo="0"/>
+				<Description>Download kernel image file</Description>
+			</Img>
+			<Img name="ROOTFS" select="1" flag="1">
+				<ID>ROOTFS</ID>
+				<Type>CODE</Type>
+				<Block id="rootfs">
+					<Base>0x0</Base>
+					<Size>0x0</Size>
+				</Block>
+				<File/>
+				<Auth algo="0"/>
+				<Description>Download rootfs image file</Description>
+			</Img>
+			<Img name="SPL" select="1" flag="1">
+				<ID>SPL</ID>
+				<Type>CODE</Type>
+				<Block id="spl">
+					<Base>0x0</Base>
+					<Size>0x0</Size>
+				</Block>
+				<File/>
+				<Auth algo="0"/>
+				<Description>Download spl image file</Description>
+			</Img>
+		</ImgList>
+		<ROMBOOTLOADER>
+			<!-- 0: NO PARITY(DEFAULT), 1: ODD PARITY  2: EVEN PARITY --> 	
+			<UART parity="1"/>
+			<FDL1 execute="1"/>
+		</ROMBOOTLOADER>
+	</Project>									
+</Config>

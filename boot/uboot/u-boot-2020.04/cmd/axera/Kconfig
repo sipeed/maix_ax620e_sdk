@@ -1,0 +1,94 @@
+menu "Axera commands"
+
+config CMD_AXERA_DOWNLOAD
+	bool "download"
+	default y
+	help
+	  Enable axera download function
+
+config CMD_AXERA_MEMTEST
+	bool "memtest"
+	default y
+	help
+	  Integrated memory test.
+
+config CMD_AXERA_CIPHER
+	bool "cipher"
+	default y
+	help
+	  Integrated cipher test.
+
+config CMD_AXERA_BOOT
+	bool "axera boot"
+	default y
+	help
+	  Axera boot os from memory.
+
+config CMD_AXERA_EXT4
+	bool "axera ext4 command support"
+	select FS_EXT4
+	help
+	  Enables axera EXT4 FS command
+
+config AXERA_SECURE_BOOT
+	bool "axera secureboot"
+	default n
+	help
+	  Axera secureboot support.
+
+config CMD_AXERA_SDUPDATE
+	bool "axera sd update"
+	default y
+	help
+	  Axera sd update image to storage.
+
+config CMD_AXERA_SDBOOT
+	bool "axera sd boot"
+	default y
+	help
+	  Axera sd boot to kernel.
+
+config CMD_AXERA_TFTP_OTA
+	bool "axera tftp ota update"
+	default n
+	help
+	  Axera tftp ota update image to storage.
+
+config CMD_AXERA_UPDATE
+	bool "axera update"
+	default y
+	help
+	  Axera update image to storage.
+
+config CMD_AXERA_EMMC_SCAN
+	bool "axera emmc scan"
+	default n
+	help
+	  Axera emmc scan for delayline.
+
+config CMD_AXERA_BOOT_RISCV
+	bool "axera riscv boot"
+	default n
+	help
+	  Axera Risc-v fast boot
+
+config CMD_AXERA_USB_STOR_UPDATE
+	bool "axera usb storage update"
+	default n
+	help
+	  Axera usb storage update image to storage.
+
+config CMD_AXERA_GZIPD
+	bool "axera gzipd"
+	default y
+	help
+	  Axera gzipd function.
+
+### SIPEED EDIT ###
+config CMD_AXERA_KERNEL_LZMA
+	bool "axera kernel lzma"
+	default n
+	help
+	  Axera kernel lzma function.
+### SIPEED EDIT END ###
+endmenu

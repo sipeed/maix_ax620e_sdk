@@ -1,0 +1,51 @@
+Import('RTT_ROOT')
+Import('rtconfig')
+from building import *
+
+cwd     = GetCurrentDir()
+
+# add the general drivers.
+src     = Glob('*.c') + Glob('gpio/*.c') + Glob('utils/*.c') + Glob('i2c/*.c') + Glob('mailbox/*.c') \
+        + Glob('uart/*.c') + Glob('sw_int/*.c') + Glob('libc/syscalls.c') + Glob('timer64/*.c') \
+        + Glob('pwm/*.c') + Glob('pinmux/*.c') + Glob('sensors/*.c') + Glob('env/*.c') + Glob('log/*.c') \
+
+if GetDepend('AX_RISCV_SNS_SC200AI'):
+	src += Glob('sensors/smartsens_sc200ai/*.c')
+elif GetDepend('AX_RISCV_SNS_OS04A10'):
+	src += Glob('sensors/ov_os04a10/*.c')
+elif GetDepend('AX_RISCV_SNS_OS04D10'):
+	src += Glob('sensors/ov_os04d10/*.c')
+elif GetDepend('AX_RISCV_SNS_SC235HAI'):
+	src += Glob('sensors/smartsens_sc235hai/*.c')
+elif GetDepend('AX_RISCV_SNS_SC450AI'):
+	src += Glob('sensors/smartsens_sc450ai/*.c')
+elif GetDepend('AX_RISCV_SNS_SC500AI'):
+	src += Glob('sensors/smartsens_sc500ai/*.c')
+elif GetDepend('AX_RISCV_SNS_SC850SL'):
+	src += Glob('sensors/smartsens_sc850sl/*.c')
+elif GetDepend('AX_RISCV_SNS_SC200AI_SC200AI'):
+	src += Glob('sensors/smartsens_sc200ai/*.c')
+elif GetDepend('AX_RISCV_SNS_SC200AI_SC200AI_SC200AI'):
+	src += Glob('sensors/smartsens_sc200ai/*.c')
+elif GetDepend('AX_RISCV_SNS_OS04A10_OS04A10'):
+	src += Glob('sensors/ov_os04a10/*.c')
+elif GetDepend('AX_RISCV_SNS_SC850SL_OS04A10'):
+	src += Glob('sensors/smartsens_sc850sl/*.c')
+	src += Glob('sensors/ov_os04a10/*.c')
+else:
+	src += Glob('sensors/ov_os04a10/*.c')
+
+if GetDepend('DFS_USING_POSIX'):
+    src += ['libc/dfs_posix.c']
+
+if GetDepend('AX_LOAD_ROOTFS_SUPPORT'):
+    src += Glob('gzipd/*.c') + Glob('spinor/*.c') + Glob('bus_monitor/*.c')
+
+CPPPATH = ['gpio', 'utils', 'mailbox', 'uart', 'i2c', 'sw_int', 'timer64', 'pwm', 'sensors/include', 'sys', 'env', 'log']
+
+if GetDepend('AX_LOAD_ROOTFS_SUPPORT'):
+    CPPPATH += ['spinor', 'gzipd']
+
+group   = DefineGroup('Drivers', src, depend = [''], CPPPATH = CPPPATH)
+
+Return('group')

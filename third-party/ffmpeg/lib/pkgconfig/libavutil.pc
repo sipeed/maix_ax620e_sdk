@@ -1,0 +1,14 @@
+prefix=/home/xinhongliang/res/ffmpeg-mp4/out
+exec_prefix=${prefix}
+libdir=/home/xinhongliang/res/ffmpeg-mp4/out/lib
+includedir=/home/xinhongliang/res/ffmpeg-mp4/out/include
+
+Name: libavutil
+Description: FFmpeg utility library
+Version: 56.58.100
+Requires: 
+Requires.private: 
+Conflicts:
+Libs: -L${libdir}  -lavutil 
+Libs.private: -pthread -lm
+Cflags: -I${includedir}

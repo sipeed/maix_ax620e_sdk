@@ -1,0 +1,1 @@
+ ./configure --with-pic=yes --host=arm-linux --enable-shared=yes --enable-static=yes CC=aarch64-none-linux-gnu-gcc CXX=aarch64-none-linux-gnu-g++  CFLAGS='-fPIC -Os -DNDEBUG' CXXFLAGS='-fPIC -Os -DNDEBUG' --prefix=./install

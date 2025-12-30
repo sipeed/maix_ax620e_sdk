@@ -1,0 +1,38 @@
+#!/bin/sh
+
+usage() {
+    echo "Usage: $0 <os-platform> <arch> <libc>"
+    exit 1
+}
+
+if [ $# -ne 3 ]
+then
+    usage $*
+fi
+
+platform=$1
+arch=$2
+libc=$3
+subdirs="liveMedia groupsock UsageEnvironment BasicUsageEnvironment testProgs mediaServer proxyServer hlsProxy"
+
+HOME_PATH=$(pwd)/../..
+ARCH=${arch}
+LIBC=${libc}
+
+for subdir in $subdirs
+do
+    /bin/rm -f $subdir/Makefile
+    cat $subdir/Makefile.head config.$platform $subdir/Makefile.tail > $subdir/Makefile
+    sed -i 1iLIBC=${libc} $subdir/Makefile
+    sed -i 1iARCH=${arch} $subdir/Makefile
+    sed -i 1iHOME_PATH="${HOME_PATH}" $subdir/Makefile
+    chmod a-w $subdir/Makefile
+done
+
+/bin/rm -f Makefile
+cat Makefile.head config.$1 Makefile.tail > Makefile
+sed -i 1iLIBC=${libc} $subdir/Makefile
+sed -i 1iARCH=${arch} $subdir/Makefile
+sed -i 1iHOME_PATH="${HOME_PATH}" Makefile
+chmod a-w Makefile
+

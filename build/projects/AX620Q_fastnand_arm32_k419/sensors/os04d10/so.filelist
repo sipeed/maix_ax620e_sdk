@@ -1,0 +1,4 @@
+@dir: msp/out/$(MSP_OUT_DIR)
+lib/libsns_os04d10.so
+lib/liblens_ms41908.so
+lib/liblens_ms41939.so

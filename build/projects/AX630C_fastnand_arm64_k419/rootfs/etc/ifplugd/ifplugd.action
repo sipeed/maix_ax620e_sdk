@@ -1,0 +1,45 @@
+#! /bin/sh
+
+if [ -f /customer/net_config ]; then
+    source /customer/net_config
+else
+    source /etc/init.d/net_config
+fi
+
+# called from ifplugd
+iface="$1"
+action="$2"
+
+echo "ifplugd: $iface is $action"
+
+case "$action" in
+  up)
+    case "$iface" in
+      eth0)
+        if [ -n "$ipaddr0" ] && [ $iface == $netdev0 ] ; then
+            cmd="/sbin/ifconfig $netdev0 $ipaddr0"
+            [ -n "$netmask0" ] && cmd="$cmd netmask $netmask0"
+            eval $cmd
+            [ -n "$gateway0" ] && route add default gw $gateway0
+        else
+            udhcpc -i $iface -t 10 -T 1 -A 5 -R  > /dev/null 2>&1 &
+        fi
+        ;;
+
+      *)
+        echo "$0: unknown iface '$iface'"
+        exit 1
+    esac
+    ;;
+
+  down)
+    ifconfig $iface 0
+    ps -ef | grep "udhcpc -i $iface" | grep -v grep | cut -c 0-6 | xargs kill > /dev/bull 2>&1
+    ;;
+
+  *)
+    echo "$0: unknown action '$action'"
+    exit 1
+esac
+
+exit 0

@@ -1,0 +1,29 @@
+@dir:rootfs/$(ARCH)/$(LIBC)/rootfs
+bin/*
+dev/*
+etc/*
+lib/*
+lib32
+linuxrc
+sbin/*
+usr/bin/*
+usr/sbin/*
+usr/share/*
+var/* var
+
+@dir:rootfs/$(ARCH)/$(LIBC)/rootfs_extend
+usr/sbin/lsz
+usr/sbin/lrz
+
+@dir:tools
+ax_lookat/bin/CHIP_AX620E/$(ARCH)/$(LIBC)/ax_lookat usr/bin
+
+@dir: build/projects/$(PROJECT)/rootfs
+etc/inittab
+etc/fstab
+etc/syslog.conf
+etc/ax_syslog.conf etc/.ax_syslog.conf
+etc/syslog.conf etc/.syslog.conf
+etc/init.d/rcS
+etc/fw_env.config
+etc/init.d/S40network

@@ -1,0 +1,19 @@
+--- arm-trusted-firmware-2.7/lib/psci/psci_common.c
++++ arm-trusted-firmware-2.7/lib/psci/psci_common.c
+@@ -770,7 +770,7 @@ void psci_warmboot_entrypoint(void)
+ {
+ 	unsigned int end_pwrlvl;
+ 	unsigned int cpu_idx = plat_my_core_pos();
+-	unsigned int parent_nodes[PLAT_MAX_PWR_LVL] = {0};
++	unsigned int parent_nodes[PLAT_MAX_PWR_LVL] = {0};//parent_nodes[0] = 1, parent_nodes[1] = 0
+ 	psci_power_state_t state_info = { {PSCI_LOCAL_STATE_RUN} };
+ 
+ 	/*
+@@ -797,7 +797,6 @@ void psci_warmboot_entrypoint(void)
+ 	 * and state management can be done safely.
+ 	 */
+ 	psci_acquire_pwr_domain_locks(end_pwrlvl, parent_nodes);
+-
+ 	psci_get_target_local_pwr_states(end_pwrlvl, &state_info);
+ 
+ #if ENABLE_PSCI_STAT

@@ -1,0 +1,273 @@
+CUR_PATH            := $(shell pwd)
+HOME_PATH           := $(abspath $(CUR_PATH)/../../..)
+
+include $(HOME_PATH)/build/color.mk
+include $(HOME_PATH)/build/config.mak
+
+SRC_PATH            := $(CUR_PATH)
+
+PRJ_OUT_HOME        := $(HOME_PATH)/build/out/$(PROJECT)
+OBJ_OUT_PATH        := $(PRJ_OUT_HOME)/objs
+LIB_PATH            := $(MSP_OUT_PATH)/lib
+INC_PATH            := $(MSP_OUT_PATH)/include
+SRC_RELATIVE_PATH   := $(subst $(HOME_PATH)/,,$(CUR_PATH))
+TARGET_OUT_PATH     := $(OBJ_OUT_PATH)/$(SRC_RELATIVE_PATH)
+GENERATED_PATH      := $(TARGET_OUT_PATH)/generated
+3RD_PATH            := $(HOME_PATH)/third-party
+
+
+# opal
+OPAL_PATH           := $(HOME_PATH)/app/opal
+OPAL_INC_PATH       := $(OPAL_PATH)/libs/inc
+OPAL_SRC_PATH       := $(OPAL_PATH)/libs/src
+
+OPAL_API_PATH       := $(OPAL_SRC_PATH)/api
+OPAL_COM_PATH       := $(OPAL_SRC_PATH)/com
+OPAL_3RD_PATH       := $(OPAL_SRC_PATH)/3rd
+OPAL_CFG_PATH       := $(OPAL_SRC_PATH)/cfg
+OPAL_HAL_PATH       := $(OPAL_SRC_PATH)/hal/
+OPAL_MAL_PATH       := $(OPAL_SRC_PATH)/mal
+
+soversion            = yes
+
+
+# output
+MOD_NAME            := ax_opal
+OUTPUT              := $(TARGET_OUT_PATH)/.obj_a
+
+# source
+SRCS                := $(wildcard $(OPAL_API_PATH)/*.c)
+SRCS                += $(wildcard $(OPAL_COM_PATH)/queue/*.c)
+SRCS                += $(wildcard $(OPAL_COM_PATH)/fifo/*.c)
+SRCS                += $(wildcard $(OPAL_COM_PATH)/thread/*.c)
+SRCS                += $(wildcard $(OPAL_COM_PATH)/ini_parser/*.c)
+SRCS                += $(wildcard $(OPAL_COM_PATH)/osd/*.c)
+SRCS                += $(wildcard $(OPAL_COM_PATH)/osd/font/*.c)
+SRCS                += $(wildcard $(OPAL_COM_PATH)/json/*.c)
+SRCS                += $(wildcard $(OPAL_COM_PATH)/utils/*.c)
+SRCS                += $(wildcard $(OPAL_HAL_PATH)/cam/*.c)
+SRCS                += $(wildcard $(OPAL_HAL_PATH)/sys/*.c)
+SRCS                += $(wildcard $(OPAL_HAL_PATH)/ivps/*.c)
+SRCS                += $(wildcard $(OPAL_HAL_PATH)/venc/*.c)
+SRCS                += $(wildcard $(OPAL_HAL_PATH)/algo/*.c)
+SRCS                += $(wildcard $(OPAL_HAL_PATH)/audio/*.c)
+SRCS                += $(wildcard $(OPAL_MAL_PATH)/*.c)
+
+# include
+CINCLUDE            := -I$(INC_PATH)
+CINCLUDE            += -I$(OPAL_INC_PATH)
+CINCLUDE            += -I$(OPAL_API_PATH)
+CINCLUDE            += -I$(OPAL_COM_PATH)/ini_parser
+CINCLUDE            += -I$(OPAL_COM_PATH)/queue
+CINCLUDE            += -I$(OPAL_COM_PATH)/fifo
+CINCLUDE            += -I$(OPAL_COM_PATH)/thread
+CINCLUDE            += -I$(OPAL_COM_PATH)/log
+CINCLUDE            += -I$(OPAL_COM_PATH)/osd
+CINCLUDE            += -I$(OPAL_COM_PATH)/osd/font
+CINCLUDE            += -I$(OPAL_COM_PATH)/json
+CINCLUDE            += -I$(OPAL_COM_PATH)/utils
+
+CINCLUDE            += -I$(OPAL_HAL_PATH)/cam
+CINCLUDE            += -I$(OPAL_HAL_PATH)/sys
+CINCLUDE            += -I$(OPAL_HAL_PATH)/ivps
+CINCLUDE            += -I$(OPAL_HAL_PATH)/venc
+CINCLUDE            += -I$(OPAL_HAL_PATH)/algo
+CINCLUDE            += -I$(OPAL_HAL_PATH)/audio
+
+CINCLUDE            += -I$(OPAL_MAL_PATH)
+
+CINCLUDE            += -I$(LIVE_PATH)/include/BasicUsageEnvironment
+CINCLUDE            += -I$(LIVE_PATH)/include/groupsock
+CINCLUDE            += -I$(LIVE_PATH)/include/liveMedia
+CINCLUDE            += -I$(LIVE_PATH)/include/UsageEnvironment
+CINCLUDE            += -I$(SSL_PATH)/include
+
+CINCLUDE            += -I$(HOME_PATH)/third-party/tinyalsa/include \
+                       -I$(HOME_PATH)/third-party/libsamplerate/include
+ifeq ($(CHIP_TYPE), AX620Q)
+CINCLUD             += -I$(HOME_PATH)/third-party/faac/include
+else
+CINCLUDE            += -I$(HOME_PATH)/third-party/opus/include/opus \
+                       -I$(HOME_PATH)/third-party/fdk-aac/include/fdk-aac
+endif
+
+CINCLUDE            += -I$(GENERATED_PATH)
+
+ifeq ($(FONT_USE_FREETYPE),yes)
+CINCLUDE            += -I$(OPAL_3RD_PATH)/inc/freetype2
+CINCLUDE            += -I$(OPAL_3RD_PATH)/inc/freetype2/freetype
+CINCLUDE            += -I$(OPAL_3RD_PATH)/inc/freetype2/freetype/config
+endif
+
+OBJS                := $(SRCCPPS:%.cpp=$(OUTPUT)/%.o)
+OBJS                += $(SRCS:%.c=$(OUTPUT)/%.o)
+
+DEPS                := $(OBJS:%.o=%.d)
+
+# static lib
+LIBNAME             := lib$(MOD_NAME).a
+STRIPPED_STATIC_TARGET := $(LIBNAME)
+
+# build flags
+#CPPFLAGS           := -Werror -Wall --std=c++11 -fvisibility=hidden -Wunused-function
+#CFLAGS             := $(STATIC_FLAG) -lstdc++ $(CPPFLAGS)
+CFLAGS              := $(STATIC_FLAG) -lstdc++ -Werror -Wall -fvisibility=hidden -Wunused-function
+CFLAGS              += -fPIC
+CFLAGS              += -DOPAL_BUILD_VERSION=\"$(SDK_VERSION)\"
+ifeq ($(debug),yes)
+CFLAGS              += -O0 -ggdb3
+else
+CFLAGS              += -O2 -ggdb3
+endif
+
+ifeq ($(TUNING_CTRL_SUPPORT),yes)
+CFLAGS              += -DTUNING_CTRL
+endif
+
+ifeq ($(FONT_USE_FREETYPE),yes)
+CFLAGS              += -DFONT_USE_FREETYPE
+endif
+
+ifeq ($(USE_OPENSSL),no)
+CFLAGS              += -DNO_OPENSSL
+endif
+
+ifeq ($(OS04A10_SUPPORT),yes)
+CFLAGS              += -DOS04A10_SUPPORT
+endif
+
+ifeq ($(SC450AI_SUPPORT),yes)
+CFLAGS              += -DSC450AI_SUPPORT
+endif
+
+ifeq ($(IMX678_SUPPORT),yes)
+CFLAGS              += -DIMX678_SUPPORT
+endif
+
+ifeq ($(SC200AI_SUPPORT),yes)
+CFLAGS              += -DSC200AI_SUPPORT
+endif
+
+ifeq ($(SC500AI_SUPPORT),yes)
+CFLAGS              += -DSC500AI_SUPPORT
+endif
+
+ifeq ($(SC850SL_SUPPORT),yes)
+CFLAGS              += -DSC850SL_SUPPORT
+endif
+
+ifeq ($(C4395_SUPPORT),yes)
+CFLAGS              += -DC4395_SUPPORT
+endif
+
+ifeq ($(GC4653_SUPPORT),yes)
+CFLAGS              += -DGC4653_SUPPORT
+endif
+
+ifeq ($(MIS2032_SUPPORT),yes)
+CFLAGS              += -DMIS2032_SUPPORT
+endif
+
+CFLAGS              += -DUSING_OPAL_STATIC_FLAG
+
+# dependency
+CLIB                := -Wl,-rpath-link=$(LIB_PATH)
+CLIB                += -L$(LIB_PATH)
+CLIB                += -lrt -lm -ldl -lpthread -lstdc++
+
+ifeq ($(TUNING_CTRL_SUPPORT),yes)
+COMBINE_LIBS        += $(LIB_PATH)/libax_nt_ctrl.a
+COMBINE_LIBS        += $(LIB_PATH)/libax_nt_stream.a
+endif
+
+COMBINE_LIBS        += $(LIB_PATH)/libax_proton.a
+COMBINE_LIBS        += $(LIB_PATH)/libax_ae.a
+COMBINE_LIBS        += $(LIB_PATH)/libax_awb.a
+COMBINE_LIBS        += $(LIB_PATH)/libax_af.a
+COMBINE_LIBS        += $(LIB_PATH)/libax_mipi.a
+COMBINE_LIBS        += $(LIB_PATH)/libax_venc.a
+COMBINE_LIBS        += $(LIB_PATH)/libax_ivps.a
+COMBINE_LIBS        += $(LIB_PATH)/libax_ives.a
+ifeq ($(CHIP_TYPE), AX620Q)
+COMBINE_LIBS        += $(LIB_PATH)/libax_skel_tiny.a
+COMBINE_LIBS        += $(LIB_PATH)/libax_engine_tiny.a
+else
+COMBINE_LIBS        += $(LIB_PATH)/libax_skel.a
+COMBINE_LIBS        += $(LIB_PATH)/libax_engine.a
+endif
+COMBINE_LIBS        += $(LIB_PATH)/libax_interpreter.a
+COMBINE_LIBS        += $(LIB_PATH)/libax_audio.a
+COMBINE_LIBS        += $(LIB_PATH)/libax_audio_3a.a
+COMBINE_LIBS        += $(LIB_PATH)/libax_sys.a
+
+#This position need add all sensor's libxxx.a
+ifeq ($(OS04A10_SUPPORT),yes)
+COMBINE_LIBS        += $(LIB_PATH)/libsns_os04a10.a
+endif
+
+ifeq ($(SC450AI_SUPPORT),yes)
+COMBINE_LIBS        += $(LIB_PATH)/libsns_sc450ai.a
+endif
+
+ifeq ($(IMX678_SUPPORT),yes)
+COMBINE_LIBS        += $(LIB_PATH)/libsns_imx678.a
+endif
+
+ifeq ($(SC200AI_SUPPORT),yes)
+COMBINE_LIBS        += $(LIB_PATH)/libsns_sc200ai.a
+endif
+
+ifeq ($(SC500AI_SUPPORT),yes)
+COMBINE_LIBS        += $(LIB_PATH)/libsns_sc500ai.a
+endif
+
+ifeq ($(SC850SL_SUPPORT),yes)
+COMBINE_LIBS        += $(LIB_PATH)/libsns_sc850sl.a
+endif
+
+ifeq ($(C4395_SUPPORT),yes)
+COMBINE_LIBS        += $(LIB_PATH)/libsns_c4395.a
+endif
+
+ifeq ($(GC4653_SUPPORT),yes)
+COMBINE_LIBS        += $(LIB_PATH)/libsns_gc4653.a
+endif
+
+ifeq ($(MIS2032_SUPPORT),yes)
+COMBINE_LIBS        += $(LIB_PATH)/libsns_mis2032.a
+endif
+
+ifeq ($(SNS_MODE_DYNAMIC_SWITCH_SUPPORT),yes)
+CFLAGS              += -DSNS_MODE_DYNAMIC_SWITCH_SUPPORT
+endif
+
+ifeq ($(FONT_USE_FREETYPE),yes)
+COMBINE_LIBS        += $(COMPONENT_3RD_PATH)/lib/libfreetype.a
+endif
+
+# audio
+# aac
+ifeq ($(APP_AAC_SUPPORT), faac)
+CFLAGS              += -DAPP_FAAC_SUPPORT
+COMBINE_LIBS        += $(LIB_PATH)/libax_faac.a
+else ifeq ($(APP_AAC_SUPPORT), fdk)
+CFLAGS              += -DAPP_FDK_SUPPORT
+COMBINE_LIBS        += $(LIB_PATH)/libax_fdk.a
+endif
+
+# opus
+ifeq ($(APP_OPUS_SUPPORT),yes)
+CFLAGS              += -DAPP_OPUS_SUPPORT
+COMBINE_LIBS        += $(LIB_PATH)/libax_opus.a
+endif
+
+# install
+INSTALL_LIB         := $(STRIPPED_STATIC_TARGET)
+MV_TARGET           := $(INSTALL_LIB)
+#INSTALL_INC         += $(OPAL_INC_PATH)/ax_opal_api.h
+#INSTALL_INC         += $(OPAL_INC_PATH)/ax_opal_type.h
+
+# link
+LINK = $(CC)
+
+include $(HOME_PATH)/build/rules.mak

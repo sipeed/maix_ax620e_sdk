@@ -1,0 +1,17 @@
+#ifndef __SEC_GLB_H__
+#define __SEC_GLB_H__
+
+#include <ax620e_def.h>
+
+#define EFUSE_CTRL				(SEC_GLB_BASE + 0x114)
+
+#define AXI2IRAM0_ADDR_4K_SET	(SEC_GLB_BASE + 0x118)
+#define AXI2IRAM0_ADDR_4K_CLR	(SEC_GLB_BASE + 0x11C)
+#define AXI2IRAM0_PROT_SW_CLR	(SEC_GLB_BASE + 0x134)
+
+#define AXI2IRAM1_ADDR_4K_SET	(SEC_GLB_BASE + 0x138)
+#define AXI2IRAM1_ADDR_4K_CLR	(SEC_GLB_BASE + 0x13C)
+#define AXI2IRAM1_PROT_SW_CLR	(SEC_GLB_BASE + 0x154)
+
+
+#endif

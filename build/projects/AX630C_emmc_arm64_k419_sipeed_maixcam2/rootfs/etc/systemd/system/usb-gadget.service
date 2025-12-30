@@ -1,0 +1,15 @@
+[Unit]
+Description=Run usb gadget
+DefaultDependencies=no
+After=boot.mount
+Requires=boot.mount
+
+[Service]
+Type=forking
+PIDFile=/var/run/udhcpd.usb0.pid
+ExecStart=/opt/scripts/usb-gadget.sh start
+ExecStop=/opt/scripts/usb-gadget.sh stop
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

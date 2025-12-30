@@ -1,0 +1,47 @@
+#!/bin/sh
+#
+# Start the network....
+#
+
+# resolv.conf is not allowed to be modified by other process.
+# chattr +i /etc/resolv.conf
+[ -r "/etc/ssh/ssh_host_rsa_key" ] && chmod 700 /etc/ssh/ssh_*
+
+# enable RFS&RPS
+echo 3 > /sys/class/net/eth0/queues/rx-0/rps_cpus
+echo 32768 > /proc/sys/net/core/rps_sock_flow_entries
+echo 32768 > /sys/class/net/eth0/queues/rx-0/rps_flow_cnt
+echo 200000 > /sys/class/net/eth0/queues/tx-0/byte_queue_limits/limit_min
+
+case "$1" in
+  start)
+        printf "Starting network...\n"
+        /sbin/ifup -a
+        /sbin/ifconfig eth0 up
+        # enable rx pause frame
+        ethtool -A eth0 rx on
+        ethtool -A eth0 tx off
+       ;;
+
+  stop)
+        printf "Stopping network...\n"
+        killall udhcpc
+        # wait to release IP
+        sleep 0.5
+
+        /sbin/ifdown -a
+        /etc/init.d/S80ifplugd stop
+        /sbin/ifconfig eth0 down
+        ;;
+
+  restart|reload)
+        "$0" stop
+        "$0" start
+        ;;
+
+  *)
+        echo "Usage: $0 {start|stop|restart}"
+        exit 1
+esac
+
+exit $?

@@ -1,0 +1,5 @@
+/etc/init.d/S01syslogd
+/etc/init.d/S02klogd
+/etc/init.d/axsyslogd
+/etc/init.d/axklogd
+/etc/init.d/S20urandom

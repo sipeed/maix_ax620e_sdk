@@ -1,0 +1,17 @@
+# All configs user can edit easily
+# Format: maix_<item>_<key>=value
+#         all key charactors should be lowercase
+#         and shell environment style file, so no space around '=' !!!
+# Full supported items see documentation of maixpy at:
+#      https://wiki.sipeed.com/maixpy/doc/zh/basic/app.html
+
+#### [memory]
+# CMM memory is for camera and NPU etc. Now only support for maixcam2, unit is MiB.
+# -1 means use default.
+maix_memory_cmm=-1
+
+# ################################################################ #
+###### More configs see MaixPy's builtin files repo ################
+# ################################################################ #
+
+

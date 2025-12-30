@@ -1,0 +1,161 @@
+CUR_PATH            := $(shell pwd)
+HOME_PATH           := $(abspath $(CUR_PATH)/../../..)
+
+include $(HOME_PATH)/build/color.mk
+include $(HOME_PATH)/build/config.mak
+
+PRJ_OUT_HOME        := $(HOME_PATH)/build/out/$(PROJECT)
+OBJ_OUT_PATH        := $(PRJ_OUT_HOME)/objs
+LIB_PATH            := $(MSP_OUT_PATH)/lib
+INC_PATH            := $(MSP_OUT_PATH)/include
+SRC_RELATIVE_PATH   := $(subst $(HOME_PATH)/,,$(CUR_PATH))
+TARGET_OUT_PATH     := $(OBJ_OUT_PATH)/$(SRC_RELATIVE_PATH)
+
+BIN_PATH            := $(HOME_PATH)/app/opal/bin
+SRC_PATH            := $(HOME_PATH)/app/opal/demo/src
+LIBSRC_PATH         := $(HOME_PATH)/app/opal/libs/src
+
+APP_COMPONENT_PATH  := $(HOME_PATH)/app/component
+COMPONENT_PATH      := $(HOME_PATH)/app/opal/libs/src
+
+COMPONENT_3RD_PATH  := $(COMPONENT_PATH)/3rd
+#RESOURCE_PATH       := $(COMPONENT_PATH)/resource
+
+RESOURCE_PATH       := $(HOME_PATH)/app/component/resource
+RTSP_PATH           := $(COMPONENT_PATH)/com/rtsp
+#LOG_PATH            := $(HOME_PATH)/app/component/log
+
+3RD_PATH            := $(HOME_PATH)/third-party
+SSL_PATH            := $(3RD_PATH)/openssl/$(ARCH)/$(LIBC)
+LIVE_PATH           := $(3RD_PATH)/live/out/$(ARCH)/$(LIBC)
+MP4_LIB             := $(3RD_PATH)/mp4/lib/$(ARCH)/$(LIBC)
+MP4_INC             := $(3RD_PATH)/mp4/include
+
+USE_OPENSSL         := no
+
+MOD_NAME            = opaldemo
+OUTPUT              := $(TARGET_OUT_PATH)/obj
+
+# source
+SRCCPPS             += $(wildcard $(SRC_PATH)/utils/*.cpp)
+SRCCPPS             += $(wildcard $(SRC_PATH)/rtsp/*.cpp)
+
+SRCS                := $(wildcard $(SRC_PATH)/utils/*.c)
+SRCS                += $(wildcard $(SRC_PATH)/cfg/*.c)
+SRCS                += $(wildcard $(SRC_PATH)/webserver/*.c)
+SRCS                += $(wildcard $(SRC_PATH)/mp4/*.c)
+SRCS                += $(wildcard $(SRC_PATH)/*.c)
+
+OBJS                := $(SRCCPPS:%.cpp=$(OUTPUT)/%.o)
+OBJS                += $(SRCS:%.c=$(OUTPUT)/%.o)
+DEPS                := $(OBJS:%.o=$(OUTPUT)%.d)
+
+# include
+CINCLUDE            := -I$(INC_PATH)
+CINCLUDE            += -I$(SRC_PATH)
+CINCLUDE            += -I$(SRC_PATH)/utils
+CINCLUDE            += -I$(SRC_PATH)/cfg
+CINCLUDE            += -I$(SRC_PATH)/rtsp
+CINCLUDE            += -I$(SRC_PATH)/webserver
+CINCLUDE            += -I$(SRC_PATH)/mp4
+
+CINCLUDE            += -I$(COMPONENT_3RD_PATH)/inc/appweb
+CINCLUDE            += -I$(LIVE_PATH)/include/BasicUsageEnvironment
+CINCLUDE            += -I$(LIVE_PATH)/include/groupsock
+CINCLUDE            += -I$(LIVE_PATH)/include/liveMedia
+CINCLUDE            += -I$(LIVE_PATH)/include/UsageEnvironment
+CINCLUDE            += -I$(MP4_INC)
+
+
+# build flags
+CFLAGS            := ${EXEC_FLAG} -Wall -Wl,-rpath-link=$(LIB_PATH):$(BIN_PATH)/lib:$(3RD_PATH)/lib
+CPPFLAGS          := ${CFLAGS} --std=c++11
+
+ifeq ($(debug),yes)
+CFLAGS            += -O0 -ggdb3
+else
+CFLAGS            += -O2 -ggdb3
+endif
+
+ifeq ($(mtrace),yes)
+CFLAGS            += -DAX_MEM_CHECK
+endif
+
+CFLAGS            += -DAPP_BUILD_VERSION=\"$(SDK_VERSION)\"
+
+CFLAGS            += -DSNS_MODE_DYNAMIC_SWITCH_SUPPORT
+
+ifeq ($(USE_OPENSSL),no)
+CFLAGS            += -DNO_OPENSSL
+endif
+
+# exec
+ifeq ($(STRIP_APP),yes)
+STRIPPED_TARGET   := $(TARGET_OUT_PATH)/$(MOD_NAME)
+DEBUG_TARGET      := $(TARGET_OUT_PATH)/$(MOD_NAME)_debug
+else
+TARGET            := $(TARGET_OUT_PATH)/$(MOD_NAME)
+endif
+
+# dependency
+CLIB            := -L$(LIB_PATH)
+CLIB            += -lax_sys
+# CLIB            += -lax_proton
+# CLIB            += -lax_mipi
+# CLIB            += -lax_venc
+# CLIB            += -lax_ivps
+# CLIB            += -lax_3a
+# CLIB            += -lax_engine
+# CLIB            += -lax_ives
+# CLIB            += -lax_nt_stream
+# CLIB            += -lax_nt_ctrl
+# CLIB            += -lax_audio
+# CLIB            += -lax_audio_3a
+CLIB            += -lax_opal
+
+CLIB            += -L$(MP4_LIB) -l:libmp4.a
+CLIB            += -lrt
+CLIB            += -lm
+CLIB            += -ldl
+CLIB            += -lpthread
+CLIB            += -lstdc++
+
+ifeq ($(USE_OPENSSL),yes)
+CLIB            += -L$(SSL_PATH)/lib -lssl -lcrypto
+endif
+
+CLIB            += -L$(RESOURCE_PATH)/lib/$(ARCH)/$(LIBC)/appweb -lappweb -lmpr -lhttp
+CLIB            += -L$(LIVE_PATH)/lib -lliveMedia -lgroupsock -lBasicUsageEnvironment -lUsageEnvironment
+CLIB            += -L$(COMPONENT_3RD_PATH)/lib/$(ARCH)/$(LIBC) -lfreetype
+
+# audio
+CLIB            += -L$(3RD_PATH)/tinyalsa/lib/$(ARCH)/$(LIBC) -ltinyalsa
+CLIB            += -L$(3RD_PATH)/libsamplerate/lib/$(ARCH)/$(LIBC) -lsamplerate
+
+# aac
+ifeq ($(APP_AAC_SUPPORT), faac)
+CFLAGS          += -DAPP_FAAC_SUPPORT
+CLIB            += -L$(3RD_PATH)/faac/lib/$(ARCH)/$(LIBC) -lfaac
+else ifeq ($(APP_AAC_SUPPORT), fdk)
+CFLAGS          += -DAPP_FDK_SUPPORT
+CLIB            += -L$(3RD_PATH)/fdk-aac/lib/$(ARCH)/$(LIBC) -lfdk-aac
+endif
+
+# opus
+ifeq ($(APP_OPUS_SUPPORT),yes)
+CFLAGS          += -DAPP_OPUS_SUPPORT
+CLIB            += -L$(3RD_PATH)/opus/lib/$(ARCH)/$(LIBC) -lopus
+endif
+
+# link
+LINK = $(CPP)
+
+ifeq ($(STRIP_APP),yes)
+INSTALL_TARGET  := $(STRIPPED_TARGET)
+else
+INSTALL_TARGET  := $(TARGET)
+endif
+
+INSTALL_DIR     := $(ROOTFS_TARGET_PATH)/bin/OPALDemo
+
+include $(HOME_PATH)/build/rules.mak

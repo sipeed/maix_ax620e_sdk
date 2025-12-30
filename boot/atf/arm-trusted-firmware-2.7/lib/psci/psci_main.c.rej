@@ -1,0 +1,19 @@
+--- arm-trusted-firmware-2.7/lib/psci/psci_main.c
++++ arm-trusted-firmware-2.7/lib/psci/psci_main.c
+@@ -17,6 +17,8 @@
+ #include <services/arm_arch_svc.h>
+ 
+ #include "psci_private.h"
++#include <lib/mmio.h>
++#include <common/debug.h>
+ 
+ /*******************************************************************************
+  * PSCI frontend api for servicing SMCs. Described in the PSCI spec.
+@@ -150,7 +152,6 @@ int psci_cpu_suspend(unsigned int power_state,
+ 	return PSCI_E_SUCCESS;
+ }
+ 
+-
+ int psci_system_suspend(uintptr_t entrypoint, u_register_t context_id)
+ {
+ 	int rc;

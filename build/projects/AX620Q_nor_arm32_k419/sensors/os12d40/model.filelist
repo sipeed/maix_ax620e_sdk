@@ -1,0 +1,12 @@
+@dir: msp/out/$(MSP_OUT_DIR)
+#etc/models/aiisp/OS12D40_HDR_4480x2512*.axmodel
+etc/models/aiisp/OS12D40_SDR_4480x2512_10b_LCG_ISP1_A16-60X_I1-16X_0700_00000833850_240701_AX620E.axmodel
+etc/models/aiisp/OS12D40_SDR_2240x1256_10b_HCG_ISP1_A16X_I2-8X_0000_00000839519_240705_AX620E.axmodel
+etc/os12d40_sdr_10bit_4480x2512.bin
+etc/os12d40_sdr_10bit_binning_2240x1256.bin
+etc/os12d40_sdr_online.ini
+etc/os12d40_single_sdr_online_entry.ini
+etc/os12d40_sdr_4480_2512_online.ini
+etc/os12d40_single_sdr_4480_2512_online_entry.ini
+etc/os12d40_sdr_binning_2240_1256_online.ini
+etc/os12d40_single_sdr_binning_2240_1256_online_entry.ini

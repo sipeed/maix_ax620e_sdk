@@ -1,0 +1,18 @@
+#!/bin/sh
+set -e
+
+case "$2" in
+up)
+        echo "$1 Cable plugged in, requesting DHCP ..."
+        ip link set $1 up
+        pkill -f "dhclient.*$1" || true
+        dhclient -v $1
+        ;;
+down)
+        echo "$1 Cable unplugged, releasing DHCP ..."
+        pkill -f "dhclient.*$1" || true
+        ip addr flush dev "$1"
+        ip link set "$1" down
+        ;;
+esac
+

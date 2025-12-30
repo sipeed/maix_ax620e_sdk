@@ -1,0 +1,19 @@
+[Unit]
+Description=System Device Services
+
+[Service]
+Type=simple
+ExecStart=/opt/scripts/sysdev.sh
+ExecStop=/bin/kill -s TERM $MAINPID 
+KillSignal=SIGTERM
+TimeoutStopSec=3
+User=root
+Group=root
+Restart=always
+RestartSec=1
+StandardOutput=journal
+StandardError=journal
+KillMode=mixed
+
+[Install]
+WantedBy=multi-user.target

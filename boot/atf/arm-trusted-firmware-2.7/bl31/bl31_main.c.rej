@@ -1,0 +1,13 @@
+--- arm-trusted-firmware-2.7/bl31/bl31_main.c
++++ arm-trusted-firmware-2.7/bl31/bl31_main.c
+@@ -121,8 +121,8 @@ void bl31_setup(u_register_t arg0, u_register_t arg1, u_register_t arg2,
+  ******************************************************************************/
+ void bl31_main(void)
+ {
+-	NOTICE("BL31: %s\n", version_string);
+-	NOTICE("BL31: %s\n", build_message);
++	//NOTICE("BL31: %s\n", version_string);
++	//NOTICE("BL31: %s\n", build_message);
+ 
+ #if FEATURE_DETECTION
+ 	/* Detect if features enabled during compilation are supported by PE. */

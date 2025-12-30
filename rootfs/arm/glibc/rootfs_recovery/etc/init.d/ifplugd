@@ -1,0 +1,37 @@
+#!/bin/sh
+
+INTERFACES="eth0"
+APIMODE=""
+
+echo "ifplugd $1"
+
+start()
+{
+  for IFNAME in $INTERFACES; do
+      ifplugd $APIMODE -i $IFNAME -n -s -f -I -q -p -d0 > /dev/null 2>&1 &
+  done
+}
+
+stop()
+{
+    killall ifplugd
+}
+
+case "$1" in
+  start)
+    start
+    ;;
+  stop)
+    stop
+    ;;
+  restart)
+    stop
+    start
+    ;;
+  *)
+    echo "Usage: $0 {start|stop|restart}"
+    exit 1
+    ;;
+esac
+
+exit 0

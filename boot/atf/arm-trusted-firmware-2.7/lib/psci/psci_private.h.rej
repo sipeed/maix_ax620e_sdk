@@ -1,0 +1,10 @@
+--- arm-trusted-firmware-2.7/lib/psci/psci_private.h
++++ arm-trusted-firmware-2.7/lib/psci/psci_private.h
+@@ -16,6 +16,7 @@
+ #include <lib/el3_runtime/cpu_data.h>
+ #include <lib/psci/psci.h>
+ #include <lib/spinlock.h>
++#include <common/debug.h>
+ 
+ /*
+  * The PSCI capability which are provided by the generic code but does not

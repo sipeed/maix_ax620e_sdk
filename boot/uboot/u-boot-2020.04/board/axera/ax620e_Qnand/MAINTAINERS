@@ -1,0 +1,6 @@
+AX620E_QNAND
+M:      junqiang wang <junqiang.wang@aixin-chip.com>
+S:      Maintained
+F:      board/axera/ax620e_Qnand
+F:      include/configs/ax620e_Qnand.h
+F:      configs/AX620E_Qnand_defconfig
