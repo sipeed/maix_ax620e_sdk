@@ -3,6 +3,8 @@ MAIX AX620E System Build
 
 ## Introduction
 
+If you are first time using, you can refer to [this document](https://github.com/sipeed/maix_ax620e_sdk/tree/main/docs) for a complete system use guide.
+
 This repository contains the source code for building `MaixCam2`, `KVM Pro` etc. basic system images.
 
 This repository requires the submodules [maix_ax620e_sdk_msp](https://github.com/sipeed/maix_ax620e_sdk_msp) and [maix_ax620e_sdk_kernel](https://github.com/sipeed/maix_ax620e_sdk_kernel) to be cloned before compiling.

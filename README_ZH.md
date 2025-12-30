@@ -3,6 +3,8 @@ MAIX AX620E 系统构建
 
 ## 说明
 
+初次使用可以先看一遍[官方文档](https://github.com/sipeed/maix_ax620e_sdk/tree/main/docs)，他们提供了更完整的系统使用说明，目前只有中文版。
+
 本仓库存放的是AX620E平台的系统源码, 主要用于构建`MaixCam2`, `KVM Pro`等基础系统镜像。
 
 本仓库还依赖了子仓库[maix_ax620e_sdk_msp](https://github.com/sipeed/maix_ax620e_sdk_msp)和[maix_ax620e_sdk_kernel](https://github.com/sipeed/maix_ax620e_sdk_kernel), 确保构造镜像前通过`git submodule`命令拉取了依赖的子仓库。
