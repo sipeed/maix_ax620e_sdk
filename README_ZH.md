@@ -3,7 +3,7 @@ MAIX AX620E 系统构建
 
 ## 说明
 
-初次使用可以先看一遍[官方文档](https://github.com/sipeed/maix_ax620e_sdk/tree/main/docs)，他们提供了更完整的系统使用说明，目前只有中文版。
+初次使用可以先看一遍[官方文档](https://github.com/sipeed/maix_ax620e_sdk/tree/main/docs)，这里提供了更完整的系统使用说明，目前只有中文版。
 
 本仓库存放的是AX620E平台的系统源码, 主要用于构建`MaixCam2`, `KVM Pro`等基础系统镜像。
 
@@ -44,10 +44,10 @@ which aarch64-none-linux-gnu-gcc
 ```shell
 sudo dpkg-reconfigure dash # 然后选择No
 
-sudo apt install make libc6:i386 lib32stdc++6 zlib1g-dev libncurses5-dev ncurses-term libncursesw5-dev g++ u-boot-tools texinfo texlive gawk libssl-dev openssl bc bison flex gcc libgcc1 gdb build-essential lib32z1 u-boot-tools device-tree-compiler qemu qemu-user-static fusefat
+sudo apt install make libc6:i386 lib32stdc++6 zlib1g-dev libncurses5-dev ncurses-term libncursesw5-dev g++ u-boot-tools texinfo texlive gawk libssl-dev openssl bc bison flex gcc libgcc1 gdb build-essential lib32z1 u-boot-tools device-tree-compiler qemu qemu-user-static fusefat patchelf libpcre3
 
 sudo python3 -m pip install --upgrade pip
-sudo pip3 install lxml
+sudo pip3 install lxml pyelftools
 ```
 
 * 构建 ubuntu rootfs

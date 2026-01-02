@@ -45,10 +45,10 @@ which aarch64-none-linux-gnu-gcc
 ```shell
 sudo dpkg-reconfigure dash # Then choose No
 
-sudo apt install make libc6:i386 lib32stdc++6 zlib1g-dev libncurses5-dev ncurses-term libncursesw5-dev g++ u-boot-tools texinfo texlive gawk libssl-dev openssl bc bison flex gcc libgcc1 gdb build-essential lib32z1 u-boot-tools device-tree-compiler qemu qemu-user-static fusefat
+sudo apt install make libc6:i386 lib32stdc++6 zlib1g-dev libncurses5-dev ncurses-term libncursesw5-dev g++ u-boot-tools texinfo texlive gawk libssl-dev openssl bc bison flex gcc libgcc1 gdb build-essential lib32z1 u-boot-tools device-tree-compiler qemu qemu-user-static fusefat patchelf libpcre3
 
 sudo python3 -m pip install --upgrade pip
-sudo pip3 install lxml axp-tools
+sudo pip3 install lxml axp-tools pyelftools
 ```
 
 * Build ubuntu rootfs

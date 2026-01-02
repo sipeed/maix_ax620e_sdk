@@ -10,3 +10,7 @@ boot/bl1/*/*/*/*.d
 boot/bl1/*/*/*/*.o
 rootfs/arm64/glibc/ubuntu_rootfs/*.tar.gz
 app/opal/libs/*
+.vscode
+tools/*/*/__pycache__/*.pyc
+tools/*/*/*/__pycache__/*.pyc
+tools/*/*/*/*/__pycache__/*.pyc
