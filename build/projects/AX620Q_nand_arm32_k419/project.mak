@@ -29,7 +29,7 @@ include $(BUILD_DIR)/cross_$(ARCH)_$(LIBC).mak
 include $(PRJECT_DIR)/common.mak
 
 # You are not advised to modify the following options
-BUILD_BUSYBOX                  := FALSE
+BUILD_BUSYBOX                  := TRUE
 SUPPORT_UBIFS                  := TRUE
 SUPPORT_CPIO                   := FALSE
 SUPPPORT_GZIPD                 := TRUE

@@ -15,6 +15,7 @@
 #include <linux/mtd/spinand.h>
 
 #define SPINAND_MFR_WINBOND		0xEF
+#define SPINAND_MFR_XTXTECH		0x0B
 #define WINBOND_STATUS_ECC_HAS_BITFLIPS_T	(3 << 4)
 
 #define WINBOND_CFG_BUF_READ		BIT(3)
@@ -466,6 +467,14 @@ static const struct spinand_info winbond_spinand_table[] = {
 		     SPINAND_HAS_QE_BIT,
 		     SPINAND_ECCINFO(&w25n02kw_ooblayout, NULL)),
 #endif
+	SPINAND_INFO("XT26G01C", 0x11,
+		     NAND_MEMORG(1, 2048, 64, 64, 1024, 1, 1, 1),
+		     NAND_ECCREQ(1, 512),
+		     SPINAND_INFO_OP_VARIANTS(&read_cache_variants,
+					      &write_cache_variants,
+					      &update_cache_variants),
+		     SPINAND_HAS_QE_BIT,
+		     SPINAND_ECCINFO(&w25m02gv_ooblayout, NULL)),
 };
 
 /**
@@ -482,7 +491,7 @@ static int winbond_spinand_detect(struct spinand_device *spinand)
 	 * Winbond SPI NAND read ID need a dummy byte,
 	 * so the first byte in raw_id is dummy.
 	 */
-	if (id[1] != SPINAND_MFR_WINBOND)
+	if (id[1] != SPINAND_MFR_WINBOND && id[1] != SPINAND_MFR_XTXTECH)
 		return 0;
 
 	ret = spinand_match_and_init(spinand, winbond_spinand_table,
