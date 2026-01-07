@@ -96,6 +96,7 @@ export DEBIAN_FRONTEND=noninteractive
 chmod 1777 /tmp
 apt update --allow-insecure-repositories
 apt install -y --allow-unauthenticated dialog tzdata locales
+apt install -y --allow-unauthenticated --no-install-recommends wireguard-tools
 locale-gen en_US.UTF-8
 update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
 apt upgrade -y
