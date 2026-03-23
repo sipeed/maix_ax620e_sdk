@@ -112,7 +112,7 @@ apt install -y --allow-unauthenticated vim bash-completion systemd sudo kmod net
         i2c-tools spi-tools portaudio19-dev udhcpc \
         hostapd rsync neovim arp-scan ripgrep picocom etherwake netcat-traditional\
         bluez evtest usbutils arping zstd dos2unix parted e2fsprogs dosfstools \
-        exfatprogs libcairo2-dev libgirepository1.0-dev iw
+        exfatprogs libcairo2-dev libgirepository1.0-dev iw fdisk
 
 if [ -L "/etc/systemd/system/multi-user.target.wants/hostapd.service" ]; then
     unlink "/etc/systemd/system/multi-user.target.wants/hostapd.service"
