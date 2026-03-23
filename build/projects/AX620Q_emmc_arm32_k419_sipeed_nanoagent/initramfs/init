@@ -1,0 +1,231 @@
+#!/bin/sh
+
+export PATH=/bin
+echo "Run initramfs!"
+
+boot_mount=/boot
+root_mount=/realroot
+boot_from_sd=0
+root_dev=""
+boot_dev=""
+bootargs=""
+
+run_sh() {
+    exec /bin/sh
+}
+
+msc() {
+    echo "[initramfs] Recovery mode"
+    mkdir -p /sys/kernel/config
+    mount -t configfs configfs /sys/kernel/config
+    umount "$boot_dev" || true
+    umount "$root_dev" || true
+
+    cd /sys/kernel/config/usb_gadget
+    mkdir g1
+    cd g1
+    echo 0x359f > idVendor
+    echo 0x2200 > idProduct
+
+    mkdir -p strings/0x409 -m 0770
+    echo "nanoagent" > strings/0x409/serialnumber
+    echo "sipeed" > strings/0x409/manufacturer
+    echo "nanoagent" > strings/0x409/product
+
+    mkdir -p configs/c.1 -m 0770
+    mkdir -p configs/c.1/strings/0x409 -m 0770
+    echo "gadget config" > configs/c.1/strings/0x409/configuration
+    echo 250 > configs/c.1/MaxPower # max 500mA
+
+    mkdir -p functions/mass_storage.disk0
+    mkdir -p functions/mass_storage.disk0/lun.0
+    ln -s functions/mass_storage.disk0 configs/c.1/
+    echo 1 > functions/mass_storage.disk0/lun.0/removable
+    if [ "$boot_from_sd" -eq 0 ]; then
+        echo /dev/mmcblk0 > functions/mass_storage.disk0/lun.0/file
+    else
+        echo /dev/mmcblk1 > functions/mass_storage.disk0/lun.0/file
+    fi
+
+    ls /sys/class/udc/ | cat > UDC
+
+    /show_iostat $boot_from_sd &
+    cd /
+    /bin/sh
+}
+
+wait_for_device() {
+    local device="$1"
+    local retries="${2:-50}"
+    local i=0
+
+    while [ ! -e "$device" ] && [ $i -lt "$retries" ]; do
+        usleep 100000
+        i=$((i + 1))
+    done
+
+    [ -e "$device" ]
+}
+
+mount -t proc proc /proc || run_sh
+mount -t sysfs sysfs /sys || run_sh
+mount -t devtmpfs devtmpfs /dev || run_sh
+
+wait_for_device "/proc/cmdline" || run_sh
+bootargs=$(cat /proc/cmdline 2>/dev/null)
+
+case " $bootargs " in
+    *" initramfs "*)
+        run_sh
+        ;;
+esac
+
+for arg in $bootargs; do
+    case "$arg" in
+        root=*)
+            root_dev="${arg#root=}"
+            ;;
+    esac
+done
+
+if [ -z "$root_dev" ]; then
+    echo "No root device in cmdline"
+    run_sh
+fi
+
+block_device="${root_dev%p*}"
+root_part_num="${root_dev##*p}"
+if [ -z "$root_part_num" ] || [ "$root_part_num" -le 1 ] 2>/dev/null; then
+    echo "Invalid root partition: $root_dev"
+    run_sh
+fi
+boot_part_num=$((root_part_num - 1))
+boot_dev="${block_device}p${boot_part_num}"
+
+wait_for_device "$boot_dev" || run_sh
+wait_for_device "$root_dev" || run_sh
+
+mkdir -p "$boot_mount"
+mkdir -p "$root_mount"
+
+mount -o ro "$boot_dev" "$boot_mount"
+if [ "$?" -ne 0 ]; then
+    echo "Mount bootfs failed, try fsck.vfat ..."
+    fsck.vfat -a "$boot_dev"
+    mount -o rw "$boot_dev" "$boot_mount"
+    mfail="$?"
+    if [ "${mfail}" -ne 0 ]
+    then
+        echo "Recover with fsck.vfat failed, enter USB upgrade mode"
+        msc
+    fi
+fi
+
+# check step into recovery mode
+if [ -e "$boot_mount"/rec ]
+then
+    msc
+fi
+
+# check boot key pressed
+boot_key=0
+for arg in $(cat /proc/cmdline); do
+    case "$arg" in
+        boot_key=*)
+            boot_key="${arg#boot_key=}"
+            ;;
+    esac
+done
+
+if [ "${boot_key}" -eq 1 ] # boot key pressed
+then
+    msc
+fi
+
+if [ "$boot_from_sd" -ne 1 ]; then
+    if [ -e /boot/check_resize2fs ]; then
+        echo "/boot/check_resize2fs exists, now check ..."
+        mount -o ro "$root_dev" "$root_mount"
+        cp "$root_mount"/opt/e2fs-static/tune2fs /tune2fs
+        cp "$root_mount"/opt/e2fs-static/resize2fs /resize2fs
+        umount "$root_dev"
+        echo "Resizing rootfs ..."
+        /tune2fs -O^resize_inode "$root_dev"
+        e2fsck -fvp "$root_dev"
+        if [ "$?" -ne 0 ]; then
+            e2fsck -fvy "$root_dev"
+        fi
+        /resize2fs "$root_dev"
+        mount -o remount,rw "$boot_mount"
+        rm -f "$boot_mount/check_resize2fs"
+        rm -f /resize2fs /tune2fs
+        echo "[initramfs] resize rootfs done"
+        sync
+    fi
+
+    # mount rootfs
+    mount -o rw "$root_dev" "$root_mount"
+    mfail="$?"
+    if [ "${mfail}" -ne 0 ]
+    then
+        echo "Mount rootfs failed, try e2fsck ..."
+        e2fsck -fvp "$root_dev"
+        if [ "$?" -ne 0 ]; then
+            e2fsck -fvy "$root_dev"
+        fi
+        mount -o rw "$root_dev" "$root_mount"
+        mfail="$?"
+        if [ "${mfail}" -ne 0 ]
+        then
+            echo "Recover with e2fsck failed, enter USB upgrade mode"
+            msc
+        fi
+    fi
+else
+    echo "Not support boot from sdcard, enter USB upgrade mode"
+    msc
+fi
+
+if dmesg | grep -q "running e2fsck is recommended"; then
+    echo "Rootfs needs e2fsck, unmount and repair ..."
+    umount "$root_mount" 2>/dev/null || true
+
+    echo "Running e2fsck -fvp $root_dev ..."
+    e2fsck -fvp "$root_dev"
+    if [ "$?" -ne 0 ]; then
+        echo "e2fsck failed, trying with -fvy ..."
+        e2fsck -fvy "$root_dev"
+    fi
+
+    mount -o rw "$root_dev" "$root_mount"
+    if [ "$?" -ne 0 ]; then
+        echo "Mount rootfs failed after e2fsck, entering recovery mode"
+        msc
+    fi
+fi
+
+# set device key
+device_key=$(cat /proc/ax_proc/uid | awk '{print $2}' | cut -c 3-)
+echo "$device_key" > "$root_mount/device_key"
+
+# set mac addr
+mac_uid=$(sha512sum "$root_mount/device_key" | head -c 4)
+mac_hi=$(echo "$mac_uid" | cut -c 1-2)
+mac_lo=$(echo "$mac_uid" | cut -c 3-4)
+new_mac="48:da:35:6d:${mac_hi}:${mac_lo}"
+interfaces_file="$root_mount/etc/network/interfaces"
+if grep -q "hwaddress ether" "$interfaces_file"; then
+    sed -i "s/^\(.*hwaddress ether \)[^ ]*\$/\1$new_mac/" "$interfaces_file"
+else
+    echo "hwaddress ether $new_mac" >> "$interfaces_file"
+fi
+
+if [ -e "$boot_mount/first_time_boot" ]; then
+    echo "kvm-${mac_hi}${mac_lo}" > "$root_mount/etc/hostname"
+    mount -o remount,rw "$boot_mount"
+    rm -f "$boot_mount/first_time_boot"
+    sync
+fi
+
+umount "$boot_dev"
+exec switch_root "$root_mount" /sbin/init

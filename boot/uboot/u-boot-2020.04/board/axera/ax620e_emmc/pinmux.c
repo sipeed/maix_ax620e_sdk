@@ -67,6 +67,9 @@ static int ax_pinmux_index_conv(int index)
 		ret = AX630C_DEMO_V1_0;
 		break;
 	case AX620Q_LP4_DEMO_V1_1:
+	// ### SIPEED EDIT ###
+	case AX620Q_LP4_NANOAGENT_256M:
+	// ### SIPEED EDIT END ###
 		ret = AX620Q_LP4_DEMO_V1_0;
 		break;
 	default :

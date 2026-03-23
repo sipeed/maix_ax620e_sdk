@@ -26,7 +26,7 @@ MSP_OUT_PATH     := $(HOME_PATH)/msp/out/$(MSP_OUT_DIR)
 OSDRV_OUT_PATH   := $(HOME_PATH)/kernel/osdrv/out/$(OSDRV_OUT_DIR)
 ROOTFS_TARGET_PATH := $(MSP_OUT_PATH)
 
-include $(BUILD_DIR)/cross_$(ARCH)_$(LIBC)_nanokvm.mak
+include $(BUILD_DIR)/cross_$(ARCH)_$(LIBC)_nanoagent.mak
 include $(PRJECT_DIR)/common.mak
 
 # You are not advised to modify the following options

@@ -41,7 +41,7 @@ function get_emmc_size()
 
 function get_os_mem_size()
 {
-    $(cat /proc/cmdline | grep -o "mem=[0-9]*M" | sed 's/mem=\([0-9]*\)M/\1/')
+    cat /proc/cmdline | grep -o "mem=[0-9]*M" | sed 's/mem=\([0-9]*\)M/\1/'
 }
 
 function get_cmm_size()

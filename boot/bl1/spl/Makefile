@@ -150,11 +150,13 @@ CPPFLAGS += -DKERNEL_HEADER_FLASH_BASE="$(KERNEL_A_HEADER_FLASH_BASE)"
 CPPFLAGS += -DKERNEL_HEADER_BAK_FLASH_BASE="0x0"
 
 ### SIPEED EDIT ###
-ifneq (,$(findstring $(PROJECT), "AX630C_emmc_arm64_k515" "AX630C_emmc_arm64_k419" "AX630C_emmc_arm64_k419_sipeed_maixcam2"))
+ifneq (,$(findstring $(PROJECT), "AX630C_emmc_arm64_k515" "AX630C_emmc_arm64_k419" "AX630C_emmc_arm64_k419_sipeed_maixcam2" "AX630C_emmc_arm64_k419_sipeed_nanokvm"))
 ### SIPEED EDIT END ###
 CPPFLAGS += -DUBOOT_HEADER_BAK_FLASH_BASE="$(UBOOT_B_HEADER_FLASH_BASE)"
 CPPFLAGS += -DATF_HEADER_BAK_FLASH_BASE="$(ATF_B_HEADER_FLASH_BASE)"
-else ifneq (,$(findstring $(PROJECT), "AX630C_emmc_arm32_k419" "AX620Q_emmc_arm32_k419"))
+### SIPEED EDIT ###
+else ifneq (,$(findstring $(PROJECT), "AX630C_emmc_arm32_k419" "AX620Q_emmc_arm32_k419" "AX620Q_emmc_arm32_k419_sipeed_nanoagent"))
+### SIPEED EDIT END ###
 CPPFLAGS += -DUBOOT_HEADER_BAK_FLASH_BASE="$(UBOOT_B_HEADER_FLASH_BASE)"
 CPPFLAGS += -DATF_HEADER_BAK_FLASH_BASE="0x0"
 else
@@ -246,9 +248,9 @@ endif
 
 ### SIPEED EDIT ###
 endif
-### SIPEED EDIT END ###
 
-ifneq (,$(findstring $(PROJECT), "AX620Q_emmc_arm32_k419"))
+ifneq (,$(findstring $(PROJECT), "AX620Q_emmc_arm32_k419" "AX620Q_emmc_arm32_k419_sipeed_nanoagent"))
+### SIPEED EDIT END ###
 CPPFLAGS += -DAX620Q_EMMC_4BIT=1
 SIGN_CAP := 0x54FAFD
 else

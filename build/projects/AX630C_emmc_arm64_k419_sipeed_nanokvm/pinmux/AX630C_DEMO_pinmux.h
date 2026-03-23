@@ -101,7 +101,7 @@
 0x02302004, 0x00000201,  /* SLEEP_CTRL */
 0x0230200C, 0x00000003,  /* PadName = SD_PWR_SW            Fuction = SD_PWR_SW */
 0x02302018, 0x00000003,  /* PadName = GPIO3_A1             Fuction = GPIO3_A1 */
-0x02302024, 0x00000003,  /* PadName = GPIO3_A2             Fuction = SEN_HSYNC_D0 */
+0x02302024, 0x00000003,  /* PadName = GPIO3_A2             Fuction = GPIO3_A2 */
 0x02302030, 0x00000013,  /* PadName = GPIO3_A3             Fuction = GPIO3_A3 */
 0x02302048, 0x00000013,  /* PadName = BOND0                Fuction = BOND0 */
 0x02302054, 0x00000013,  /* PadName = BOND1                Fuction = BOND1 */

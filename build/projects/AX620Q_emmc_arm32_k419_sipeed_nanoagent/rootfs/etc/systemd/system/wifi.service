@@ -1,0 +1,17 @@
+[Unit]
+Description=Run wifi.sh
+DefaultDependencies=no
+After=boot.mount network.target
+Requires=boot.mount
+
+[Service]
+Type=simple
+ExecStart=/opt/scripts/wifi.sh start
+ExecStop=/opt/scripts/wifi.sh stop
+ExecReload=/opt/scripts/wifi.sh restart
+RemainAfterExit=yes
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,76 @@
+#!/bin/sh
+
+export PATH=/bin
+boot_from_sd=$1
+blk_name=mmcblk0
+blk_dev=/dev/$blk_name
+
+if [ $boot_from_sd -eq 1 ]; then
+    blk_name=mmcblk1
+    blk_dev=/dev/$blk_name
+fi
+
+
+prev_written=0      # 上一秒写入量 (kB)
+base_written=0      # 基准写入量 (kB)
+last_increase=0     # 上次检测到写入增加的时间
+i=0
+detected=0          # 是否已经检测到开始刷写
+written_times=0     # 记录写入了多少次
+last_written_time=""
+
+written_k=$(iostat -k | awk -v blk="$blk_name" '$1==blk {print $6}')
+[ -z "$written_k" ] && written_k=0
+base_written=$written_k
+
+while true
+do
+    sync
+    sleep 1
+    i=$((i+1))
+
+    # 获取写入量 (kB)
+    written_k=$(iostat -k | awk -v blk="$blk_name" '$1==blk {print $6}')
+    [ -z "$written_k" ] && written_k=0
+
+    # 判断是否有写入增加
+    if [ "$written_k" -gt "$prev_written" ]; then
+        last_increase=$i
+    fi
+
+    # 检测开始刷写（写入增量 >= 50MiB）
+    if [ $detected -eq 0 ] && [ $(( (written_k - base_written) / 1024 )) -ge 50 ]; then
+        echo "Detect USB flashing"
+        detected=1
+    fi
+
+    # 检测刷写完成（连续5秒没有写入增加）
+    if [ $detected -eq 1 ] && [ $((i - last_increase)) -ge 5 ]; then
+        echo "Detect USB not flash in 5 seconds"
+        detected=0
+        base_written=$written_k  # 刷写完成后重置基准点
+        sync
+        sleep 1
+        sync
+        blockdev --flushbufs $blk_dev 2>/dev/null || true
+        sleep 1
+        sync
+        echo "Sync completed - all data written to storage"
+        written_times=$((written_times+1))
+        last_written_time=$(date)
+    fi
+
+    prev_written=$written_k
+
+    if [ $((i % 5)) -eq 0 ]; then
+        iostat -k
+        uptime
+        echo "USB upgrade(recovery) mode, execute 'killall show_iostat' to prevent print"
+        if [ $detected -eq 1 ]; then
+            echo "USB Flashing ..."
+        elif [ $written_times -gt 0 ]; then
+            echo "USB Flash done $written_times times, last time: $last_written_time"
+        fi
+        echo ""
+    fi
+done

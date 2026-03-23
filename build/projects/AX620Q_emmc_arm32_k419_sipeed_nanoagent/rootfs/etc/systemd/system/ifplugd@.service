@@ -1,0 +1,13 @@
+[Unit]
+Description=ifplugd for network interface %I
+Requires=ifup@%i.service
+After=network.target ifup@%i.service
+
+[Service]
+Type=simple
+ExecStart=/usr/sbin/ifplugd -n -i %I -f -u0 -d5 -I
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
