@@ -2,9 +2,9 @@
 0x02300004, 0x00000201,  /* SLEEP_CTRL */
 0x0230000C, 0x00040003,  /* PadName = VI_D0                Fuction = I2S0_DIN0 */
 0x02300018, 0x00040003,  /* PadName = VI_D1                Fuction = I2S0_SCLK */
-0x02300024, 0x00040003,  /* PadName = VI_D2                Fuction = I2S0_DOUT */
+0x02300024, 0x00060003,  /* PadName = VI_D2                Fuction = GPIO0_A2 */
 0x02300030, 0x00040003,  /* PadName = VI_D3                Fuction = I2S0_MCLK */
-0x0230003C, 0x00040003,  /* PadName = VI_D4                Fuction = I2S0_DIN1 */
+0x0230003C, 0x00060003,  /* PadName = VI_D4                Fuction = GPIO0_A4 */
 0x02300084, 0x00040003,  /* PadName = VI_CLK0              Fuction = I2S0_LRCK */
 0x02304008, 0x0000000f,  /* SLEEP_CTRL */
 0x02304004, 0x00000201,  /* SLEEP_CTRL */
@@ -14,25 +14,25 @@
 0x02304030, 0x00000083,  /* PadName = I2C1_SDA             Fuction = I2C1_SDA */
 0x0230403C, 0x00000083,  /* PadName = UART0_TXD            Fuction = UART0_TXD */
 0x02304048, 0x00000083,  /* PadName = UART0_RXD            Fuction = UART0_RXD */
-0x02304054, 0x00000083,  /* PadName = UART1_TXD            Fuction = UART1_TXD */
-0x02304060, 0x00000083,  /* PadName = UART1_RXD            Fuction = UART1_RXD */
-0x0230406C, 0x00060083,  /* PadName = UART2_TXD            Fuction = GPIO1_A0 */
+0x02304054, 0x00060003,  /* PadName = UART1_TXD            Fuction = GPIO0_A30 */
+0x02304060, 0x00060003,  /* PadName = UART1_RXD            Fuction = GPIO0_A31 */
+0x0230406C, 0x00060003,  /* PadName = UART2_TXD            Fuction = GPIO1_A0 */
 0x02304078, 0x00060083,  /* PadName = UART2_RXD            Fuction = GPIO1_A1 */
 0x02304084, 0x00060083,  /* PadName = UART3_TXD            Fuction = GPIO1_A2 */
 0x02304090, 0x00060083,  /* PadName = UART3_RXD            Fuction = GPIO1_A3 */
 0x104F0008, 0x0000000f,  /* SLEEP_CTRL */
 0x104F0004, 0x00000201,  /* SLEEP_CTRL */
-0x104F0060, 0x00060003,  /* PadName = EPHY_RSTN            Fuction = GPIO1_A27 */
+0x104F0060, 0x00020003,  /* PadName = EPHY_RSTN            Fuction = PWM7_M */
 0x104F006C, 0x00010003,  /* PadName = EPHY_LED0            Fuction = RGMII_MDCK_M */
 0x104F0078, 0x00010003,  /* PadName = EPHY_LED1            Fuction = RGMII_MDIO_M */
 0x104F0084, 0x00000005,  /* PadName = RGMII_RXD0           Fuction = RGMII_RXD0 */
 0x104F0090, 0x00000005,  /* PadName = RGMII_RXD1           Fuction = RGMII_RXD1 */
 0x104F009C, 0x00000003,  /* PadName = RGMII_RXDV           Fuction = RGMII_RXDV */
 0x104F00A8, 0x00000005,  /* PadName = RGMII_RXCLK          Fuction = RGMII_RXCLK */
-0x104F00CC, 0x00000005,  /* PadName = RGMII_TXD0           Fuction = RGMII_TXD0 */
+0x104F00CC, 0x00040003,  /* PadName = RGMII_TXD0           Fuction = SPI_M2_MOSI_M */
 0x104F00D8, 0x00000005,  /* PadName = RGMII_TXD1           Fuction = RGMII_TXD1 */
-0x104F00E4, 0x00000005,  /* PadName = RGMII_TXCLK          Fuction = RGMII_TXCLK */
-0x104F00F0, 0x00000003,  /* PadName = RGMII_TXEN           Fuction = RGMII_TXEN */
+0x104F00E4, 0x00040003,  /* PadName = RGMII_TXCLK          Fuction = SPI_M2_SCLK_M */
+0x104F00F0, 0x00040003,  /* PadName = RGMII_TXEN           Fuction = SPI_M2_CS1_M */
 0x104F1008, 0x0000000f,  /* SLEEP_CTRL */
 0x104F1004, 0x00000201,  /* SLEEP_CTRL */
 0x104F100C, 0x00000083,  /* PadName = SD_DAT0              Fuction = SD_DAT0 */

@@ -63,6 +63,7 @@ function get_cmm_param()
 function load_drv()
 {
     echo "run auto_load_all_drv.sh start "
+    insmod /soc/ko/hynitron_touch.ko
     insmod /soc/ko/ax_sys.ko
 
     cmm_param=$(get_cmm_param)
@@ -114,6 +115,7 @@ function remove_drv()
     rmmod ax_pool
     rmmod ax_cmm
     rmmod ax_sys
+    rmmod hynitron_touch
 }
 
 function auto_drv()
