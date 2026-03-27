@@ -70,8 +70,11 @@ dtb-$(CONFIG_ARCH_OWL) += \
 
 dtb-$(CONFIG_TARGET_AX620E_HAPS) += \
 	AX620E_haps.dtb
+### SIPEED EDIT ###
 dtb-$(CONFIG_TARGET_AX620E_EMMC) += \
-	AX620E_emmc.dtb
+	AX620E_emmc.dtb \
+	AX620E_emmc_nanoagent.dtb
+### SIPEED EDIT END ###
 dtb-$(CONFIG_TARGET_AX620E_NAND) += \
 	AX620E_nand.dtb
 dtb-$(CONFIG_TARGET_AX620E_NOR) += \

@@ -18,8 +18,8 @@
 0x02304060, 0x00060003,  /* PadName = UART1_RXD            Fuction = GPIO0_A31 */
 0x0230406C, 0x00060003,  /* PadName = UART2_TXD            Fuction = GPIO1_A0 */
 0x02304078, 0x00060083,  /* PadName = UART2_RXD            Fuction = GPIO1_A1 */
-0x02304084, 0x00060083,  /* PadName = UART3_TXD            Fuction = GPIO1_A2 */
-0x02304090, 0x00060083,  /* PadName = UART3_RXD            Fuction = GPIO1_A3 */
+0x02304084, 0x00000083,  /* PadName = UART3_TXD            Fuction = UART3_TXD */
+0x02304090, 0x00000083,  /* PadName = UART3_RXD            Fuction = UART3_RXD */
 0x104F0008, 0x0000000f,  /* SLEEP_CTRL */
 0x104F0004, 0x00000201,  /* SLEEP_CTRL */
 0x104F0060, 0x00020003,  /* PadName = EPHY_RSTN            Fuction = PWM7_M */

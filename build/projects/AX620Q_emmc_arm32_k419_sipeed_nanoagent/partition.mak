@@ -72,7 +72,10 @@ FLASH_PARTITIONS  := $(shell echo '$(FLASH_PARTITIONS)' | tr -d ' ')
 ROOTFS_TYPE       := ext4
 ROOTFS_POSITION   := $(shell echo "$(FLASH_PARTITIONS)" | tr ',' '\n' | grep -n 'rootfs' | cut -d ':' -f 1)
 ROOTFS_DEV        := /dev/mmcblk0p$(strip $(ROOTFS_POSITION))
-KERNEL_BOOTARGS   := "$(OS_MEM) console=ttyS0,115200n8 earlycon=uart8250,mmio32,0x4880000 board_id=0x0,boot_reason=0x00,initcall_debug=0 loglevel=8 \
+
+#KERNEL_BOOTARGS   := "$(OS_MEM) console=ttyS0,115200n8 earlycon=uart8250,mmio32,0x4880000 board_id=0x0,boot_reason=0x00,initcall_debug=0 loglevel=8 \
+
+KERNEL_BOOTARGS   := "$(OS_MEM) console=ttyS3,115200n8 earlycon=uart8250,mmio32,0x6080000 board_id=0x0,boot_reason=0x00,initcall_debug=0 loglevel=8 \
 usbcore.autosuspend=-1 root=$(ROOTFS_DEV) rootfstype=$(ROOTFS_TYPE) rw rootwait blkdevparts=mmcblk0:$(FLASH_PARTITIONS)"
 
 # Calculates the position of each partition in flash
