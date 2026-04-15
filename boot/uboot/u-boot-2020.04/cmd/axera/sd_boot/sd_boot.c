@@ -376,6 +376,10 @@ static void config_cmm_size() {
 			strcpy(new_mem_cfg, BOARD_4G_OS_MEM);
 			need_config_bootargs = true;
 			break;
+		case PHY_AX620QE_LP4_NANOAGENT_512M:
+			strcpy(new_mem_cfg, BOARD_512M_OS_MEM);
+			need_config_bootargs = true;
+			break;
 		default:
 			strcpy(new_mem_cfg, BOARD_1G_OS_MEM);
 			need_config_bootargs = true;
@@ -397,6 +401,9 @@ static void config_cmm_size() {
 		case PHY_AX630C_AX631_MAIXCAM2_SOM_4G:
 			os_mem_size = 4096 - cmm_size;
 			break;
+		case PHY_AX620QE_LP4_NANOAGENT_512M:
+			os_mem_size = 512 - cmm_size;
+			break;
 		default:
 			os_mem_size = 512 - cmm_size;
 			break;
@@ -416,6 +423,39 @@ static void config_cmm_size() {
 		strcpy(newargs + mem_start_offset + strlen(new_mem_cfg), mem_end);
 		env_set("bootargs", newargs);
 	}
+}
+
+static void config_console_for_nanoagent(void)
+{
+	const char *old_console = "console=ttyS0,115200n8 earlycon=uart8250,mmio32,0x4880000";
+	const char *new_console = "console=ttyS3,115200n8 earlycon=uart8250,mmio32,0x6080000";
+	char new_bootargs[1024] = {0};
+	char *bootargs = NULL;
+	char *console_pos = NULL;
+	int board_id = get_board_id();
+	int ret;
+
+	if (board_id != PHY_AX620QE_LP4_NANOAGENT_512M)
+		return;
+
+	bootargs = env_get("bootargs");
+	if (!bootargs)
+		return;
+
+	console_pos = strstr(bootargs, old_console);
+	if (!console_pos)
+		return;
+
+	ret = snprintf(new_bootargs, sizeof(new_bootargs), "%.*s%s%s",
+		(int)(console_pos - bootargs), bootargs,
+		new_console, console_pos + strlen(old_console));
+	if (ret < 0 || ret >= sizeof(new_bootargs)) {
+		printf("set nanoagent console failed\n");
+		return;
+	}
+
+	env_set("bootargs", new_bootargs);
+	printf("set nanoagent console to ttyS3\n");
 }
 // ### SIPEED EDIT END ###
 
@@ -443,6 +483,7 @@ int do_sd_boot(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 
 	env_set("bootargs", BOOTARGS_SD);
 	// ### SIPEED EDIT ###
+	config_console_for_nanoagent();
 	check_and_config_upgrade();
 	config_system_console();
 	config_cmm_size();

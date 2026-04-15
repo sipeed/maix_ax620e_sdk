@@ -650,7 +650,8 @@ void ddrmc_sys_glb_init(DDR_FREQ freq)
 	ddr_writel(0x02340068, 0x00000200);
 	ddr_writel(0x02340068, 0x00000100);
 	ddr_writel(0x00210004, 0x00000001);
-	if ((misc_info->chip_type == AX620Q_CHIP_E) || (misc_info->chip_type == AX620QX_CHIP_E) || (misc_info->chip_type == AX620QZ_CHIP_E) || (misc_info->chip_type == AX620QP_CHIP_E)) {
+	if ((misc_info->chip_type == AX620Q_CHIP_E) || (misc_info->chip_type == AX620QX_CHIP_E) || (misc_info->chip_type == AX620QZ_CHIP_E) || (misc_info->chip_type == AX620QP_CHIP_E) ||
+		(misc_info->chip_type == AX620QE_CHIP_E) || (misc_info->chip_type == AX620QF_CHIP_E)) {
 		//ddr_writel(0x00210000, 0x0006DB6E);
 		ddr_writel(0x00210000, 0x00076DB6);
 		if(ddr_dfs_sel) {
@@ -891,7 +892,8 @@ void ddrmc_pre_init(const u32 ddrmc_timing[][29], u8 ddrc_timming_index)
 		#endif
 	}
 
-	if((AX620Q_CHIP_E == chip_id) || (AX620QX_CHIP_E == chip_id) || (chip_id == AX620QZ_CHIP_E) || (chip_id == AX620QP_CHIP_E)) {
+	if((AX620Q_CHIP_E == chip_id) || (AX620QX_CHIP_E == chip_id) || (chip_id == AX620QZ_CHIP_E) || (chip_id == AX620QP_CHIP_E) ||
+		(chip_id == AX620QE_CHIP_E) || (chip_id == AX620QF_CHIP_E)) {
 		ddr_writel(D_DDRMC_TMG14_F0_ADDR, 0x00000000);
 	#if LPDDR4_DFS_CONFIG
 		ddr_writel(D_DDRMC_TMG14_F1_ADDR, 0x00000000);
@@ -1100,7 +1102,7 @@ void lpddr4_mrs_config(u8 mr_cs)
 
 	//MR3
 	mr_ad = 0x3;
-	mr_op = (AX620QX_CHIP_E == chip_id) ? 0x30 : 0x31;
+	mr_op = ((AX620QX_CHIP_E == chip_id) || (AX620QF_CHIP_E == chip_id)) ? 0x30 : 0x31;
 	mr3_status_op = mr_op;
 	ddrmc_mrw((0x2 | mr_cs), mr_ad, mr_op);
 
@@ -1109,7 +1111,7 @@ void lpddr4_mrs_config(u8 mr_cs)
 	mr_op =	0x0;
 	#if WR_ODT_EN
 		if (ddr_freqs > DDR_CLK_1600)
-			mr_op |= (AX620QX_CHIP_E == chip_id) ? (0x4 << 0) : (0x6 << 0);//DQ ODT LP4 40ohm / LP4X 60ohm
+			mr_op |= ((AX620QX_CHIP_E == chip_id) || (AX620QF_CHIP_E == chip_id)) ? (0x4 << 0) : (0x6 << 0);//DQ ODT LP4 40ohm / LP4X 60ohm
 	#endif
 	if (lpddr4_ca_odt_en)
 		mr_op |= (0x2 << 4);//CA ODT 120ohm
@@ -1125,7 +1127,7 @@ void lpddr4_mrs_config(u8 mr_cs)
 			if (((ddr_types & 0x300) >> 8) == DDR_2CS)
 				mr_op =	0x16;
 			else
-				mr_op =	(AX620QX_CHIP_E == chip_id) ? (0x4 << 0) : 0x06;
+				mr_op =	((AX620QX_CHIP_E == chip_id) || (AX620QF_CHIP_E == chip_id)) ? (0x4 << 0) : 0x06;
 			ddrmc_mrw((0x2 | mr_cs), mr_ad, mr_op);
 		} else {
 #ifdef AX630C_LPDDR4_DUAL_RANK
@@ -1133,7 +1135,7 @@ void lpddr4_mrs_config(u8 mr_cs)
 				mr_op =	0x16;
 			else
 #endif
-				mr_op =	(AX620QX_CHIP_E == chip_id) ? (0x4 << 0) : 0x06;
+				mr_op =	((AX620QX_CHIP_E == chip_id) || (AX620QF_CHIP_E == chip_id)) ? (0x4 << 0) : 0x06;
 			ddrmc_mrw((0x2 | mr_cs), mr_ad, mr_op);
 		}
 // ### SIPEED EDIT ###
@@ -1148,7 +1150,7 @@ void lpddr4_mrs_config(u8 mr_cs)
 		mr_op =	0x0;
 		#if WR_ODT_EN
 			if (ddr_dfs_sel && (ddr_freqs > DDR_CLK_1600))
-				mr_op |= (AX620QX_CHIP_E == chip_id) ? (0x4 << 0) : (0x6 << 0);//DQ ODT 40ohm / LP4X 60ohm
+				mr_op |= ((AX620QX_CHIP_E == chip_id) || (AX620QF_CHIP_E == chip_id)) ? (0x4 << 0) : (0x6 << 0);//DQ ODT 40ohm / LP4X 60ohm
 		#endif
 		if (lpddr4_ca_odt_en)
 			mr_op |= (0x2 << 4);//CA ODT 120ohm
@@ -1172,7 +1174,8 @@ void lpddr4mc_pos_init(void)
 
 // ### SIPEED EDIT ###
 	if (IS_LPDDR4_DUAL_RANK(ddr_types)) {
-		if ((AX620Q_CHIP_E != chip_id) && (AX620QX_CHIP_E != chip_id) && (AX620QZ_CHIP_E != chip_id) && (AX620QP_CHIP_E != chip_id) && (((ddr_types & 0x300) >> 8) == DDR_2CS)) {
+		if ((AX620Q_CHIP_E != chip_id) && (AX620QX_CHIP_E != chip_id) && (AX620QZ_CHIP_E != chip_id) && (AX620QP_CHIP_E != chip_id) &&
+			(AX620QE_CHIP_E != chip_id) && (AX620QF_CHIP_E != chip_id) && (((ddr_types & 0x300) >> 8) == DDR_2CS)) {
 			u8 cmd_delay_cycles;
 
 			reg_data = readl(D_DDRPHY_AC_TMG2_F0_ADDR);
@@ -1182,7 +1185,8 @@ void lpddr4mc_pos_init(void)
 		}
 	} else {
 #ifdef AX630C_LPDDR4_DUAL_RANK
-	if ((AX620Q_CHIP_E != chip_id) && (AX620QX_CHIP_E != chip_id) && (AX620QZ_CHIP_E != chip_id) && (AX620QP_CHIP_E != chip_id) && (((ddr_types & 0x300) >> 8) == DDR_2CS)) {
+	if ((AX620Q_CHIP_E != chip_id) && (AX620QX_CHIP_E != chip_id) && (AX620QZ_CHIP_E != chip_id) && (AX620QP_CHIP_E != chip_id) &&
+		(AX620QE_CHIP_E != chip_id) && (AX620QF_CHIP_E != chip_id) && (((ddr_types & 0x300) >> 8) == DDR_2CS)) {
 		u8 cmd_delay_cycles;
 
 		reg_data = readl(D_DDRPHY_AC_TMG2_F0_ADDR);
@@ -1200,13 +1204,15 @@ void lpddr4mc_pos_init(void)
 
 // ### SIPEED EDIT ###
 if (IS_LPDDR4_DUAL_RANK(ddr_types)) {
-	if ((AX620Q_CHIP_E == chip_id) || (AX620QX_CHIP_E == chip_id) || (AX620QZ_CHIP_E == chip_id) || (AX620QP_CHIP_E == chip_id))
+	if ((AX620Q_CHIP_E == chip_id) || (AX620QX_CHIP_E == chip_id) || (AX620QZ_CHIP_E == chip_id) || (AX620QP_CHIP_E == chip_id) ||
+		(AX620QE_CHIP_E == chip_id) || (AX620QF_CHIP_E == chip_id))
 		udelay(1);
 	else
 		udelay(2000);
 } else {
 #ifdef AX630C_LPDDR4_DUAL_RANK
-	if ((AX620Q_CHIP_E == chip_id) || (AX620QX_CHIP_E == chip_id) || (AX620QZ_CHIP_E == chip_id) || (AX620QP_CHIP_E == chip_id))
+	if ((AX620Q_CHIP_E == chip_id) || (AX620QX_CHIP_E == chip_id) || (AX620QZ_CHIP_E == chip_id) || (AX620QP_CHIP_E == chip_id) ||
+		(AX620QE_CHIP_E == chip_id) || (AX620QF_CHIP_E == chip_id))
 #endif
 		udelay(1);
 #ifdef AX630C_LPDDR4_DUAL_RANK
@@ -1272,7 +1278,8 @@ if (IS_LPDDR4_DUAL_RANK(ddr_types)) {
 // ### SIPEED EDIT END ###
 	//MR12
 	mr_ad = 0xc;
-	if ((AX620Q_CHIP_E == chip_id) || (AX620QX_CHIP_E == chip_id) || (AX620QZ_CHIP_E == chip_id) || (AX620QP_CHIP_E == chip_id))
+	if ((AX620Q_CHIP_E == chip_id) || (AX620QX_CHIP_E == chip_id) || (AX620QZ_CHIP_E == chip_id) || (AX620QP_CHIP_E == chip_id) ||
+		(AX620QE_CHIP_E == chip_id) || (AX620QF_CHIP_E == chip_id))
 		mr_op = 0x32;//CA Vref LP4 30% / LP4X 44.9%
 	else
 		mr_op = 0x26;
@@ -1290,9 +1297,9 @@ if (IS_LPDDR4_DUAL_RANK(ddr_types)) {
 // ### SIPEED EDIT END ###
 	//MR14
 	mr_ad = 0xe;
-	if ((AX620Q_CHIP_E == chip_id) || (AX620QZ_CHIP_E == chip_id) || (AX620QP_CHIP_E == chip_id))
+	if ((AX620Q_CHIP_E == chip_id) || (AX620QZ_CHIP_E == chip_id) || (AX620QP_CHIP_E == chip_id) || (AX620QE_CHIP_E == chip_id))
 		mr_op = 0x24;//DQ Vref 24.4%
-	else if (AX620QX_CHIP_E == chip_id)
+	else if ((AX620QX_CHIP_E == chip_id) || (AX620QF_CHIP_E == chip_id))
 		mr_op = 0x14;//DQ Vref 26.9%
 	else
 		mr_op = 0x16;//DQ Rref 18.8%
@@ -1471,7 +1478,8 @@ static void ddrphy_dq_deskew_pre_set(void)
 				reg_base = D_DDRPHY_DS0_CFG6_ADDR + DDR_PHY_OFFSET;
 			else if (36 == i)
 				reg_base = D_DDRPHY_DS1_CFG6_ADDR + DDR_PHY_OFFSET;
-			if ((AX620Q_CHIP_E == chip_id) || (AX620QX_CHIP_E == chip_id) || (AX620QZ_CHIP_E == chip_id) || (AX620QP_CHIP_E == chip_id))
+			if ((AX620Q_CHIP_E == chip_id) || (AX620QX_CHIP_E == chip_id) || (AX620QZ_CHIP_E == chip_id) || (AX620QP_CHIP_E == chip_id) ||
+				(AX620QE_CHIP_E == chip_id) || (AX620QF_CHIP_E == chip_id))
 				ddr_writel(reg_base + (i % 12) * 4, ax620q_lpddr4_dq_deskew_pre_set[i]);
 			else
 				ddr_writel(reg_base + (i % 12) * 4, ax630c_lpddr4_dq_deskew_pre_set[i]);
@@ -1709,7 +1717,7 @@ void lpddr4phy_pre_init(void)
 	}
 
 	//TYPE_LPDDR4 mode
-	if (AX620QX_CHIP_E == chip_id) {
+	if ((AX620QX_CHIP_E == chip_id) || (AX620QF_CHIP_E == chip_id)) {
 		reg_mask_set(D_DDRPHY_GEN_CFG0_ADDR, 0, (1 << 1) | (1 << 4));
 		reg_mask_set(D_DDRPHY_GEN_CFG0_ADDR + DDR_PHY_OFFSET, 0, (1 << 1) | (1 << 4));
 	} else {
@@ -2220,6 +2228,7 @@ void ddr_types_get(void)
 	misc_info_t *misc_info = (misc_info_t *) MISC_INFO_ADDR;
 	chip_id = misc_info->chip_type;
 	switch (misc_info->chip_type) {
+	case AX620QF_CHIP_E:
 	case AX620QX_CHIP_E:
 		ddr_types = TYPE_LPDDR4_1CS_1CH_X16_2GBIT;
 		lpddr4_ca_odt_en = 0;
@@ -2233,6 +2242,7 @@ void ddr_types_get(void)
 		lpddr4_ca_odt_en = 0;
 		lpddr4_ca_train_en = 1;
 		break;
+	case AX620QE_CHIP_E:
 	case AX620QP_CHIP_E:
 		ddr_types = TYPE_LPDDR4_1CS_1CH_X16_4GBIT;
 		lpddr4_ca_odt_en = 0;
@@ -2307,7 +2317,7 @@ void lpddr4_init_flow(void * rom_param)
 	if(ddr_dfs_sel && (ddr_freqs > DDR_CLK_1600)) {
 		ddr_dfs_f1_freq = ddr_freqs;
 		ddr_freqs = DDR_CLK_1600;
-	} else if (!ddr_dfs_sel && (ddr_freqs > DDR_CLK_1600) && (misc_info->chip_type != AX620Q_CHIP_E) && (misc_info->chip_type != AX620QZ_CHIP_E) && (misc_info->chip_type != AX620QP_CHIP_E)) {
+	} else if (!ddr_dfs_sel && (ddr_freqs > DDR_CLK_1600) && (misc_info->chip_type != AX620Q_CHIP_E) && (misc_info->chip_type != AX620QZ_CHIP_E) && (misc_info->chip_type != AX620QP_CHIP_E) && (misc_info->chip_type != AX620QE_CHIP_E)) {
 		ddr_timming_index = 1;
 	} else {
 		ddr_dfs_sel = 0;
@@ -2407,7 +2417,8 @@ void mc20e_ddr_init(void * rom_param)
 	ddr_types_get();
 	ddr_freqs_get();
 #if (LPDDR4_CONFIG_3733) || (LPDDR4_CONFIG_3200)
-	if ((AX620Q_CHIP_E != chip_id) && (AX620QZ_CHIP_E != chip_id) && (AX620QX_CHIP_E != chip_id) && (AX620QP_CHIP_E != chip_id) && (ddr_freqs >= DDR_CLK_3200)) {
+	if ((AX620Q_CHIP_E != chip_id) && (AX620QZ_CHIP_E != chip_id) && (AX620QX_CHIP_E != chip_id) && (AX620QP_CHIP_E != chip_id) &&
+		(AX620QE_CHIP_E != chip_id) && (AX620QF_CHIP_E != chip_id) && (ddr_freqs >= DDR_CLK_3200)) {
 		def_clk = ddr_freqs;
 		ddr_freqs = DDR_CLK_2800;
 	}
@@ -2415,7 +2426,8 @@ void mc20e_ddr_init(void * rom_param)
 	ddrmc_sys_glb_init(ddr_freqs);
 	if (ddr_types & TYPE_LPDDR4) {
 #if (LPDDR4_CONFIG_3733) || (LPDDR4_CONFIG_3200)
-		if ((AX620Q_CHIP_E != chip_id) && (AX620QX_CHIP_E != chip_id) && (AX620QZ_CHIP_E != chip_id) && (AX620QP_CHIP_E != chip_id))
+		if ((AX620Q_CHIP_E != chip_id) && (AX620QX_CHIP_E != chip_id) && (AX620QZ_CHIP_E != chip_id) && (AX620QP_CHIP_E != chip_id) &&
+			(AX620QE_CHIP_E != chip_id) && (AX620QF_CHIP_E != chip_id))
 			ddr_freqs = def_clk;
 #endif
 		lpddr4_init_flow(rom_param);

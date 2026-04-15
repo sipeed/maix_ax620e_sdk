@@ -655,8 +655,8 @@ int board_late_init(void)
 			strcpy(new_mem_cfg, BOARD_4G_OS_MEM);
 			need_config_bootargs = true;
 			break;
-		case PHY_AX620Q_LP4_NANOAGENT_256M:
-			strcpy(new_mem_cfg, BOARD_256M_OS_MEM);
+		case PHY_AX620QE_LP4_NANOAGENT_512M:
+			strcpy(new_mem_cfg, BOARD_512M_OS_MEM);
 			need_config_bootargs = true;
 			break;
 		case AX620Q_LP4_DEMO_V1_1:
@@ -684,8 +684,8 @@ int board_late_init(void)
 		case PHY_AX630C_AX631_MAIXCAM2_SOM_4G:
 			os_mem_size = 4096 - cmm_size;
 			break;
-		case PHY_AX620Q_LP4_NANOAGENT_256M:
-			os_mem_size = 256 - cmm_size;
+		case PHY_AX620QE_LP4_NANOAGENT_512M:
+			os_mem_size = 512 - cmm_size;
 			break;
 		case AX620Q_LP4_DEMO_V1_1:
 			os_mem_size = 256 - cmm_size;

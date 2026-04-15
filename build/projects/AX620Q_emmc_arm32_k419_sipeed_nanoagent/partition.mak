@@ -4,7 +4,7 @@ DDRINIT_PARAM_HEADER_BASE       := 0x03200000
 ATF_IMG_HEADER_BASE             := 0x4003FC00
 ATF_IMG_ADDR                    := 0x40040000
 ATF_IMG_PKG_SIZE                := 0x40000
-UBOOT_IMG_HEADER_BASE           := 0x5C000000
+UBOOT_IMG_HEADER_BASE           := 0x44000000
 ifeq ($(strip $(SUPPORT_OPTEE)),TRUE)
 OPTEE_IMAGE_ADDR                := 0x44200000
 OPTEE_RESERVED_SIZE             := 0x2000000
@@ -45,10 +45,10 @@ SYS_DRAM_SIZE             := 1024 #MB
 endif
 
 # linux OS memory config
-OS_MEM_SIZE             := 128 #MB
-BOARD_256M_OS_MEM_SIZE  := 128
+OS_MEM_SIZE             := 256 #MB
+BOARD_512M_OS_MEM_SIZE  := 256
 OS_MEM                  := mem=$(strip $(OS_MEM_SIZE))M
-BOARD_256M_OS_MEM       := mem=$(strip $(BOARD_256M_OS_MEM_SIZE))M
+BOARD_512M_OS_MEM       := mem=$(strip $(BOARD_512M_OS_MEM_SIZE))M
 
 # cmm memory config
 CMM_START_ADDR       := $(call AddAddressMB, $(SYS_DRAM_BASE), $(OS_MEM_SIZE))

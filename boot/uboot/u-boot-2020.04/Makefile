@@ -1807,6 +1807,7 @@ define filechk_ax_common.h
 		echo \#define ROOTFS_TYPE \"$(ROOTFS_TYPE)\";\
 		echo \#define ROOTFS_DEV \"$(ROOTFS_DEV)\";\
 		echo \#define BOARD_256M_OS_MEM \"$(BOARD_256M_OS_MEM)\";\
+		echo \#define BOARD_512M_OS_MEM \"$(BOARD_512M_OS_MEM)\";\
 		echo \#define BOARD_0_5G_OS_MEM \"$(BOARD_0_5G_OS_MEM)\";\
 		echo \#define BOARD_1G_OS_MEM \"$(BOARD_1G_OS_MEM)\";\
 		echo \#define BOARD_2G_OS_MEM \"$(BOARD_2G_OS_MEM)\";\

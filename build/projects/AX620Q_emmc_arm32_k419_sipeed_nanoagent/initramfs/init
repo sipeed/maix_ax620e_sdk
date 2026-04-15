@@ -67,6 +67,42 @@ wait_for_device() {
     [ -e "$device" ]
 }
 
+create_sd_boot_service() {
+    # create boot script
+    sd_boot_script=/realroot/opt/scripts/sd_boot.sh
+    block_device="${root_dev%p*}"
+    partition_num="${root_dev##*[^0-9]}"
+    if [ ! -f ${sd_boot_script} ]; then
+        echo "#!/bin/bash
+if [ -f /boot/check_resize2fs ]; then
+    echo -e \"d\\n${partition_num}\\nn\\np\\n${partition_num}\\n\\n\\nw\\n\" | fdisk "$block_device"
+    /opt/e2fs-static/resize2fs ${root_dev}
+    rm /boot/check_resize2fs
+fi
+" > ${sd_boot_script}
+    chmod +x ${sd_boot_script}
+    fi
+
+    # create boot service
+    service_path=/realroot/etc/systemd/system/sd_boot.service
+    if [ ! -f ${service_path} ]; then
+        echo "[Unit]
+Description=Run sd boot
+DefaultDependencies=no
+After=boot.mount
+
+[Service]
+Type=simple
+ExecStart=/bin/bash /opt/scripts/sd_boot.sh
+Restart=no
+
+[Install]
+WantedBy=default.target" > ${service_path}
+        mkdir -p /realroot/etc/systemd/system/default.target.wants
+        ln -s ${service_path} /realroot/etc/systemd/system/default.target.wants/sd_boot.service
+    fi
+}
+
 mount -t proc proc /proc || run_sh
 mount -t sysfs sysfs /sys || run_sh
 mount -t devtmpfs devtmpfs /dev || run_sh
@@ -101,6 +137,10 @@ if [ -z "$root_part_num" ] || [ "$root_part_num" -le 1 ] 2>/dev/null; then
 fi
 boot_part_num=$((root_part_num - 1))
 boot_dev="${block_device}p${boot_part_num}"
+
+if [ "$root_dev" = "/dev/mmcblk1p2" ]; then
+    boot_from_sd=1
+fi
 
 wait_for_device "$boot_dev" || run_sh
 wait_for_device "$root_dev" || run_sh
@@ -182,8 +222,27 @@ if [ "$boot_from_sd" -ne 1 ]; then
         fi
     fi
 else
-    echo "Not support boot from sdcard, enter USB upgrade mode"
-    msc
+    mount -o rw "$root_dev" "$root_mount"
+    mfail="$?"
+    if [ "${mfail}" -ne 0 ]
+    then
+        echo "Mount rootfs failed, try e2fsck ..."
+        e2fsck -fvp "$root_dev"
+        if [ "$?" -ne 0 ]; then
+            e2fsck -fvy "$root_dev"
+        fi
+        mount -o rw "$root_dev" "$root_mount"
+        mfail="$?"
+        if [ "${mfail}" -ne 0 ]
+        then
+            echo "Recover with e2fsck failed, enter USB upgrade mode"
+            msc
+        fi
+    fi
+
+    # config rootfs
+    sed -i 's/\/dev\/mmcblk0p9/\/dev\/mmcblk1p1/g' /realroot/etc/fstab
+    create_sd_boot_service
 fi
 
 if dmesg | grep -q "running e2fsck is recommended"; then
@@ -228,4 +287,5 @@ if [ -e "$boot_mount/first_time_boot" ]; then
 fi
 
 umount "$boot_dev"
+
 exec switch_root "$root_mount" /sbin/init

@@ -213,6 +213,7 @@ static int spinand_reset_op(void)
 	return spinand_wait(NULL);
 }
 
+#define SPINAND_ECCS_3_CORRETED
 static int spinand_check_ecc_status(u8 status)
 {
 	switch (status & STATUS_ECC_MASK) {
@@ -224,7 +225,11 @@ static int spinand_check_ecc_status(u8 status)
 		return -1;
 
 	default:
+#ifdef SPINAND_ECCS_3_CORRETED
+		return 0;
+#else
 		break;
+#endif
 	}
 
 	return -1;

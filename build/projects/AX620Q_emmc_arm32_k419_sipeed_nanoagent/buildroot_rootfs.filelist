@@ -19,6 +19,7 @@ lib/libatomic.so*
 $(PROJECT)/rootfs/etc/* etc/
 $(PROJECT)/rootfs/usr/* usr/
 $(PROJECT)/rootfs/opt/* opt/
+$(PROJECT)/rootfs/root/. root/
 
 @dir: tools
 ax_lookat/bin/CHIP_AX620E/$(ARCH)/$(LIBC)/ax_lookat usr/bin

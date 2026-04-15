@@ -136,7 +136,10 @@ ifneq (,$(findstring emmc_arm64,$(PROJECT)))
 # ### SIPEED EDIT END ###
 CPPFLAGS += -DUBOOT_HEADER_BAK_FLASH_BASE="$(UBOOT_B_HEADER_FLASH_BASE)"
 CPPFLAGS += -DATF_HEADER_BAK_FLASH_BASE="$(ATF_B_HEADER_FLASH_BASE)"
-else ifneq (,$(findstring $(PROJECT), "AX630C_emmc_arm32_k419"))
+# ### SIPEED EDIT ###
+else ifneq (,$(findstring emmc_arm32,$(PROJECT)))
+# else ifneq (,$(findstring $(PROJECT), "AX630C_emmc_arm32_k419"))
+# ### SIPEED EDIT END ###
 CPPFLAGS += -DUBOOT_HEADER_BAK_FLASH_BASE="$(UBOOT_B_HEADER_FLASH_BASE)"
 CPPFLAGS += -DATF_HEADER_BAK_FLASH_BASE="0x0"
 else

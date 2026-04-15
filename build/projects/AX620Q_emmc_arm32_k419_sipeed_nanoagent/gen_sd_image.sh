@@ -14,7 +14,7 @@ UBUNTU_ROOTFS_DIR="${OBJS_DIR}/ubuntu_rootfs"
 BUILDROOT_ROOTFS_DIR="${OBJS_DIR}/buildroot_rootfs"
 ROOTFS_FALLBACK_DIR="${OBJS_DIR}/rootfs"
 
-IMG_SIZE="500M"
+IMG_SIZE="350M"
 BOOT_PART_SIZE_MIB=128
 BUILD_TS="$(date +%Y%m%d_%H%M%S)"
 OUTPUT_IMG="${SDK_ROOT}/build/out/${PROJECT}_sdcard_${BUILD_TS}.img"

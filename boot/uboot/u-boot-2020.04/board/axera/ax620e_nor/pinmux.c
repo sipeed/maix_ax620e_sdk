@@ -22,6 +22,10 @@ static unsigned int ax620Q_Demo_pinmux[] = {
 #include "AX620Q_DEMO_pinmux.h"
 };
 
+static unsigned int ax620QZ_Demo_pinmux[] = {
+#include "AX620QZ_DEMO_pinmux.h"
+};
+
 static unsigned int ax630C_EVB_pinmux[] = {
 #include "AX630C_EVB_pinmux.h"
 };
@@ -48,6 +52,12 @@ static struct pinmux ax620E_pinmux_tbl[AX620E_BOARD_MAX] = {
 	[AX630C_DEMO_V1_0] =
 	    {ax630C_Demo_pinmux,
 	     sizeof(ax630C_Demo_pinmux) / sizeof(unsigned int)},
+	[AX630C_DEMO_V1_1] =
+	    {ax630C_Demo_pinmux,
+	     sizeof(ax630C_Demo_pinmux) / sizeof(unsigned int)},
+	[AX620QZ_DEMO_LP4_V1_0] =
+	    {ax620QZ_Demo_pinmux,
+	     sizeof(ax620QZ_Demo_pinmux) / sizeof(unsigned int)},
 };
 
 static int ax_pinmux_index_conv(int index)
@@ -70,6 +80,11 @@ static int ax_pinmux_index_conv(int index)
 	case AX620Q_LP4_DEMO_V1_1:
 		ret = AX620Q_LP4_DEMO_V1_0;
 		break;
+	// ### SIPEED EDIT ###
+	case AX620QE_LP4_NANOAGENT_512M:
+		ret = AX620QZ_DEMO_LP4_V1_0;
+		break;
+	// ### SIPEED EDIT END ###
 	default :
 		ret = index;
 		break;

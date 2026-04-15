@@ -564,7 +564,8 @@ static void DQ_Write_delay_proc(u16 wreye_val0, u16 wreye_val1, u16 wreye_val2, 
 	static int is_check_done = 0;
 
 
-	if (shift_num && (AX620Q_CHIP_E != chip_id) && (AX620QZ_CHIP_E != chip_id) && (AX620QX_CHIP_E != chip_id) && (AX620QP_CHIP_E != chip_id))
+	if (shift_num && (AX620Q_CHIP_E != chip_id) && (AX620QZ_CHIP_E != chip_id) && (AX620QX_CHIP_E != chip_id) && (AX620QP_CHIP_E != chip_id) &&
+		(AX620QE_CHIP_E != chip_id) && (AX620QF_CHIP_E != chip_id))
 		return;
 
 	if (((dfs_freq == 0) && (is_check_done == 1)) || ((dfs_freq == 1) && (is_check_done == 2)))
@@ -1142,7 +1143,8 @@ void ddrmc_train_flow_lp4_sequence(void * rom_param)
 
 // ### SIPEED EDIT ###
 if (IS_LPDDR4_DUAL_RANK(ddr_types)) {
-	if ((AX620Q_CHIP_E != chip_id) && (AX620QZ_CHIP_E != chip_id) && (AX620QX_CHIP_E != chip_id) && (AX620QP_CHIP_E != chip_id)) {
+	if ((AX620Q_CHIP_E != chip_id) && (AX620QZ_CHIP_E != chip_id) && (AX620QX_CHIP_E != chip_id) && (AX620QP_CHIP_E != chip_id) &&
+		(AX620QE_CHIP_E != chip_id) && (AX620QF_CHIP_E != chip_id)) {
 		lpddr4_rank_num = (((ddr_types & 0x300) >> 8) == DDR_2CS) ? 2 : 1;
 		if (cs_position)
 			cs_position += 26;
@@ -1171,7 +1173,8 @@ if (IS_LPDDR4_DUAL_RANK(ddr_types)) {
 	}
 } else {
 #ifdef AX630C_LPDDR4_DUAL_RANK
-	if ((AX620Q_CHIP_E != chip_id) && (AX620QZ_CHIP_E != chip_id) && (AX620QX_CHIP_E != chip_id) && (AX620QP_CHIP_E != chip_id)) {
+	if ((AX620Q_CHIP_E != chip_id) && (AX620QZ_CHIP_E != chip_id) && (AX620QX_CHIP_E != chip_id) && (AX620QP_CHIP_E != chip_id) &&
+		(AX620QE_CHIP_E != chip_id) && (AX620QF_CHIP_E != chip_id)) {
 		lpddr4_rank_num = (((ddr_types & 0x300) >> 8) == DDR_2CS) ? 2 : 1;
 		if (cs_position)
 			cs_position += 26;
@@ -1400,7 +1403,7 @@ if (IS_LPDDR4_DUAL_RANK(ddr_types)) {
 #elif defined(DDR_ENV_EDA)
 		rd_vref_scan(rom_dfs_vref_info, TYPE_LPDDR4, cs_num, 0, 0xff, 0x80);
 #else
-		rd_vref_scan(rom_dfs_vref_info, TYPE_LPDDR4, cs_num, (AX620QX_CHIP_E == chip_id) ? 0x8 : LPDDR4_RDEYE_ODT_VREFDQ_MIN, LPDDR4_RDEYE_ODT_VREFDQ_MAX, 0x1);
+		rd_vref_scan(rom_dfs_vref_info, TYPE_LPDDR4, cs_num, ((AX620QX_CHIP_E == chip_id) || (AX620QF_CHIP_E == chip_id)) ? 0x8 : LPDDR4_RDEYE_ODT_VREFDQ_MIN, LPDDR4_RDEYE_ODT_VREFDQ_MAX, 0x1);
 #endif
 
 		write_pat_cfg();

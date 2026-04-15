@@ -11,7 +11,7 @@ if [ -f /boot/configs ]; then
 fi
 
 OS_MEM_MIN_SZIE=0
-BOARD_ID_256M=16
+BOARD_ID_512M=3
 
 function get_board_id()
 {
@@ -23,8 +23,8 @@ function get_board_id()
 function get_emmc_size()
 {
     board_id=$(get_board_id)
-    if [ $board_id -eq ${BOARD_ID_256M} ]; then
-        echo 256
+    if [ $board_id -eq ${BOARD_ID_512M} ]; then
+        echo 512
     fi
 }
 
