@@ -19,6 +19,7 @@ struct Image {
 #include "bootlogo/sipeed_logo.c"
 #include "bootlogo/bootlogo_fix.c"
 #include "bootlogo/bootlogo_pikvm.c"
+#include "bootlogo/bootlogo_nanoagent.c"
 #else
 static const unsigned char sipeed_logo[] = {0};
 #define sipeed_logo_len 0
@@ -28,6 +29,8 @@ static const unsigned char bootlogo_fix[] = {0};
 #define bootlogo_fix_len 0
 static const unsigned char bootlogo_pikvm[] = {0};
 #define bootlogo_pikvm_len 0
+static const unsigned char bootlogo_nanoagent[] = {0};
+#define bootlogo_nanoagent_len 0
 #endif
 
 #define msleep(a) udelay(a * 1000)
@@ -66,6 +69,7 @@ static int safe_strncmp(const char *a, size_t a_len, const char *b,
 }
 
 static const struct Image IMAGES[] = {
+    {bootlogo_nanoagent, bootlogo_nanoagent_len, "nanoagent"},
     {sipeed_logo, sipeed_logo_len, "nanokvm"},
     {bootlogo_pikvm, bootlogo_pikvm_len, "pikvm"},
     {bootlogo_fix, bootlogo_fix_len, "fix"},
@@ -424,6 +428,7 @@ static const struct udevice_id panel_spi_ids[] = {
     {.compatible = "axera,panel_spi"},
 #ifdef UBOOT_SPI2_SIPEED_LOGO
     {.compatible = "sipeed,for_jd9853"},
+    {.compatible = "sipeed,for_st7789p3"},
 #endif
     {}};
 

@@ -32,7 +32,7 @@
 0x104F00CC, 0x00040003,  /* PadName = RGMII_TXD0           Fuction = SPI_M2_MOSI_M */
 0x104F00D8, 0x00000005,  /* PadName = RGMII_TXD1           Fuction = RGMII_TXD1 */
 0x104F00E4, 0x00040003,  /* PadName = RGMII_TXCLK          Fuction = SPI_M2_SCLK_M */
-0x104F00F0, 0x00040003,  /* PadName = RGMII_TXEN           Fuction = SPI_M2_CS1_M */
+0x104F00F0, 0x00060003,  /* PadName = RGMII_TXEN           Fuction = GPIO1_A21 */
 0x104F1008, 0x0000000f,  /* SLEEP_CTRL */
 0x104F1004, 0x00000201,  /* SLEEP_CTRL */
 0x104F100C, 0x00000083,  /* PadName = SD_DAT0              Fuction = SD_DAT0 */

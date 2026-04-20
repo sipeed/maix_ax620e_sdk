@@ -63,5 +63,6 @@ KERNEL_BUILDIN_PRVDRV := TRUE
 endif
 
 AX620Q_EMMC                  := TRUE
+UBOOT_SPI2_SIPEED_LOGO       := TRUE
 
 include $(PRJECT_DIR)/AX620Q_emmc_arm32_k419_sipeed_nanoagent/partition.mak
