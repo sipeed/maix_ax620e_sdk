@@ -48,7 +48,9 @@ endif
 ifeq ($(strip $(SUPPORT_ATF)),FALSE)
 SUPPORT_OPTEE                := FALSE
 endif
-use_buildroot_rootfs           := yes
+use_buildroot_rootfs        := no
+use_ubuntu_rootfs           := no
+use_debian_rootfs           := yes
 
 ############################################################################################
 # Note: The above configuration is generally not modified.

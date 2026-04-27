@@ -27,9 +27,7 @@ echo "mkdir -p $TARGET_ROOTFS_DIR"
 tar -xf $TARGET_ROOTFS_BASE -C $TARGET_ROOTFS_DIR
 
 #modify hostname
-echo kvm > $TARGET_ROOTFS_DIR/etc/hostname
-echo console > $TARGET_ROOTFS_DIR/etc/securetty
-echo ttyS0 >> $TARGET_ROOTFS_DIR/etc/securetty
+echo nanoagent > $TARGET_ROOTFS_DIR/etc/hostname
 
 #link some bin to busybox
 #create init link
@@ -53,8 +51,8 @@ echo >> $TARGET_ROOTFS_DIR/etc/rc.local
 echo "chmod 755 /soc/scripts/npu_set_bw_limiter.sh" >> $TARGET_ROOTFS_DIR/etc/rc.local
 echo "bash /soc/scripts/npu_set_bw_limiter.sh start" >> $TARGET_ROOTFS_DIR/etc/rc.local
 echo >> $TARGET_ROOTFS_DIR/etc/rc.local
-echo "bash /etc/init.d/axsyslogd start" >> $TARGET_ROOTFS_DIR/etc/rc.local
-echo "bash /etc/init.d/axklogd start" >> $TARGET_ROOTFS_DIR/etc/rc.local
+echo "bash /opt/scripts/axsyslogd start" >> $TARGET_ROOTFS_DIR/etc/rc.local
+echo "bash /opt/scripts/axklogd start" >> $TARGET_ROOTFS_DIR/etc/rc.local
 echo >> $TARGET_ROOTFS_DIR/etc/rc.local
 echo "chmod 755 /opt/scripts/usbdev.sh" >> $TARGET_ROOTFS_DIR/etc/rc.local
 echo "bash /opt/scripts/usbdev.sh start" >> $TARGET_ROOTFS_DIR/etc/rc.local

@@ -6,8 +6,8 @@ include $(BUILD_PATH)/color.mk
 include $(BUILD_PATH)/config.mak
 
 ifeq ($(use_buildroot_rootfs),)
-	use_buildroot_rootfs := yes
-	$(info default use_buildroot_rootfs for ax620q nanoagent)
+use_buildroot_rootfs := yes
+$(info default use_buildroot_rootfs for ax620q nanoagent)
 endif
 
 OUT_DIR                  := $(BUILD_PATH)/out/$(PROJECT)/objs
@@ -48,6 +48,13 @@ UBUNTU_ROOTFS_IMG        := $(IMAGE_OUTDIR)/ubuntu_rootfs.ext4
 UBUNTU_ROOTFS_SPARSE_IMG := $(IMAGE_OUTDIR)/ubuntu_rootfs_sparse.ext4
 UBUNTU_ROOTFS_FSTAB_FILE := $(DST_UBUNTU_ROOTFS_DIR)/etc/fstab
 
+#debian_rootfs
+SRC_DEBIAN_ROOTFS_DIR    := $(HOME_PATH)/rootfs/$(ARCH)/$(LIBC)/debian
+DST_DEBIAN_ROOTFS_DIR    := $(OUT_DIR)/debian_rootfs
+DEBIAN_ROOTFS_IMG        := $(IMAGE_OUTDIR)/debian_rootfs.ext4
+DEBIAN_ROOTFS_SPARSE_IMG := $(IMAGE_OUTDIR)/debian_rootfs_sparse.ext4
+DEBIAN_ROOTFS_FSTAB_FILE := $(DST_DEBIAN_ROOTFS_DIR)/etc/fstab
+
 #soc
 SRC_SOC_DIR       := $(HOME_PATH)
 SCRIPTS_DIR       := $(HOME_PATH)/rootfs/rootfs/opt/scripts
@@ -77,7 +84,7 @@ DST_KO_PATH       := $(OSDRV_OUT_PATH)/ko
 DST_KO_TYPE       := .ko
 endif
 
-.PHONY: prepare all install rootfs images rootfs_image bootfs bootfs_image
+.PHONY: prepare all install rootfs ubuntu_rootfs debian_rootfs images rootfs_image ubuntu_rootfs_image debian_rootfs_image bootfs bootfs_image
 
 default: all
 
@@ -89,7 +96,7 @@ ifneq ($(wildcard $(VALGRIND_PATH)),)
 SUPPORT_VALGRIND := yes
 endif
 
-all: prepare rootfs ubuntu_rootfs bootfs
+all: prepare rootfs ubuntu_rootfs debian_rootfs bootfs
 	@$(ECHO) -e $(GREEN)"\nBuild Rootfs success!!\n" $(DONE)
 
 prepare:
@@ -194,11 +201,45 @@ endif
 endif
 endif
 
+debian_rootfs:
+ifeq ($(strip $(use_debian_rootfs)),yes)
+	@$(ECHO) -e $(GREEN) "Making $@..." $(DONE)
+	@$(MKDIR) -p $(DST_DEBIAN_ROOTFS_DIR)
+ifeq ($(wildcard $(SRC_DEBIAN_ROOTFS_DIR)/debian_rootfs_base.tar.gz),)
+	@echo "file debian_rootfs_base.tar.gz does not exist, don't do debian rootfs operation"
+else
+	@$(MKDIR) -p $(DST_DEBIAN_ROOTFS_DIR)/proc
+	@$(MKDIR) -p $(DST_DEBIAN_ROOTFS_DIR)/sys
+	@$(MKDIR) -p $(DST_DEBIAN_ROOTFS_DIR)/mnt
+	@$(MKDIR) -p $(DST_DEBIAN_ROOTFS_DIR)/tmp
+	@$(MKDIR) -p $(DST_DEBIAN_ROOTFS_DIR)/run
+	@$(MKDIR) -p $(DST_DEBIAN_ROOTFS_DIR)/root
+	@$(MKDIR) -p $(DST_DEBIAN_ROOTFS_DIR)/boot
+	@$(MKDIR) -p $(DST_DEBIAN_ROOTFS_DIR)/media
+	@$(MKDIR) -p $(DST_DEBIAN_ROOTFS_DIR)/param
+	@$(MKDIR) $(DST_DEBIAN_ROOTFS_DIR)/var/www
+	@$(MKDIR) $(DST_DEBIAN_ROOTFS_DIR)/etc
+	@$(MKDIR) $(IMAGE_OUTDIR)
+ifeq ($(AX_SUPPORT_AB_PART),TRUE)
+	mkdir -p $(DST_DEBIAN_ROOTFS_DIR)/etc/init.d/
+	@cp -rf rootfs/etc/init.d/* $(DST_DEBIAN_ROOTFS_DIR)/etc/init.d/
+endif
+	@bash mk_debian_rootfs_sipeed.sh $(DST_DEBIAN_ROOTFS_DIR) $(SRC_DEBIAN_ROOTFS_DIR)
+	@python3 $(COPY_FILE) $(PROJECT) $(PROJECT_MAK) $(SRC_ROOTFS_DIR) debian_rootfs.filelist $(DST_DEBIAN_ROOTFS_DIR)
+ifeq ($(ENABLE_SWUPDATE),TRUE)
+	@cp -rf swupdate/hwrevision $(DST_DEBIAN_ROOTFS_DIR)/etc/hwrevision
+	@cp -rf $(COMM_SWUPDATE_PATH)/mkswu/swupdate.cfg $(DST_DEBIAN_ROOTFS_DIR)/etc/swupdate.cfg
+endif
+	@chmod 755 $(MODIFY_FSTAB_FILE)
+	@bash $(MODIFY_FSTAB_FILE) $(DEBIAN_ROOTFS_FSTAB_FILE) "$(FLASH_PARTITIONS)"
+endif
+endif
+
 install:
 	@$(ECHO) -e $(GREEN) "rootfs $@..." $(DONE)
 
 
-image: rootfs_image ubuntu_rootfs_image bootfs_image
+image: rootfs_image ubuntu_rootfs_image debian_rootfs_image bootfs_image
 	@$(ECHO) -e $(GREEN) "images $@..." $(DONE)
 
 bootfs_image:
@@ -307,10 +348,57 @@ endif
 endif
 endif
 
+debian_rootfs_image:
+ifeq ($(strip $(use_debian_rootfs)),yes)
+	@$(ECHO) -e $(GREEN) "making $@ ..." $(DONE)
+ifeq ($(wildcard $(SRC_DEBIAN_ROOTFS_DIR)/debian_rootfs_base.tar.gz),)
+	@echo "file debian_rootfs_base.tar.gz does not exist, don't generate image file"
+else
+ifeq ($(strip $(SUPPORT_OPTEE)),TRUE)
+	@$(MKDIR) -p $(DST_DEBIAN_ROOTFS_DIR)/$(LIB_OPTEE_PATH)
+	@cp -rf $(MSP_OUT_PATH)/ta/* $(DST_DEBIAN_ROOTFS_DIR)/$(LIB_OPTEE_PATH)
+endif
+ifeq ($(SUPPORT_VALGRIND), yes)
+	@sed -i '/VALGRIND_LIB/{d}' $(DST_DEBIAN_ROOTFS_DIR)/etc/profile
+	@sed -i '$$a\export VALGRIND_LIB=/opt/libexec/valgrind' $(DST_DEBIAN_ROOTFS_DIR)/etc/profile
+endif
+ifneq ($(findstring yes, $(debugkconfig) $(debug)),)
+	echo "chmod 755 /soc/scripts/kmemleak_scan.sh" >> $(DST_DEBIAN_ROOTFS_DIR)/etc/init.d/rc.local
+	echo "/soc/scripts/kmemleak_scan.sh &" >> $(DST_DEBIAN_ROOTFS_DIR)/etc/init.d/rc.local
+endif
+	@python3 $(COPY_FILE) $(PROJECT) $(PROJECT_MAK) $(SRC_SOC_DIR) soc.filelist $(DST_DEBIAN_ROOTFS_DIR)/soc
+	@python3 $(COPY_FILE) $(PROJECT) $(PROJECT_MAK) $(SRC_OPT_DIR) opt.filelist $(DST_DEBIAN_ROOTFS_DIR)/opt
+	@mkdir -p $(DST_DEBIAN_ROOTFS_DIR)/opt/etc/models/aiisp
+	@for element in $(SENSOR_TYPE); do \
+		if [ ! -d $(CUR_DIR)/sensors/$$element ]; then \
+			echo "Error: Unsupported sensor: $$element"; \
+			exit 1; \
+		fi; \
+		python3 $(COPY_FILE) $(PROJECT) $(PROJECT_MAK)  $(SRC_OPT_DIR) $(CUR_DIR)/sensors/$$element/so.filelist $(DST_DEBIAN_ROOTFS_DIR)/opt; \
+		python3 $(COPY_FILE) $(PROJECT) $(PROJECT_MAK)  $(SRC_OPT_DIR) $(CUR_DIR)/sensors/$$element/model.filelist $(DST_DEBIAN_ROOTFS_DIR)/opt; \
+	done
+
+ifeq ($(ENABLE_SWUPDATE), TRUE)
+	@mkdir -p $(DST_DEBIAN_ROOTFS_DIR)/opt/swupdate/
+	@cp -rf $(MSP_OUT_PATH)/third-party/swupdate/* $(DST_DEBIAN_ROOTFS_DIR)/opt/swupdate/
+	@cp -rf swupdate/swupdate.sh $(DST_DEBIAN_ROOTFS_DIR)/opt/swupdate/bin
+	# @cp -rf $(COMM_SWUPDATE_PATH)/mkswu/public.pem $(DST_DEBIAN_ROOTFS_DIR)/opt/swupdate/
+endif
+
+ifeq ($(SUPPORT_VALGRIND), yes)
+	@cp -rf $(VALGRIND_PATH)/bin/* $(DST_DEBIAN_ROOTFS_DIR)/opt/bin
+	@cp -rf $(VALGRIND_PATH)/libexec $(DST_DEBIAN_ROOTFS_DIR)/opt/
+endif
+	$(MAKE_EXT4FS) -l $(ROOTFS_PARTITION_SIZE) $(DEBIAN_ROOTFS_IMG) $(DST_DEBIAN_ROOTFS_DIR)
+	$(MAKE_EXT4FS) -l $(ROOTFS_PARTITION_SIZE) -s $(DEBIAN_ROOTFS_SPARSE_IMG) $(DST_DEBIAN_ROOTFS_DIR)
+endif
+endif
+
 clean:
 	@$(ECHO) -e $(GREEN) "rootfs $@..." $(DONE)
 	@rm -rf $(DST_BOOTFS_DIR)
 	@rm -rf $(DST_ROOTFS_DIR)
 	@rm -rf $(DST_UBUNTU_ROOTFS_DIR)
+	@rm -rf $(DST_DEBIAN_ROOTFS_DIR)
 	@rm -rf $(DST_SOC_DIR)
 	@rm -rf $(DST_OPT_DIR)

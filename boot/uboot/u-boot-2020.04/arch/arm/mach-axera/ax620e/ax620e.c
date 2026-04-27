@@ -414,6 +414,9 @@ static bool check_cmm_size_is_valid(int cmm_size)
 	case PHY_AX630C_AX631_MAIXCAM2_SOM_4G:
 		mmc_max_size = 4096;
 		break;
+	case PHY_AX620QE_LP4_NANOAGENT_512M:
+		mmc_max_size = 512;
+		break;
 	default:
 		mmc_max_size = 512;
 		break;
@@ -422,7 +425,7 @@ static bool check_cmm_size_is_valid(int cmm_size)
 
 	if (cmm_size < 0) {
 		return false;
-	} else if (mmc_max_size - cmm_size < 256) {	// os min size is 256MiB
+	} else if (mmc_max_size - cmm_size < 128) {	// os min size is 128MiB
 		return false;
 	} else {
 		return true;

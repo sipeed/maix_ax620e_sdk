@@ -1,0 +1,61 @@
+#!/bin/sh
+
+DAEMON="axsyslogd"
+PIDFILE="/var/run/$DAEMON.pid"
+
+SYSLOGD_ARGS="-S"
+
+# shellcheck source=/dev/null
+[ -r "/etc/default/$DAEMON" ] && . "/etc/default/$DAEMON"
+
+# BusyBox' syslogd does not create a pidfile, so pass "-n" in the command line
+# and use "-m" to instruct start-stop-daemon to create one.
+start() {
+	#printf 'Starting %s: ' "$DAEMON"
+	# shellcheck disable=SC2086 # we need the word splitting
+	start-stop-daemon -b -m -S -q -p "$PIDFILE" -x "/sbin/$DAEMON" \
+		-- -n $SYSLOGD_ARGS
+	status=$?
+	if [ "$status" -ne 0 ]; then
+		echo "FAIL"
+	fi
+	return "$status"
+}
+
+stop() {
+	printf 'Stopping %s: ' "$DAEMON"
+	if [ ! -e $PIDFILE ];then
+		touch $PIDFILE
+		echo $(ps | grep $DAEMON | grep -v grep | awk '{print $1}') > $PIDFILE
+	fi
+	start-stop-daemon -K -q -p "$PIDFILE"
+	status=$?
+	if [ "$status" -eq 0 ]; then
+		rm -f "$PIDFILE"
+		echo "OK"
+	else
+		echo "FAIL"
+	fi
+	return "$status"
+}
+
+restart() {
+	stop
+	sleep 1
+	start
+}
+
+reload() {
+	echo "Reloading  $DAEMON"
+	start-stop-daemon -K -s 10 -q -p "$PIDFILE"
+}
+
+case "$1" in
+	start|stop|restart)
+		"$1";;
+	reload)
+		reload;;
+	*)
+		echo "Usage: $0 {start|stop|restart|reload}"
+		exit 1
+esac

@@ -4,7 +4,7 @@ set -e
 
 echo "making axp ..."
 
-while getopts "o:p:s:d:u:v:z:a:l:f:b:" arg
+while getopts "o:p:s:d:u:v:z:a:l:f:b:r:" arg
 do
 	case "$arg" in
 		o)
@@ -49,6 +49,10 @@ do
 		b)
 			echo "build buildroot axp: $OPTARG"
 			BUILD_BUILDROOT_AXP=$OPTARG
+			;;
+		r)
+			echo "build debian axp: $OPTARG"
+			BUILD_DEBIAN_AXP=$OPTARG
 			;;
 	esac
 done
@@ -108,6 +112,7 @@ UBOOT_A_PATH=$IMG_PATH/u-boot_signed.bin
 UBOOT_B_PATH=$IMG_PATH/u-boot_b_signed.bin
 ROOTFS_PATH=$IMG_PATH/rootfs_sparse.ext4
 UBUNTU_ROOTFS_PATH=$IMG_PATH/ubuntu_rootfs_sparse.ext4
+DEBIAN_ROOTFS_PATH=$IMG_PATH/debian_rootfs_sparse.ext4
 BUILDROOT_ROOTFS_PATH=$IMG_PATH/buildroot_rootfs.ext4
 PARAM_PATH=$IMG_PATH/param_sparse.ext4
 SOC_PATH=$IMG_PATH/soc_sparse.ext4
@@ -181,6 +186,10 @@ if [[ "x$BUILD_UBUNTU_AXP" == "x" ]]; then
 	BUILD_UBUNTU_AXP="yes"
 fi
 
+if [[ "x$BUILD_DEBIAN_AXP" == "x" ]]; then
+	BUILD_DEBIAN_AXP="no"
+fi
+
 if [[ "$BUILD_BUILDROOT_AXP" = "yes" ]]; then
 	if [[ "$PROJECT" == *nand* ]]; then
 		BOOT_PATH=$IMG_PATH/bootfs.ubi
@@ -189,6 +198,10 @@ if [[ "$BUILD_BUILDROOT_AXP" = "yes" ]]; then
 	fi
 	get_axp_parm "$FLASH_PARTITIONS"
 	python3 $TOOL_PATH -p $CHIP_GROUP -v $VERSION_EXT -x $PAC_XML_PATH -o $AXP_BUILDROOT_ROOTFS_PATH ${AXP_PARM}
+elif [[ "$BUILD_DEBIAN_AXP" = "yes" ]]; then
+	ROOTFS_PATH=$DEBIAN_ROOTFS_PATH
+	get_axp_parm "$FLASH_PARTITIONS"
+	python3 $TOOL_PATH -p $CHIP_GROUP -v $VERSION_EXT -x $PAC_XML_PATH -o $AXP_PATH ${AXP_PARM}
 elif [[ "$BUILD_UBUNTU_AXP" = "yes" ]]; then
 	ROOTFS_PATH=$UBUNTU_ROOTFS_PATH
 	get_axp_parm "$FLASH_PARTITIONS"

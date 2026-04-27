@@ -81,6 +81,9 @@ static bool check_cmm_size_is_valid(int cmm_size)
 	case PHY_AX630C_AX631_MAIXCAM2_SOM_4G:
 		mmc_max_size = 4096;
 		break;
+	case PHY_AX620QE_LP4_NANOAGENT_512M:
+		mmc_max_size = 512;
+		break;
 	default:
 		mmc_max_size = 512;
 		break;
@@ -89,7 +92,7 @@ static bool check_cmm_size_is_valid(int cmm_size)
 
 	if (cmm_size < 0) {
 		return false;
-	} else if (mmc_max_size - cmm_size < 256) {	// os min size is 256MiB
+	} else if (mmc_max_size - cmm_size < 128) {	// os min size is 128MiB
 		return false;
 	} else {
 		return true;
@@ -100,7 +103,6 @@ static int read_cmm_size_from_boot(int *cmm_size) {
 	int ret = 0;
 	struct blk_desc *mmc_desc;
 	char *filename = "configs";
-	disk_partition_t fs_partition;
 
 	mmc_desc = blk_get_dev("mmc", SD_DEV_ID);
 	if (NULL == mmc_desc) {
@@ -213,7 +215,6 @@ static int load_file_from_boot_partition(char *filename, char **file_data, size_
 {
 	int ret = 0;
 	struct blk_desc *mmc_desc = NULL;
-	disk_partition_t fs_partition;
 	loff_t file_len = 0;
 
 	mmc_desc = blk_get_dev("mmc", SD_DEV_ID);
@@ -346,7 +347,7 @@ static void config_system_console(void) {
 	}
 }
 
-static void config_cmm_size() {
+static void config_cmm_size(void) {
 	int cmm_size = -1;
 	if (0 != read_cmm_size_from_boot(&cmm_size)) {
 		cmm_size = -1;	// if failed, use default cmm_size
@@ -465,7 +466,7 @@ int do_sd_boot(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 	int cnt, last_size;
 	int j;
 	struct img_header *boot_img_header = NULL;
-#ifdef CONFIG_CMD_AXERA_GZIPD || CONFIG_CMD_AXERA_KERNEL_LZMA
+#if defined(CONFIG_CMD_AXERA_GZIPD) || defined(CONFIG_CMD_AXERA_KERNEL_LZMA)
 	char *img_addr = (char *)KERNEL_IMAGE_COMPRESSED_ADDR;
 	char *dtb_addr = (char *)DTB_IMAGE_COMPRESSED_ADDR;
 	u64 kernel_image_size;
@@ -496,7 +497,7 @@ int do_sd_boot(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 	cnt = boot_img_header->img_size / READ_IMG_SIZE;
 	last_size = boot_img_header->img_size % READ_IMG_SIZE;
 	j = 0;
-#ifdef CONFIG_CMD_AXERA_GZIPD || CONFIG_CMD_AXERA_KERNEL_LZMA
+#if defined(CONFIG_CMD_AXERA_GZIPD) || defined(CONFIG_CMD_AXERA_KERNEL_LZMA)
 	kernel_image_size = boot_img_header->img_size;
 #endif
 	printf("kernel size is %d bytes\n", boot_img_header->img_size);
@@ -526,7 +527,7 @@ int do_sd_boot(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 	run_command_list(boot_cmd, -1, 0);
 	boot_img_header = (struct img_header *)SD_BOOT_IMAGE_ADDR;
 	dtb_size = boot_img_header->img_size;
-#ifdef CONFIG_CMD_AXERA_GZIPD || CONFIG_CMD_AXERA_KERNEL_LZMA
+#if defined(CONFIG_CMD_AXERA_GZIPD) || defined(CONFIG_CMD_AXERA_KERNEL_LZMA)
 	dtb_image_size = dtb_size;
 #endif
 

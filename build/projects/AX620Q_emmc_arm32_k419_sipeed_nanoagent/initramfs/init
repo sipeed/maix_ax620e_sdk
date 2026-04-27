@@ -280,7 +280,13 @@ else
 fi
 
 if [ -e "$boot_mount/first_time_boot" ]; then
-    echo "kvm-${mac_hi}${mac_lo}" > "$root_mount/etc/hostname"
+    echo "nanoagent-${mac_hi}${mac_lo}" > "$root_mount/etc/hostname"
+    hosts_file="$root_mount/etc/hosts"
+    if grep -q '^127\.0\.1\.1[[:space:]]\+' "$hosts_file"; then
+        sed -i "s/^127\.0\.1\.1[[:space:]].*/127.0.1.1\tnanoagent-${mac_hi}${mac_lo}/" "$hosts_file"
+    else
+        echo -e "127.0.1.1\tnanoagent-${mac_hi}${mac_lo}" >> "$hosts_file"
+    fi
     mount -o remount,rw "$boot_mount"
     rm -f "$boot_mount/first_time_boot"
     sync

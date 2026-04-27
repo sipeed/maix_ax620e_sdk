@@ -92,7 +92,7 @@ clean:	$(SUBDIRS_CLEAN)
 	@echo -e $(GREEN)"\nClean success!!\n"  $(DONE)
 
 axp: image
-	@bash axp_make.sh -p "$(PROJECT)" -v "$(SDK_VERSION)" -o "$(SUPPORT_OPTEE)" -z "$(SUPPPORT_GZIPD)" -s "$(SENSOR_TYPE)" -d "$(DETECT_TYPE)" -a "$(AX_SUPPORT_AB_PART)" -l "$(LIBC)" -f "$(FLASH_PARTITIONS)" -u "$(use_ubuntu_rootfs)" -b "$(use_buildroot_rootfs)"
+	@bash axp_make.sh -p "$(PROJECT)" -v "$(SDK_VERSION)" -o "$(SUPPORT_OPTEE)" -z "$(SUPPPORT_GZIPD)" -s "$(SENSOR_TYPE)" -d "$(DETECT_TYPE)" -a "$(AX_SUPPORT_AB_PART)" -l "$(LIBC)" -f "$(FLASH_PARTITIONS)" -u "$(use_ubuntu_rootfs)" -b "$(use_buildroot_rootfs)" -r "$(use_debian_rootfs)"
 	@echo -e $(GREEN)"\nMake AXP success!!\n"  $(DONE)
 
 image:
