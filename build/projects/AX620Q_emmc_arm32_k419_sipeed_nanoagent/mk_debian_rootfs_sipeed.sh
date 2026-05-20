@@ -20,7 +20,7 @@ if [ -d "$TARGET_ROOTFS_DIR" ]; then
 fi
 
 mkdir -p "$TARGET_ROOTFS_DIR"
-tar -zxpf "$TARGET_ROOTFS_BASE_TAR" -C "$TARGET_ROOTFS_DIR"
+tar -zxpf "$TARGET_ROOTFS_BASE_TAR" -C "$TARGET_ROOTFS_DIR" --exclude='./dev/*'
 
 # cp debian_rootfs specific files
 if [ -d "$INPUT_DEBIAN_BASE_DIR/rootfs_overlay" ]; then
@@ -31,11 +31,13 @@ fi
 echo nanoagent > "$TARGET_ROOTFS_DIR/etc/hostname"
 
 # link some bin to busybox
-ln -sf /lib/systemd/systemd "$TARGET_ROOTFS_DIR/sbin/init"
-ln -sf /bin/bash "$TARGET_ROOTFS_DIR/bin/sh"
 ln -sf /usr/bin/busybox "$TARGET_ROOTFS_DIR/usr/sbin/hwclock"
 ln -sf /usr/bin/busybox "$TARGET_ROOTFS_DIR/usr/sbin/devmem"
 ln -sf /usr/bin/busybox "$TARGET_ROOTFS_DIR/usr/bin/strings"
+
+ln -sf /lib/systemd/systemd "$TARGET_ROOTFS_DIR/sbin/init"
+ln -sf /bin/bash "$TARGET_ROOTFS_DIR/bin/sh"
+ln -sf /usr/sbin/etherwake $TARGET_ROOTFS_DIR/usr/sbin/ether-wake
 
 # create rc.local
 touch "$TARGET_ROOTFS_DIR/etc/rc.local"
@@ -54,10 +56,6 @@ bash /soc/scripts/npu_set_bw_limiter.sh start
 bash /opt/scripts/axsyslogd start
 bash /opt/scripts/axklogd start
 
-chmod 755 /opt/scripts/usbdev.sh
-bash /opt/scripts/usbdev.sh start
-
-insmod /soc/ko/lt7911_manage.ko
 EOF
 
 # modify profile

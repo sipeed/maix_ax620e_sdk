@@ -27,8 +27,8 @@
 0x104F0078, 0x00010003,  /* PadName = EPHY_LED1            Fuction = RGMII_MDIO_M */
 0x104F0084, 0x00000005,  /* PadName = RGMII_RXD0           Fuction = RGMII_RXD0 */
 0x104F0090, 0x00000005,  /* PadName = RGMII_RXD1           Fuction = RGMII_RXD1 */
-0x104F009C, 0x00000003,  /* PadName = RGMII_RXDV           Fuction = RGMII_RXDV */
-0x104F00A8, 0x00000005,  /* PadName = RGMII_RXCLK          Fuction = RGMII_RXCLK */
+0x104F009C, 0x00060083,  /* PadName = RGMII_RXDV           Fuction = GPIO1_A14 */
+0x104F00A8, 0x00060003,  /* PadName = RGMII_RXCLK          Fuction = GPIO1_A15 */
 0x104F00CC, 0x00040003,  /* PadName = RGMII_TXD0           Fuction = SPI_M2_MOSI_M */
 0x104F00D8, 0x00000005,  /* PadName = RGMII_TXD1           Fuction = RGMII_TXD1 */
 0x104F00E4, 0x00040003,  /* PadName = RGMII_TXCLK          Fuction = SPI_M2_SCLK_M */

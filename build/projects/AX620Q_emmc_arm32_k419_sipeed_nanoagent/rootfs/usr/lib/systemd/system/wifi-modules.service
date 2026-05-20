@@ -1,0 +1,15 @@
+[Unit]
+Description=WiFi kernel modules loader/unloader
+DefaultDependencies=no
+After=boot.mount
+Requires=boot.mount
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/opt/scripts/wifi-modules.sh load
+ExecStop=/opt/scripts/wifi-modules.sh unload
+ExecReload=/opt/scripts/wifi-modules.sh restart
+
+[Install]
+WantedBy=multi-user.target

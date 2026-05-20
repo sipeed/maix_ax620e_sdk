@@ -15,7 +15,7 @@ UBUNTU_ROOTFS_DIR="${OBJS_DIR}/ubuntu_rootfs"
 BUILDROOT_ROOTFS_DIR="${OBJS_DIR}/buildroot_rootfs"
 ROOTFS_FALLBACK_DIR="${OBJS_DIR}/rootfs"
 
-IMG_SIZE="600M"
+IMG_SIZE="1024M"
 BOOT_PART_SIZE_MIB=128
 BUILD_TS="$(date +%Y%m%d_%H%M%S)"
 OUTPUT_IMG="${SDK_ROOT}/build/out/${PROJECT}_sdcard_${BUILD_TS}.img"
@@ -29,7 +29,7 @@ Generate an SD card image for ${PROJECT}.
 Options:
   -o, --output <file>      Output image path (default: ${OUTPUT_IMG})
   -s, --size <size>        Image size (default: ${IMG_SIZE}, examples: 4G, 8192M)
-    -r, --rootfs <dir>       Rootfs source dir (default: auto debian_rootfs -> ubuntu_rootfs -> buildroot_rootfs -> rootfs)
+  -r, --rootfs <dir>       Rootfs source dir (default: auto debian_rootfs -> ubuntu_rootfs -> buildroot_rootfs -> rootfs)
   -h, --help               Show this help
 
 Notes:

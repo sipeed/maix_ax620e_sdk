@@ -64,10 +64,16 @@ export DEBIAN_FRONTEND=noninteractive
 
 apt-get update
 apt-get install -y --no-install-recommends \
-    systemd-sysv systemd-resolved sudo kmod udev dialog busybox net-tools ifupdown wget curl iperf3 avahi-daemon \
-    iproute2 iptables iputils-ping openssh-server ca-certificates vim chrony \
-    bash-completion tzdata udhcpc udhcpd wpasupplicant rsync evtest usbutils \
-    binutils e2fsprogs iw htop fdisk fastfetch file python-is-python3
+    systemd-sysv systemd-resolved systemd-zram-generator sudo kmod udev dialog \
+    busybox net-tools ifupdown wget curl iperf3 avahi-daemon iproute2 iptables \
+    iputils-ping openssh-server ca-certificates vim chrony bash-completion \
+    tzdata udhcpc udhcpd wpasupplicant rsync evtest usbutils binutils e2fsprogs \
+    iw htop fdisk fastfetch file python-is-python3 xxd hostapd i2c-tools \
+    etherwake arping exfatprogs python3-pip python3-dbus nodejs npm libturbojpeg0
+
+wget -O /tmp/tailscale.deb https://pkgs.tailscale.com/stable/debian/pool/tailscale_1.96.4_armhf.deb
+apt-get install -y --no-install-recommends /tmp/tailscale.deb
+rm -f /tmp/tailscale.deb
 
 ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 echo "Asia/Shanghai" > /etc/timezone
@@ -75,14 +81,9 @@ echo "Asia/Shanghai" > /etc/timezone
 echo "root:sipeed" | chpasswd
 chmod 4755 /usr/bin/sudo
 
-cat > /etc/network/interfaces <<'NETEOF'
-auto lo
-iface lo inet loopback
-
-allow-hotplug eth0
-iface eth0 inet dhcp
-NETEOF
-
+systemctl set-default multi-user.target
+systemctl disable wpa_supplicant.service
+systemctl disable tailscaled.service
 systemctl mask apt-daily.timer
 systemctl mask apt-daily-upgrade.timer
 

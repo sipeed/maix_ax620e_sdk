@@ -4,7 +4,6 @@ $(PROJECT)/soc/scripts/* scripts/
 @dir: build/out
 $(PROJECT)/objs/kernel/linux/linux-4.19.125/drivers/net/wireless/aic8800/*/*.ko ko/
 $(PROJECT)/objs/kernel/linux/linux-4.19.125/drivers/input/touchscreen/hyn_driver_release_qm/*.ko ko/
-$(PROJECT)/objs/kernel/linux/linux-4.19.125/drivers/misc/lt7911_manage.ko ko/
 
 @dir: kernel/osdrv/out/$(OSDRV_OUT_DIR)
 ko/*.ko ko/

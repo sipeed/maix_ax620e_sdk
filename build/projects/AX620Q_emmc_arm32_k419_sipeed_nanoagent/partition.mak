@@ -30,7 +30,7 @@ LOGO_PARTITION_SIZE       := 6M
 DTB_PARTITION_SIZE        := 1M
 KERNEL_PARTITION_SIZE     := 64M
 BOOT_PARTITION_SIZE       := 128M
-ROOTFS_PARTITION_SIZE     := 512M
+ROOTFS_PARTITION_SIZE     := 1024M
 AUTO_FIT_PARTITION        := ROOTFS
 
 # env part size, size is equal to ENV_PARTITION_SIZE
@@ -46,8 +46,10 @@ endif
 
 # linux OS memory config
 OS_MEM_SIZE             := 256 #MB
+BOARD_256M_OS_MEM_SIZE  := 128
 BOARD_512M_OS_MEM_SIZE  := 256
 OS_MEM                  := mem=$(strip $(OS_MEM_SIZE))M
+BOARD_256M_OS_MEM       := mem=$(strip $(BOARD_256M_OS_MEM_SIZE))M
 BOARD_512M_OS_MEM       := mem=$(strip $(BOARD_512M_OS_MEM_SIZE))M
 
 # cmm memory config

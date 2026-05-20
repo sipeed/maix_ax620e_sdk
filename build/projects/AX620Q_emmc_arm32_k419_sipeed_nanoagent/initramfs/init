@@ -271,13 +271,6 @@ echo "$device_key" > "$root_mount/device_key"
 mac_uid=$(sha512sum "$root_mount/device_key" | head -c 4)
 mac_hi=$(echo "$mac_uid" | cut -c 1-2)
 mac_lo=$(echo "$mac_uid" | cut -c 3-4)
-new_mac="48:da:35:6d:${mac_hi}:${mac_lo}"
-interfaces_file="$root_mount/etc/network/interfaces"
-if grep -q "hwaddress ether" "$interfaces_file"; then
-    sed -i "s/^\(.*hwaddress ether \)[^ ]*\$/\1$new_mac/" "$interfaces_file"
-else
-    echo "hwaddress ether $new_mac" >> "$interfaces_file"
-fi
 
 if [ -e "$boot_mount/first_time_boot" ]; then
     echo "nanoagent-${mac_hi}${mac_lo}" > "$root_mount/etc/hostname"

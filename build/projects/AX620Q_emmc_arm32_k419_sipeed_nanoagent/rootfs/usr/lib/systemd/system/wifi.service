@@ -2,7 +2,8 @@
 Description=Run wifi.sh
 DefaultDependencies=no
 After=boot.mount network.target
-Requires=boot.mount
+Requires=boot.mount wifi-modules.service
+After=wifi-modules.service
 
 [Service]
 Type=simple
