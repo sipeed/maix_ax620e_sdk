@@ -1,15 +1,12 @@
 #!/bin/bash
 
-### !!! 不要使用 SDK 的 /bin/sh, 请使用 /bin/bash !!!
-
 gen_dhcpd_conf() {
     interface="${1}"
-    ipv4_prefix="${2}"              # 示例: 10.173.106 (自动补全为 10.173.106.0/24)
-    router="${3:-${ipv4_prefix}.1}" # 可选参数: 默认网关（默认 ${ipv4_prefix}.1）
-    dns="${4:-8.8.8.8 8.8.4.4}"     # 可选参数: DNS 服务器（默认 8.8.8.8 8.8.4.4）
-    lease_time="${5:-864000}"       # 可选参数: 租期时间（默认 864000 秒）
+    ipv4_prefix="${2}"
+    router="${3:-${ipv4_prefix}.1}"
+    dns="${4:-8.8.8.8 8.8.4.4}"
+    lease_time="${5:-864000}"
 
-    # 生成 dhcpd.conf 配置
     cat <<EOF
 # DHCP Server Configuration for interface ${interface}
 authoritative;
@@ -289,6 +286,10 @@ hid_start() {
         echo 0x1009 > idProduct
     fi
 
+    echo 0xEF > bDeviceClass
+    echo 0x02 > bDeviceSubClass
+    echo 0x01 > bDeviceProtocol
+
     mkdir strings/0x409
     if [ -e /boot/usb.serialnumber ]; then
         cat /boot/usb.serialnumber > strings/0x409/serialnumber
@@ -303,14 +304,14 @@ hid_start() {
     if [ -e /boot/usb.product ]; then
         cat /boot/usb.product > strings/0x409/product
     else
-        echo 'NanoKVMPro' > strings/0x409/product
+        echo 'NanoAgent' > strings/0x409/product
     fi
 
     mkdir configs/c.1
     echo 0xA0 > configs/c.1/bmAttributes
     echo 200 > configs/c.1/MaxPower
     mkdir configs/c.1/strings/0x409
-    echo "NanoKVMPro" > configs/c.1/strings/0x409/configuration
+    echo "NanoAgent" > configs/c.1/strings/0x409/configuration
 
     if [ -e /boot/usb.udisp ] && [ ! -e /boot/usb.uac2 ]; then
         mkdir functions/Loopback.0
@@ -318,7 +319,7 @@ hid_start() {
 
         mkdir configs/c.2
         mkdir configs/c.2/strings/0x409
-        echo "NanoKVMPro" > configs/c.2/strings/0x409/configuration
+        echo "NanoAgent" > configs/c.2/strings/0x409/configuration
 
         ln -s functions/Loopback.0 configs/c.1
         ln -s functions/SourceSink.0 configs/c.2
@@ -326,6 +327,9 @@ hid_start() {
 
     if [ -e /boot/usb.rndis ]; then
         mkdir -p functions/rndis.usb0
+        echo e0 > functions/rndis.usb0/class
+        echo 01 > functions/rndis.usb0/subclass
+        echo 03 > functions/rndis.usb0/protocol
         echo $(gen_mac_addr rndis dev) > functions/rndis.usb0/dev_addr
         echo $(gen_mac_addr rndis host) > functions/rndis.usb0/host_addr
         echo RNDIS > functions/rndis.usb0/os_desc/interface.rndis/compatible_id
@@ -407,9 +411,7 @@ hid_start() {
         fi
     fi
 
-    if ( [ -e /boot/usb.disk1.sd ] || [ -e /boot/usb.disk1 ] || [ -e /boot/usb.disk1.emmc ] ) && \
-       [ ! -e /boot/usb.disk0 ] && \
-       ( [ -e /dev/mmcblk1 ] || [ -e /exfat.img ] ); then
+    if ( [ -e /boot/usb.disk1 ] || [ -e /exfat.img ] ); then
 
         mkdir functions/mass_storage.disk1
         ln -s functions/mass_storage.disk1 configs/c.1/
@@ -427,10 +429,7 @@ hid_start() {
             echo -n "sipeed  Optical Drive   1.00" > functions/mass_storage.disk1/lun.0/inquiry_string_cdrom
         fi
 
-        if ( [ -e /boot/usb.disk1.sd ] || [ -e /boot/usb.disk1 ] ) && \
-           [ -e /dev/mmcblk1p1 ]; then
-            echo /dev/mmcblk1p1 > functions/mass_storage.disk1/lun.0/file
-        elif [ -e /boot/usb.disk1.emmc ] && [ -e /exfat.img ]; then
+        if [ -e /boot/usb.disk1 ] && [ -e /exfat.img ]; then
             echo /exfat.img > functions/mass_storage.disk1/lun.0/file
         fi
     fi
@@ -446,7 +445,7 @@ hid_start() {
         if [ -e /boot/uac2.function_name ]; then
             cat /boot/uac2.function_name > functions/uac2.usb0/function_name
         else
-            echo "NanoKVMPro Audio" > functions/uac2.usb0/function_name
+            echo "NanoAgent Audio" > functions/uac2.usb0/function_name
         fi
         ln -s functions/uac2.usb0 configs/c.1/
     fi
@@ -498,6 +497,10 @@ hid_only_start() {
         echo 0x1009 > idProduct
     fi
 
+    echo 0xEF > bDeviceClass
+    echo 0x02 > bDeviceSubClass
+    echo 0x01 > bDeviceProtocol
+
     mkdir strings/0x409
     if [ -e /boot/usb.serialnumber ]; then
         cat /boot/usb.serialnumber > strings/0x409/serialnumber
@@ -512,14 +515,14 @@ hid_only_start() {
     if [ -e /boot/usb.product ]; then
         cat /boot/usb.product > strings/0x409/product
     else
-        echo 'NanoKVMPro' > strings/0x409/product
+        echo 'NanoAgent' > strings/0x409/product
     fi
 
     mkdir configs/c.1
     echo 0xA0 > configs/c.1/bmAttributes
     echo 200 > configs/c.1/MaxPower
     mkdir configs/c.1/strings/0x409
-    echo "NanoKVMPro HID-only" > configs/c.1/strings/0x409/configuration
+    echo "NanoAgent HID-only" > configs/c.1/strings/0x409/configuration
 
     mkdir functions/hid.GS0
     echo 1 > functions/hid.GS0/no_out_endpoint

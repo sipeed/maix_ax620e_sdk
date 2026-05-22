@@ -84,6 +84,9 @@ static bool check_cmm_size_is_valid(int cmm_size)
 	case PHY_AX620QE_LP4_NANOAGENT_512M:
 		mmc_max_size = 512;
 		break;
+	case PHY_AX620QF_LP4_NANOAGENT_256M:
+		mmc_max_size = 256;
+		break;
 	default:
 		mmc_max_size = 512;
 		break;
@@ -381,6 +384,10 @@ static void config_cmm_size(void) {
 			strcpy(new_mem_cfg, BOARD_512M_OS_MEM);
 			need_config_bootargs = true;
 			break;
+		case PHY_AX620QF_LP4_NANOAGENT_256M:
+			strcpy(new_mem_cfg, BOARD_256M_OS_MEM);
+			need_config_bootargs = true;
+			break;
 		default:
 			strcpy(new_mem_cfg, BOARD_1G_OS_MEM);
 			need_config_bootargs = true;
@@ -404,6 +411,9 @@ static void config_cmm_size(void) {
 			break;
 		case PHY_AX620QE_LP4_NANOAGENT_512M:
 			os_mem_size = 512 - cmm_size;
+			break;
+		case PHY_AX620QF_LP4_NANOAGENT_256M:
+			os_mem_size = 256 - cmm_size;
 			break;
 		default:
 			os_mem_size = 512 - cmm_size;
@@ -436,7 +446,7 @@ static void config_console_for_nanoagent(void)
 	int board_id = get_board_id();
 	int ret;
 
-	if (board_id != PHY_AX620QE_LP4_NANOAGENT_512M)
+	if (board_id != PHY_AX620QE_LP4_NANOAGENT_512M && board_id != PHY_AX620QF_LP4_NANOAGENT_256M)
 		return;
 
 	bootargs = env_get("bootargs");

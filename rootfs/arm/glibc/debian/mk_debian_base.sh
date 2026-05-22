@@ -69,7 +69,7 @@ apt-get install -y --no-install-recommends \
     iputils-ping openssh-server ca-certificates vim chrony bash-completion \
     tzdata udhcpc udhcpd wpasupplicant rsync evtest usbutils binutils e2fsprogs \
     iw htop fdisk fastfetch file python-is-python3 xxd hostapd i2c-tools \
-    etherwake arping exfatprogs python3-pip python3-dbus nodejs npm libturbojpeg0
+    etherwake arping exfatprogs libevdev2 python3-pip python3-dbus
 
 wget -O /tmp/tailscale.deb https://pkgs.tailscale.com/stable/debian/pool/tailscale_1.96.4_armhf.deb
 apt-get install -y --no-install-recommends /tmp/tailscale.deb

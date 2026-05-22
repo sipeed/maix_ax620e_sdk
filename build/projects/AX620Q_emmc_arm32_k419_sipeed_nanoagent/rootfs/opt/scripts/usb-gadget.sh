@@ -202,11 +202,14 @@ usb_gadget_start()
 
     echo 0x359f > idVendor
     echo 0x2200 > idProduct
+    echo 0xEF > bDeviceClass
+    echo 0x02 > bDeviceSubClass
+    echo 0x01 > bDeviceProtocol
 
     mkdir -p strings/0x409 -m 0770
-    echo "nanokvm" > strings/0x409/serialnumber
+    echo "nanoagent" > strings/0x409/serialnumber
     echo "sipeed" > strings/0x409/manufacturer
-    echo "nanokvm" > strings/0x409/product
+    echo "nanoagent" > strings/0x409/product
 
     mkdir -p configs/c.1 -m 0770
     mkdir -p configs/c.1/strings/0x409 -m 0770
@@ -217,6 +220,9 @@ usb_gadget_start()
     if [[ "${maix_usb_rndis}x" == "1x" ]]; then
         mkdir -p functions/rndis.${rndis_ifname}
         rm -f configs/c.1/rndis.${rndis_ifname}
+        echo e0 > functions/rndis.${rndis_ifname}/class
+        echo 01 > functions/rndis.${rndis_ifname}/subclass
+        echo 03 > functions/rndis.${rndis_ifname}/protocol
         echo RNDIS > functions/rndis.${rndis_ifname}/os_desc/interface.rndis/compatible_id
         echo 5162001 > functions/rndis.${rndis_ifname}/os_desc/interface.rndis/sub_compatible_id
         ln -s functions/rndis.${rndis_ifname} configs/c.1

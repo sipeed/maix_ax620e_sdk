@@ -82,6 +82,7 @@ static int ax_pinmux_index_conv(int index)
 		break;
 	// ### SIPEED EDIT ###
 	case AX620QE_LP4_NANOAGENT_512M:
+	case AX620QF_LP4_NANOAGENT_256M:
 		ret = AX620QZ_DEMO_LP4_V1_0;
 		break;
 	// ### SIPEED EDIT END ###

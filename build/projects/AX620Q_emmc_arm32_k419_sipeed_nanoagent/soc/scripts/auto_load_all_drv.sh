@@ -11,6 +11,7 @@ if [ -f /boot/configs ]; then
 fi
 
 OS_MEM_MIN_SZIE=0
+BOARD_ID_256M=1
 BOARD_ID_512M=3
 
 function get_board_id()
@@ -25,6 +26,8 @@ function get_emmc_size()
     board_id=$(get_board_id)
     if [ $board_id -eq ${BOARD_ID_512M} ]; then
         echo 512
+    elif [ $board_id -eq ${BOARD_ID_256M} ] || [ $board_id -eq 16 ]; then
+        echo 256
     fi
 }
 
@@ -49,7 +52,7 @@ function get_cmm_param()
 {
     emmc_size=$(get_emmc_size)
     cmm_size=$(get_cmm_size)
-    os_mem_size=$OS_MEM_MIN_SIZE
+    os_mem_size=$OS_MEM_MIN_SZIE
     if [ $((emmc_size - cmm_size)) -ge $OS_MEM_MIN_SZIE ]; then
         os_mem_size=$((emmc_size - cmm_size))
     else
