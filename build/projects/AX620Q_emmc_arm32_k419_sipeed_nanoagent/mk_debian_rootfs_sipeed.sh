@@ -28,7 +28,7 @@ if [ -d "$INPUT_DEBIAN_BASE_DIR/rootfs_overlay" ]; then
 fi
 
 # modify hostname
-echo nanoagent > "$TARGET_ROOTFS_DIR/etc/hostname"
+echo nanokvm-go > "$TARGET_ROOTFS_DIR/etc/hostname"
 
 # link some bin to busybox
 ln -sf /usr/bin/busybox "$TARGET_ROOTFS_DIR/usr/sbin/hwclock"

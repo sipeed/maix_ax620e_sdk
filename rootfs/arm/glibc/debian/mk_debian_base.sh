@@ -69,9 +69,10 @@ apt-get install -y --no-install-recommends \
     iputils-ping openssh-server ca-certificates vim chrony bash-completion \
     tzdata udhcpc udhcpd wpasupplicant rsync evtest usbutils binutils e2fsprogs \
     iw htop fdisk fastfetch file python-is-python3 xxd hostapd i2c-tools \
-    etherwake arping exfatprogs libevdev2 python3-pip python3-dbus
+    etherwake arping exfatprogs libevdev2 python3-pip python3-dbus libavformat61 \
+    libcurl4t64
 
-wget -O /tmp/tailscale.deb https://pkgs.tailscale.com/stable/debian/pool/tailscale_1.96.4_armhf.deb
+wget -O /tmp/tailscale.deb https://pkgs.tailscale.com/stable/debian/pool/tailscale_1.98.5_armhf.deb
 apt-get install -y --no-install-recommends /tmp/tailscale.deb
 rm -f /tmp/tailscale.deb
 
@@ -86,6 +87,9 @@ systemctl disable wpa_supplicant.service
 systemctl disable tailscaled.service
 systemctl mask apt-daily.timer
 systemctl mask apt-daily-upgrade.timer
+
+update-alternatives --set iptables /usr/sbin/iptables-legacy
+update-alternatives --set ip6tables /usr/sbin/ip6tables-legacy
 
 apt-get clean
 rm -rf /var/lib/apt/lists/*

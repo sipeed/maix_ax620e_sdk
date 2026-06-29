@@ -289,7 +289,7 @@ static void config_system_console(void) {
 	size_t buffer_size = 0;
 	if (load_file_from_boot_partition("configs", &buffer, &buffer_size) == 0) {
 		bool disable_system_console = false;
-		char console_config[128] = {0};
+		char console_config[128] = "console=null ";
 		char *tmp_buffer = strdup(buffer);
 		char *value = find_key_value_from_string(tmp_buffer, "maix_system_console");
 		if (value) {
@@ -327,26 +327,35 @@ static void config_system_console(void) {
 			strcpy(console, console_config);
 			strcat(new_bootargs, end);
 			env_set("bootargs", new_bootargs);
-			free(buffer);
 		}
 
 		if (kernel_loglevel >= 0) {
 			char new_bootargs[1024] = {0};
 			char *_bootargs = env_get("bootargs");
-			memcpy(new_bootargs, _bootargs, strlen(_bootargs));
-
-			char *loglevel = strstr(new_bootargs, "loglevel=");
-			char *end = loglevel;
-			while ((char)*end != ' ') end ++;
-			if ((char)*end != '\0') end ++;
 			char loglevel_config[32] = {0};
+			char *loglevel = strstr(_bootargs, "loglevel=");
+			int ret;
+
 			sprintf(loglevel_config, "loglevel=%d", kernel_loglevel);
-			strcpy(loglevel, loglevel_config);
-			strcat(new_bootargs, end);
-			env_set("bootargs", new_bootargs);
-			if (buffer != NULL)
+			if (loglevel) {
+				char *end = loglevel;
+				while ((char)*end != '\0' && (char)*end != ' ') end ++;
+				if ((char)*end != '\0') end ++;
+				ret = snprintf(new_bootargs, sizeof(new_bootargs), "%.*s%s%s%s",
+					(int)(loglevel - _bootargs), _bootargs, loglevel_config,
+					*end ? " " : "", end);
+			} else {
+				ret = snprintf(new_bootargs, sizeof(new_bootargs), "%s %s",
+					_bootargs, loglevel_config);
+			}
+			if (ret < 0 || ret >= sizeof(new_bootargs)) {
+				printf("set kernel loglevel failed\n");
 				free(buffer);
+				return;
+			}
+			env_set("bootargs", new_bootargs);
 		}
+		free(buffer);
 	}
 }
 

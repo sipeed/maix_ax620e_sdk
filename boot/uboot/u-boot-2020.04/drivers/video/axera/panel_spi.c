@@ -19,7 +19,7 @@ struct Image {
 #include "bootlogo/sipeed_logo.c"
 #include "bootlogo/bootlogo_fix.c"
 #include "bootlogo/bootlogo_pikvm.c"
-#include "bootlogo/bootlogo_nanoagent.c"
+#include "bootlogo/bootlogo_nanokvm_go.c"
 #else
 static const unsigned char sipeed_logo[] = {0};
 #define sipeed_logo_len 0
@@ -29,8 +29,8 @@ static const unsigned char bootlogo_fix[] = {0};
 #define bootlogo_fix_len 0
 static const unsigned char bootlogo_pikvm[] = {0};
 #define bootlogo_pikvm_len 0
-static const unsigned char bootlogo_nanoagent[] = {0};
-#define bootlogo_nanoagent_len 0
+static const unsigned char bootlogo_nanokvm_go[] = {0};
+#define bootlogo_nanokvm_go_len 0
 #endif
 
 #define msleep(a) udelay(a * 1000)
@@ -69,10 +69,10 @@ static int safe_strncmp(const char *a, size_t a_len, const char *b,
 }
 
 static const struct Image IMAGES[] = {
-    {bootlogo_nanoagent, bootlogo_nanoagent_len, "nanoagent"},
     {sipeed_logo, sipeed_logo_len, "nanokvm"},
     {bootlogo_pikvm, bootlogo_pikvm_len, "pikvm"},
     {bootlogo_fix, bootlogo_fix_len, "fix"},
+    {bootlogo_nanokvm_go, bootlogo_nanokvm_go_len, "go"},
     {bird, bird_len, "example"},
 };
 static const int IMAGES_SIZE = sizeof(IMAGES) / sizeof(IMAGES[0]);
@@ -309,13 +309,15 @@ int panel_spi_init(void) {
     }
   }
 
-  struct ugpiodev boot_btn;
-  if (!ugpiodev_in_init(&boot_btn, 98, 0)) {
-    printf("[E] boot_btn init failed!\n");
-  } else {
-    msleep(100);
-    if (ugpio_read(&boot_btn)) {
-      image_index = 2;
+  if (strcmp(IMAGES[image_index].expected, "go") != 0) {
+    struct ugpiodev boot_btn;
+    if (!ugpiodev_in_init(&boot_btn, 98, 0)) {
+      printf("[E] boot_btn init failed!\n");
+    } else {
+      msleep(100);
+      if (ugpio_read(&boot_btn)) {
+        image_index = 2;
+      }
     }
   }
 
@@ -324,6 +326,11 @@ int panel_spi_init(void) {
   lcd_data(panel_spi);
   spi_xfer(slave, IMAGES[image_index].len * 8, IMAGES[image_index].data, NULL,
            SPI_XFER_ONCE);
+
+  if (device_is_compatible(dev, "sipeed,for_st7789p3")) {
+    msleep(100);
+  }
+
   lcd_bl_on(panel_spi);
 
 release:

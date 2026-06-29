@@ -1,25 +1,3 @@
-# All configs user can edit easily
-# Format: maix_<item>_<key>=value
-#         all key charactors should be lowercase
-#         and shell environment style file, so no space around '=' !!!
-# Full supported items see documentation of maixpy at:
-#      https://wiki.sipeed.com/maixpy/doc/zh/basic/app.html
-
-#### [memory]
-# CMM memory is for camera and NPU etc. Now only support for maixcam2, unit is MiB.
-# -1 means use default.
 maix_memory_cmm=-1
-
-#### [usb]
-# USB mode, device or host.
-maix_usb_mode=device
-
-# Enable (1) or disable (0) as NCM USB virtual network card.
-# supported by >=win11 and unix like systems. speed faster than rndis.
-# Only valid in device mode.
-maix_usb_ncm=1
-
-# Enable (1) or disable (0) as RNDIS USB virtual network card.
-# supported by all windows and linux(remove in future), but not macos.
-# Only valid in device mode.
-maix_usb_rndis=1
+maix_system_console=1
+maix_kernel_loglevel=0

@@ -24,13 +24,14 @@ msc() {
     cd /sys/kernel/config/usb_gadget
     mkdir g1
     cd g1
-    echo 0x359f > idVendor
-    echo 0x2200 > idProduct
+    echo 0x0100 > bcdDevice
+    echo 0x359F > idVendor
+    echo 0x3305 > idProduct
 
     mkdir -p strings/0x409 -m 0770
-    echo "nanoagent" > strings/0x409/serialnumber
+    echo "nanokvm-go" > strings/0x409/serialnumber
     echo "sipeed" > strings/0x409/manufacturer
-    echo "nanoagent" > strings/0x409/product
+    echo "nanokvm-go" > strings/0x409/product
 
     mkdir -p configs/c.1 -m 0770
     mkdir -p configs/c.1/strings/0x409 -m 0770
@@ -148,10 +149,22 @@ wait_for_device "$root_dev" || run_sh
 mkdir -p "$boot_mount"
 mkdir -p "$root_mount"
 
+if [ "$boot_from_sd" -eq 1 ] && [ -e /boot/check_resize2fs ]; then
+    mount -o ro "$root_dev" "$root_mount"
+    cp "$root_mount"/opt/e2fs-static/fsck.fat /fsck.vfat
+    umount "$root_dev"
+    /fsck.vfat -a "$boot_dev"
+    rm -f /fsck.vfat
+fi
+
 mount -o ro "$boot_dev" "$boot_mount"
 if [ "$?" -ne 0 ]; then
     echo "Mount bootfs failed, try fsck.vfat ..."
-    fsck.vfat -a "$boot_dev"
+    mount -o ro "$root_dev" "$root_mount"
+    cp "$root_mount"/opt/e2fs-static/fsck.fat /fsck.vfat
+    umount "$root_dev"
+    /fsck.vfat -a "$boot_dev"
+    rm -f /fsck.vfat
     mount -o rw "$boot_dev" "$boot_mount"
     mfail="$?"
     if [ "${mfail}" -ne 0 ]
@@ -164,6 +177,9 @@ fi
 # check step into recovery mode
 if [ -e "$boot_mount"/rec ]
 then
+    mount -o remount,rw "$boot_mount"
+    rm -f "$boot_mount"/rec
+    sync
     msc
 fi
 
@@ -273,12 +289,12 @@ mac_hi=$(echo "$mac_uid" | cut -c 1-2)
 mac_lo=$(echo "$mac_uid" | cut -c 3-4)
 
 if [ -e "$boot_mount/first_time_boot" ]; then
-    echo "nanoagent-${mac_hi}${mac_lo}" > "$root_mount/etc/hostname"
+    echo "nanokvm-go-${mac_hi}${mac_lo}" > "$root_mount/etc/hostname"
     hosts_file="$root_mount/etc/hosts"
     if grep -q '^127\.0\.1\.1[[:space:]]\+' "$hosts_file"; then
-        sed -i "s/^127\.0\.1\.1[[:space:]].*/127.0.1.1\tnanoagent-${mac_hi}${mac_lo}/" "$hosts_file"
+        sed -i "s/^127\.0\.1\.1[[:space:]].*/127.0.1.1\tnanokvm-go-${mac_hi}${mac_lo}/" "$hosts_file"
     else
-        echo -e "127.0.1.1\tnanoagent-${mac_hi}${mac_lo}" >> "$hosts_file"
+        echo -e "127.0.1.1\tnanokvm-go-${mac_hi}${mac_lo}" >> "$hosts_file"
     fi
     mount -o remount,rw "$boot_mount"
     rm -f "$boot_mount/first_time_boot"

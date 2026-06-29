@@ -452,21 +452,36 @@ int read_file_from_boot(const char* filename, char* buffer, int bufsize)
 
 	mmc_desc = blk_get_dev("mmc", EMMC_DEV_ID);
 	if (!mmc_desc) {
-		printf("[error] emmc not present\n");
+		printf("[warn] emmc not present, try sd mmc 1:1\n");
+	} else {
+		ret = get_part_info(mmc_desc, partition, &fs_partition);
+		if (ret < 0) {
+			printf("[warn] get %s partition failed, ret=%d, try sd mmc 1:1\n",
+			       partition, ret);
+		} else {
+			ret = fat_set_blk_dev(mmc_desc, &fs_partition);
+			if (ret != 0) {
+				printf("[warn] fat_set_blk_dev failed, ret=%d, try sd mmc 1:1\n",
+				       ret);
+			} else {
+				goto read_file;
+			}
+		}
+	}
+
+	mmc_desc = blk_get_dev("mmc", SD_DEV_ID);
+	if (!mmc_desc) {
+		printf("[error] emmc boot unavailable and sd mmc 1:1 unavailable\n");
 		return -ENODEV;
 	}
 
-	ret = get_part_info(mmc_desc, partition, &fs_partition);
-	if (ret < 0) {
-		printf("[error] get %s partition failed, ret=%d\n", partition, ret);
+	ret = fat_register_device(mmc_desc, 1);
+	if (ret != 0) {
+		printf("[error] sd fat_register_device failed, ret=%d\n", ret);
 		return ret;
 	}
 
-	if (fat_set_blk_dev(mmc_desc, &fs_partition) != 0) {
-		printf("[error] fat_set_blk_dev failed\n");
-		return -EIO;
-	}
-
+read_file:
 	if (!fat_exists(filename)) {
 		printf("[error] file %s not exist\n", filename);
 		return -ENOENT;

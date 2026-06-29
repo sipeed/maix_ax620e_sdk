@@ -27,7 +27,7 @@ echo "mkdir -p $TARGET_ROOTFS_DIR"
 tar -xf $TARGET_ROOTFS_BASE -C $TARGET_ROOTFS_DIR
 
 #modify hostname
-echo nanoagent > $TARGET_ROOTFS_DIR/etc/hostname
+echo nanokvm-go > $TARGET_ROOTFS_DIR/etc/hostname
 
 #link some bin to busybox
 #create init link

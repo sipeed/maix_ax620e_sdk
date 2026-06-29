@@ -271,19 +271,19 @@ hid_start() {
     if [ -e /boot/usb.bcddevice ]; then
         cat /boot/usb.bcddevice > bcdDevice
     else
-        echo 0x0623 > bcdDevice
+        echo 0x0101 > bcdDevice
     fi
 
     if [ -e /boot/usb.vid ]; then
         cat /boot/usb.vid > idVendor
     else
-        echo 0x3346 > idVendor
+        echo 0x359F > idVendor
     fi
 
     if [ -e /boot/usb.pid ]; then
         cat /boot/usb.pid > idProduct
     else
-        echo 0x1009 > idProduct
+        echo 0x3305 > idProduct
     fi
 
     echo 0xEF > bDeviceClass
@@ -304,14 +304,14 @@ hid_start() {
     if [ -e /boot/usb.product ]; then
         cat /boot/usb.product > strings/0x409/product
     else
-        echo 'NanoAgent' > strings/0x409/product
+        echo 'NanoKVM-Go' > strings/0x409/product
     fi
 
     mkdir configs/c.1
     echo 0xA0 > configs/c.1/bmAttributes
     echo 200 > configs/c.1/MaxPower
     mkdir configs/c.1/strings/0x409
-    echo "NanoAgent" > configs/c.1/strings/0x409/configuration
+    echo "NanoKVM-Go" > configs/c.1/strings/0x409/configuration
 
     if [ -e /boot/usb.udisp ] && [ ! -e /boot/usb.uac2 ]; then
         mkdir functions/Loopback.0
@@ -319,7 +319,7 @@ hid_start() {
 
         mkdir configs/c.2
         mkdir configs/c.2/strings/0x409
-        echo "NanoAgent" > configs/c.2/strings/0x409/configuration
+        echo "NanoKVM-Go" > configs/c.2/strings/0x409/configuration
 
         ln -s functions/Loopback.0 configs/c.1
         ln -s functions/SourceSink.0 configs/c.2
@@ -445,7 +445,7 @@ hid_start() {
         if [ -e /boot/uac2.function_name ]; then
             cat /boot/uac2.function_name > functions/uac2.usb0/function_name
         else
-            echo "NanoAgent Audio" > functions/uac2.usb0/function_name
+            echo "NanoKVM-Go Audio" > functions/uac2.usb0/function_name
         fi
         ln -s functions/uac2.usb0 configs/c.1/
     fi
@@ -482,19 +482,19 @@ hid_only_start() {
     if [ -e /boot/usb.bcddevice ]; then
         cat /boot/usb.bcddevice > bcdDevice
     else
-        echo 0x0623 > bcdDevice
+        echo 0x0101 > bcdDevice
     fi
 
     if [ -e /boot/usb.vid ]; then
         cat /boot/usb.vid > idVendor
     else
-        echo 0x3346 > idVendor
+        echo 0x359F > idVendor
     fi
 
     if [ -e /boot/usb.pid ]; then
         cat /boot/usb.pid > idProduct
     else
-        echo 0x1009 > idProduct
+        echo 0x3305 > idProduct
     fi
 
     echo 0xEF > bDeviceClass
@@ -515,14 +515,14 @@ hid_only_start() {
     if [ -e /boot/usb.product ]; then
         cat /boot/usb.product > strings/0x409/product
     else
-        echo 'NanoAgent' > strings/0x409/product
+        echo 'NanoKVM-Go' > strings/0x409/product
     fi
 
     mkdir configs/c.1
     echo 0xA0 > configs/c.1/bmAttributes
     echo 200 > configs/c.1/MaxPower
     mkdir configs/c.1/strings/0x409
-    echo "NanoAgent HID-only" > configs/c.1/strings/0x409/configuration
+    echo "NanoKVM-Go HID-only" > configs/c.1/strings/0x409/configuration
 
     mkdir functions/hid.GS0
     echo 1 > functions/hid.GS0/no_out_endpoint

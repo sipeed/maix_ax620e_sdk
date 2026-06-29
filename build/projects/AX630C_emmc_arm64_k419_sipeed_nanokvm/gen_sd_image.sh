@@ -9,7 +9,7 @@ IMAGES_DIR="${OUT_BASE}/images"
 OBJS_DIR="${OUT_BASE}/objs"
 
 BOOT_PACK_DIR="${IMAGES_DIR}/sd_boot_pack"
-EXTRA_BOOTFS_DIR="${SDK_ROOT}/build/projects/AX620Q_emmc_arm32_k419_sipeed_nanoagent/bootfs"
+EXTRA_BOOTFS_DIR="${SDK_ROOT}/build/projects/AX630C_emmc_arm64_k419_sipeed_nanokvm/bootfs"
 UBUNTU_ROOTFS_DIR="${OBJS_DIR}/ubuntu_rootfs"
 BUILDROOT_ROOTFS_DIR="${OBJS_DIR}/rootfs"
 

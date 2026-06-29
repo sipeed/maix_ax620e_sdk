@@ -383,11 +383,15 @@ start_dhcp_client() {
 stop_dhcp_client() {
     local iface="$1"
     systemctl stop "udhcpc@${iface}.service" >/dev/null 2>&1 || true
-    local udhcpc_pids
-    udhcpc_pids=$(pgrep -f "udhcpc.*-i ${iface}" 2>/dev/null || true)
-    if [ -z "$udhcpc_pids" ]; then
-        udhcpc_pids=$(pgrep -f "udhcpc.*${iface}" 2>/dev/null || true)
-    fi
+    local udhcpc_pids=""
+    local pid cmdline
+    for pid in $(pgrep -x udhcpc 2>/dev/null || true); do
+        cmdline=$(tr '\0' ' ' <"/proc/${pid}/cmdline" 2>/dev/null || true)
+        if [[ " $cmdline " == *" -i ${iface} "* ]] || [[ " $cmdline " == *" -i${iface} "* ]]; then
+            udhcpc_pids+="${pid}"$'\n'
+        fi
+    done
+
     if [ -n "$udhcpc_pids" ]; then
         while IFS= read -r pid; do
             if [ -n "$pid" ]; then
@@ -1003,8 +1007,67 @@ unescape_non_ascii() {
     printf '%b' "$result"
 }
 
+decode_non_ascii_x_escape_run() {
+    local hex_run="$1"
+    local offset hex value
+    local has_non_ascii="false"
+
+    for ((offset = 0; offset < ${#hex_run}; offset += 2)); do
+        hex="${hex_run:offset:2}"
+        value=$((16#$hex))
+        if [ "$value" -ge 128 ]; then
+            has_non_ascii="true"
+            break
+        fi
+    done
+
+    if [[ "$has_non_ascii" != "true" ]]; then
+        return 1
+    fi
+
+    printf '%s' "$hex_run" | xxd -r -p
+}
+
+normalize_ssid_arg() {
+    local input="$1"
+    local output=""
+    local i=0
+    local c next hex start hex_run decoded
+
+    while [ $i -lt ${#input} ]; do
+        c="${input:i:1}"
+        next="${input:i+1:1}"
+        hex="${input:i+2:2}"
+
+        if [[ "$c" == "\\" && "$next" == "x" && "$hex" =~ ^[0-9a-fA-F]{2}$ ]]; then
+            start=$i
+            hex_run=""
+            while [ $((i + 3)) -lt ${#input} ]; do
+                hex="${input:i+2:2}"
+                if [[ "${input:i:2}" != "\\x" || ! "$hex" =~ ^[0-9a-fA-F]{2}$ ]]; then
+                    break
+                fi
+                hex_run+="$hex"
+                ((i += 4))
+            done
+
+            if decoded=$(decode_non_ascii_x_escape_run "$hex_run"); then
+                output+="$decoded"
+            else
+                output+="${input:start:i-start}"
+            fi
+        else
+            output+="$c"
+            ((i += 1))
+        fi
+    done
+
+    printf '%s' "$output"
+}
+
 connect_wifi() {
-    local ssid="$1"
+    local ssid
+    ssid=$(normalize_ssid_arg "$1")
     local password="$2"
     local WIFI_IFACE
     WIFI_IFACE=$(get_wireless_interface)
@@ -1065,7 +1128,8 @@ connect_wifi() {
         local status_output current_ssid
         status_output=$(wpa_cli -i "$WIFI_IFACE" status 2>/dev/null)
         current_ssid=$(echo "$status_output" | grep "^ssid=" | cut -d= -f2-)
-        if echo "$status_output" | grep -qF "wpa_state=COMPLETED" && [[ "$current_ssid" == "$ssid" ]]; then
+        if echo "$status_output" | grep -qF "wpa_state=COMPLETED" &&
+            { [[ "$current_ssid" == "$ssid" ]] || [[ "$current_ssid" == "$ssid_escaped" ]]; }; then
             debug_print "[wifi] connection established"
             break
         fi
@@ -1093,7 +1157,8 @@ EOF
 }
 
 connect_enterprise_wifi() {
-    local ssid="$1"
+    local ssid
+    ssid=$(normalize_ssid_arg "$1")
     local eap_method="$2"
     local identity="$3"
     shift 3
@@ -1240,7 +1305,8 @@ connect_enterprise_wifi() {
         status_output=$(wpa_cli -i "$WIFI_IFACE" status 2>/dev/null)
         state=$(echo "$status_output" | grep "wpa_state=" | cut -d= -f2)
         current_ssid=$(echo "$status_output" | grep "^ssid=" | cut -d= -f2-)
-        if [[ "$state" == "COMPLETED" && "$current_ssid" == "$ssid" ]]; then
+        if [[ "$state" == "COMPLETED" ]] &&
+            { [[ "$current_ssid" == "$ssid" ]] || [[ "$current_ssid" == "$ssid_escaped" ]]; }; then
             debug_print "[wifi] enterprise connection established"
             break
         fi
@@ -1720,6 +1786,17 @@ turn_on_wifi() {
         return 1
     fi
 
+    local reconnect_retry_limit=3
+    local saved_networks
+    saved_networks=$(wpa_cli -i "$WIFI_IFACE" list_networks 2>/dev/null || true)
+
+    local any_network
+    any_network=$(printf '%s\n' "$saved_networks" | awk 'NR>1 && $1 ~ /^[0-9]+$/ {print $1; exit}')
+    if [[ -z "$any_network" ]]; then
+        echo "ERROR: NO_SAVED_NETWORK"
+        return 1
+    fi
+
     # Try last disconnected network first (manual on only)
     local last_ssid=""
     if [[ "$invocation_context" == "manual" && -f "$LAST_WIFI_FILE" ]]; then
@@ -1730,7 +1807,7 @@ turn_on_wifi() {
         local ssid_escaped
         ssid_escaped=$(escape_non_ascii "$last_ssid")
         local network_id
-        network_id=$(wpa_cli -i "$WIFI_IFACE" list_networks 2>/dev/null | grep -F "$ssid_escaped" | awk '{print $1}' | head -n1)
+        network_id=$(printf '%s\n' "$saved_networks" | grep -F "$ssid_escaped" | awk '{print $1}' | head -n1)
         if [[ -n "$network_id" ]]; then
             debug_print "[wifi] turning on, reconnecting to last network: $last_ssid"
             wpa_cli -i "$WIFI_IFACE" set_network "$network_id" mesh_fwding 0 >/dev/null
@@ -1739,7 +1816,7 @@ turn_on_wifi() {
             wpa_cli -i "$WIFI_IFACE" save_config >/dev/null
 
             local retry=0
-            while [ $retry -lt 15 ]; do
+            while [ $retry -lt $reconnect_retry_limit ]; do
                 if wpa_cli -i "$WIFI_IFACE" status | grep -qF "wpa_state=COMPLETED"; then
                     debug_print "[wifi] requesting IP address..."
                     if ! configure_sta_ip "$WIFI_IFACE"; then
@@ -1760,14 +1837,12 @@ turn_on_wifi() {
     fi
 
     # Try any saved network
-    local any_network
-    any_network=$(wpa_cli -i "$WIFI_IFACE" list_networks 2>/dev/null | awk 'NR>1 {print $1; exit}')
     if [[ -n "$any_network" ]]; then
         debug_print "[wifi] enabling all saved networks"
         wpa_cli -i "$WIFI_IFACE" enable_network all >/dev/null
 
         local retry=0
-        while [ $retry -lt 15 ]; do
+        while [ $retry -lt $reconnect_retry_limit ]; do
             if wpa_cli -i "$WIFI_IFACE" status | grep -qF "wpa_state=COMPLETED"; then
                 local connected_ssid
                 connected_ssid=$(wpa_cli -i "$WIFI_IFACE" status | grep "^ssid=" | cut -d= -f2)
