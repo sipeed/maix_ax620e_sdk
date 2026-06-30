@@ -6,7 +6,7 @@ Requires=boot.mount wifi-modules.service
 
 [Service]
 Type=simple
-ExecStart=/sbin/udhcpc -i %I -s /usr/share/udhcpc/default.script -p /run/udhcpc.%I.pid
+ExecStart=/sbin/udhcpc -i %I -s /usr/share/udhcpc/default.script -f -p /run/udhcpc.%I.pid
 Restart=on-failure
 RestartSec=3
 

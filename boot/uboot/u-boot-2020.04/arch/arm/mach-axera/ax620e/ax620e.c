@@ -260,6 +260,22 @@ static int __atoi(char *str) {
     return result * sign;
 }
 
+static bool value_is_exact_zero(char *value)
+{
+	char *end;
+
+	while (*value == ' ' || *value == '\t') {
+		value++;
+	}
+
+	end = value + strlen(value);
+	while (end > value && (*(end - 1) == ' ' || *(end - 1) == '\t' || *(end - 1) == '\r')) {
+		end--;
+	}
+
+	return end == value + 1 && *value == '0';
+}
+
 static int parse_cmm_config(char *buffer, int *cmm_size) {
 	const char *key = "maix_memory_cmm";
 	char *line = strtok(buffer, "\n");
@@ -292,6 +308,37 @@ static int parse_cmm_config(char *buffer, int *cmm_size) {
 	}
 
 	return -1;
+}
+
+static void parse_uboot_autoboot_key_config(char *buffer)
+{
+	const char *key = "maix_uboot_autoboot_key";
+	char *line = strtok(buffer, "\n");
+
+	while (line != NULL) {
+		char *key_value_str = strstr(line, key);
+		if (key_value_str != NULL) {
+			bool key_is_valid = true;
+
+			for (char *p = line; p < key_value_str; p++) {
+				if (*p == '#') {
+					key_is_valid = false;
+					printf("[info] maix_uboot_autoboot_key is invalid\r\n");
+					break;
+				}
+			}
+
+			if (key_is_valid) {
+				char *value_str = strstr(key_value_str, "=");
+				if (value_str != NULL && value_is_exact_zero(value_str + 1)) {
+					printf("disable U-Boot autoboot key check\r\n");
+					env_set("bootdelay", "-2");
+				}
+			}
+			break;
+		}
+		line = strtok(NULL, "\n");
+	}
 }
 
 extern int get_part_info(struct blk_desc *dev_desc, const char *name, disk_partition_t *info);
@@ -540,6 +587,23 @@ int read_string_from_boot(const char *filename, char *buffer, int buffer_len)
 	return 0;
 }
 
+static void config_uboot_autoboot_key_from_boot(void)
+{
+	int buffer_size = 15 * 1024 * 1024;
+	char *buffer = malloc(buffer_size);
+
+	if (buffer == NULL) {
+		printf("[error] malloc configs buffer failed\n");
+		return;
+	}
+
+	if (read_file_from_boot("configs", buffer, buffer_size) >= 0) {
+		parse_uboot_autoboot_key_config(buffer);
+	}
+
+	free(buffer);
+}
+
 int read_nanokvm_logo_index_from_boot(int* logo_index)
 {
 	int ret = 0;
@@ -650,6 +714,8 @@ int board_late_init(void)
 	set_ephy_led_pol();
 
 // ### SIPEED EDIT ###
+	config_uboot_autoboot_key_from_boot();
+
 	int cmm_size = -1;
 	if (0 != read_cmm_size_from_boot(&cmm_size)) {
 		cmm_size = -1;	// if failed, use default cmm_size

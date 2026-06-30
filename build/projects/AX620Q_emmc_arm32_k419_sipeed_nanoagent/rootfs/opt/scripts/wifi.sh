@@ -67,7 +67,9 @@ readonly WIFI_CFG_PATH="/etc/kvm/wifi.conf"
 readonly HW_WIFI_CFG_PATH="/etc/kvm/hw/wifi"
 readonly LOCK_FILE="${TMP_DIR}/wifi.lock"
 readonly LOCK_FD=200
-readonly LOCK_WAIT_SECONDS=30
+readonly LOCK_WAIT_SECONDS=90
+readonly DHCP_WAIT_SECONDS=35
+readonly DHCP_POLL_INTERVAL_SECONDS=1
 readonly PREVIOUS_WIFI_SAVE="/etc/kvm/wifi_save"
 readonly PREVIOUS_WIFI="$TMP_DIR/previous_wifi"
 readonly LAST_WIFI_FILE="/etc/kvm/last_wifi"
@@ -151,10 +153,20 @@ acquire_lock() {
 }
 
 release_lock() {
-    flock -u "$LOCK_FD"
+    flock -u "$LOCK_FD" 2>/dev/null || true
 }
 
-trap release_lock EXIT INT TERM
+cleanup_on_exit() {
+    local status=$?
+    trap - EXIT INT TERM
+    sync || true
+    release_lock
+    exit "$status"
+}
+
+trap cleanup_on_exit EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 acquire_lock
 
@@ -356,27 +368,91 @@ restore_boot_config_from_ap_previous_state() {
     return 0
 }
 
-start_dhcp_client() {
+wait_for_ipv4_addr() {
     local iface="$1"
-    if systemctl start "udhcpc@${iface}.service" >/dev/null 2>&1; then
-        debug_print "[wifi] started udhcpc@${iface}.service"
-        local dhcp_retry=0
-        while [ $dhcp_retry -lt 20 ]; do
-            if ip addr show "$iface" 2>/dev/null | grep -qE 'inet '; then
-                debug_print "[wifi] IP address acquired on $iface"
-                return 0
-            fi
-            sleep 0.5
-            ((dhcp_retry++))
-        done
-        debug_print "[wifi] DHCP timeout on $iface" >&2
-        return 1
-    fi
-    debug_print "[wifi] systemd udhcpc service unavailable, falling back to direct udhcpc"
-    if udhcpc -i "$iface" -s /usr/share/udhcpc/default.script >/dev/null 2>&1; then
+
+    local waited=0
+    while [ "$waited" -lt "$DHCP_WAIT_SECONDS" ]; do
+        if ip -4 addr show dev "$iface" 2>/dev/null | grep -qE 'inet '; then
+            debug_print "[wifi] IPv4 address acquired on $iface after ${waited}s"
+            return 0
+        fi
+        sleep "$DHCP_POLL_INTERVAL_SECONDS"
+        waited=$((waited + DHCP_POLL_INTERVAL_SECONDS))
+    done
+
+    if ip -4 addr show dev "$iface" 2>/dev/null | grep -qE 'inet '; then
+        debug_print "[wifi] IPv4 address acquired on $iface after ${DHCP_WAIT_SECONDS}s"
         return 0
     fi
-    debug_print "[wifi] direct udhcpc failed on $iface" >&2
+
+    return 1
+}
+
+log_dhcp_debug_state() {
+    local iface="$1"
+    local addr_state wpa_status line
+
+    addr_state=$(ip -br addr show "$iface" 2>/dev/null || true)
+    debug_print "[wifi] DHCP debug ip state: ${addr_state:-unavailable}"
+
+    wpa_status=$(wpa_cli -i "$iface" status 2>/dev/null | grep -E '^(wpa_state|ssid|bssid)=' || true)
+    if [[ -z "$wpa_status" ]]; then
+        debug_print "[wifi] DHCP debug wpa status: unavailable"
+        return 0
+    fi
+
+    while IFS= read -r line; do
+        [[ -n "$line" ]] && debug_print "[wifi] DHCP debug wpa status: $line"
+    done <<<"$wpa_status"
+}
+
+dhcp_client_running() {
+    local iface="$1"
+
+    if systemctl is-active --quiet "udhcpc@${iface}.service" 2>/dev/null; then
+        return 0
+    fi
+
+    local pid cmdline
+    for pid in $(pgrep -x udhcpc 2>/dev/null || true); do
+        cmdline=$(tr '\0' ' ' <"/proc/${pid}/cmdline" 2>/dev/null || true)
+        if [[ " $cmdline " == *" -i ${iface} "* ]] || [[ " $cmdline " == *" -i${iface} "* ]]; then
+            return 0
+        fi
+    done
+
+    return 1
+}
+
+start_dhcp_client() {
+    local iface="$1"
+
+    stop_dhcp_client "$iface"
+    ip -4 addr flush dev "$iface" 2>/dev/null || true
+
+    if systemctl start "udhcpc@${iface}.service" >/dev/null 2>&1; then
+        debug_print "[wifi] started udhcpc@${iface}.service"
+        if wait_for_ipv4_addr "$iface"; then
+            return 0
+        fi
+        debug_print "[wifi] DHCP timeout after ${DHCP_WAIT_SECONDS}s on $iface" >&2
+        log_dhcp_debug_state "$iface"
+        stop_dhcp_client "$iface"
+        return 1
+    fi
+
+    debug_print "[wifi] systemd udhcpc service unavailable, falling back to direct udhcpc"
+    udhcpc -i "$iface" -s /usr/share/udhcpc/default.script -f -p "/run/udhcpc.${iface}.pid" >/dev/null 2>&1 &
+    local direct_pid=$!
+    debug_print "[wifi] started direct udhcpc on $iface (PID $direct_pid)"
+    if wait_for_ipv4_addr "$iface"; then
+        return 0
+    fi
+
+    debug_print "[wifi] direct udhcpc timeout after ${DHCP_WAIT_SECONDS}s on $iface" >&2
+    log_dhcp_debug_state "$iface"
+    stop_dhcp_client "$iface"
     return 1
 }
 
@@ -457,9 +533,22 @@ try_static_ip() {
 # Configure IP for STA mode: try static assignment first, fall back to DHCP.
 configure_sta_ip() {
     local iface="$1"
+    local reuse_existing="${2:-false}"
+    if [[ -f "/boot/wifi.nodhcp" ]]; then
+        stop_dhcp_client "$iface"
+    fi
+
     if try_static_ip "$iface"; then
         return 0
     fi
+
+    if [[ "$reuse_existing" == "true" ]] &&
+        ip -4 addr show dev "$iface" 2>/dev/null | grep -qE 'inet ' &&
+        dhcp_client_running "$iface"; then
+        debug_print "[wifi] IPv4 address and DHCP client already active on $iface"
+        return 0
+    fi
+
     start_dhcp_client "$iface"
 }
 
@@ -1766,7 +1855,7 @@ turn_on_wifi() {
 
     if [[ "$status" == CONNECTED* ]]; then
         debug_print "[wifi] already connected, ensuring IP is configured"
-        if ! configure_sta_ip "$WIFI_IFACE"; then
+        if ! configure_sta_ip "$WIFI_IFACE" "true"; then
             echo "ERROR: DHCP_FAILED"
             return 1
         fi
@@ -1786,7 +1875,7 @@ turn_on_wifi() {
         return 1
     fi
 
-    local reconnect_retry_limit=3
+    local reconnect_retry_limit=10
     local saved_networks
     saved_networks=$(wpa_cli -i "$WIFI_IFACE" list_networks 2>/dev/null || true)
 

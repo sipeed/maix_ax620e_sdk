@@ -1,3 +1,4 @@
 maix_memory_cmm=-1
 maix_system_console=1
 maix_kernel_loglevel=0
+maix_uboot_autoboot_key=0
