@@ -32,6 +32,25 @@ extern struct boot_mode_info boot_info_data;
 
 #define READ_IMG_SIZE (5 * 1024 *1024)
 
+// ### SIPEED EDIT ###
+#define SD_BOOT_CMD_LEN 192
+#define SD_BOOT_MAX_IMAGE_SIZE (64U * 1024 * 1024)
+#define SD_BOOT_RECOVERY_PART 1
+#define SD_BOOT_NORMAL_PART 2
+#define SD_BOOT_RECOVERY_KERNEL "kernel.img"
+#define SD_BOOT_RECOVERY_DTB "dtb.img"
+#define SD_BOOT_NORMAL_KERNEL "/boot/kernel.img"
+#define SD_BOOT_NORMAL_DTB "/boot/dtb.img"
+#define SD_BOOT_NORMAL_CONFIGS "/boot/configs"
+#define SD_BOOT_MAX_CONFIG_SIZE (1024 * 1024)
+
+enum sd_boot_config_source {
+	SD_BOOT_CONFIG_P1_FAT,
+	SD_BOOT_CONFIG_P2_EXT4,
+	SD_BOOT_CONFIG_DEFAULT,
+};
+// ### SIPEED EDIT END ###
+
 #ifndef CONFIG_ARM64
 void ax_boot_kernel(char *img_addr,char *dtb_addr);
 #endif
@@ -41,6 +60,8 @@ int lzma_decompress_image(void *src, void *dest, u32 size);
 #endif
 
 // ### SIPEED EDIT ###
+static enum sd_boot_config_source sd_boot_config_source = SD_BOOT_CONFIG_P1_FAT;
+
 static int __atoi(char *str) {
     int result = 0;
     int sign = 1;
@@ -254,6 +275,64 @@ static int load_file_from_boot_partition(char *filename, char **file_data, size_
 	return 0;
 }
 
+static int load_configs_from_normal_partition(char **file_data, size_t *file_size)
+{
+	char boot_cmd[SD_BOOT_CMD_LEN] = {0};
+	char *filesize = NULL;
+	ulong file_len = 0;
+	int ret = 0;
+
+	ret = snprintf(boot_cmd, sizeof(boot_cmd), "ext4load mmc 1:%d 0x%x %s",
+		       SD_BOOT_NORMAL_PART, (unsigned int)SD_BOOT_IMAGE_ADDR,
+		       SD_BOOT_NORMAL_CONFIGS);
+	if (ret < 0 || (size_t)ret >= sizeof(boot_cmd)) {
+		printf("sd boot: configs load command too long\n");
+		return -1;
+	}
+
+	printf("sd boot: %s\n", boot_cmd);
+	ret = run_command_list(boot_cmd, -1, 0);
+	if (ret != 0) {
+		printf("sd boot: %s is not exist on ext4 mmc 1:%d, use defaults\n",
+		       SD_BOOT_NORMAL_CONFIGS, SD_BOOT_NORMAL_PART);
+		return -1;
+	}
+
+	filesize = env_get("filesize");
+	if (!filesize)
+		return -1;
+
+	file_len = simple_strtoul(filesize, NULL, 16);
+	if (file_len == 0 || file_len > SD_BOOT_MAX_CONFIG_SIZE) {
+		printf("sd boot: invalid %s size %lu bytes, use defaults\n",
+		       SD_BOOT_NORMAL_CONFIGS, file_len);
+		return -1;
+	}
+
+	*file_size = file_len;
+	*file_data = malloc(file_len + 1);
+	if (!*file_data) {
+		printf("malloc %s failed\n", SD_BOOT_NORMAL_CONFIGS);
+		return -1;
+	}
+	memset(*file_data, 0, file_len + 1);
+	memcpy(*file_data, (void *)SD_BOOT_IMAGE_ADDR, file_len);
+
+	printf("sd boot: load %s success\n", SD_BOOT_NORMAL_CONFIGS);
+	return 0;
+}
+
+static int load_configs_file(char **file_data, size_t *file_size)
+{
+	if (sd_boot_config_source == SD_BOOT_CONFIG_DEFAULT)
+		return -1;
+
+	if (sd_boot_config_source == SD_BOOT_CONFIG_P2_EXT4)
+		return load_configs_from_normal_partition(file_data, file_size);
+
+	return load_file_from_boot_partition("configs", file_data, file_size);
+}
+
 static char *find_key_value_from_string(char *str, char *key) {
 	char new_key[128] = {0};
 	char *line = strtok(str, "\n");
@@ -283,11 +362,43 @@ static char *find_key_value_from_string(char *str, char *key) {
 	return value_str;
 }
 
+static int read_cmm_size_from_configs(int *cmm_size)
+{
+	char *buffer = NULL;
+	char *tmp_buffer = NULL;
+	char *value = NULL;
+	size_t buffer_size = 0;
+
+	if (sd_boot_config_source == SD_BOOT_CONFIG_DEFAULT)
+		return -1;
+
+	if (sd_boot_config_source == SD_BOOT_CONFIG_P1_FAT)
+		return read_cmm_size_from_boot(cmm_size);
+
+	if (load_configs_file(&buffer, &buffer_size) != 0)
+		return -1;
+
+	tmp_buffer = strdup(buffer);
+	if (tmp_buffer) {
+		value = find_key_value_from_string(tmp_buffer, "maix_memory_cmm");
+		if (value) {
+			printf("found maix_memory_cmm: %s\r\n", value);
+			if (cmm_size)
+				*cmm_size = __atoi(value);
+			free(value);
+		}
+		free(tmp_buffer);
+	}
+	free(buffer);
+
+	return 0;
+}
+
 static void config_system_console(void) {
 	// config system console
 	char *buffer = NULL;
 	size_t buffer_size = 0;
-	if (load_file_from_boot_partition("configs", &buffer, &buffer_size) == 0) {
+	if (load_configs_file(&buffer, &buffer_size) == 0) {
 		bool disable_system_console = false;
 		char console_config[128] = "console=null ";
 		char *tmp_buffer = strdup(buffer);
@@ -336,7 +447,10 @@ static void config_system_console(void) {
 			char *loglevel = strstr(_bootargs, "loglevel=");
 			int ret;
 
-			sprintf(loglevel_config, "loglevel=%d", kernel_loglevel);
+			if (kernel_loglevel == 0)
+				sprintf(loglevel_config, "loglevel=%d quiet", kernel_loglevel);
+			else
+				sprintf(loglevel_config, "loglevel=%d", kernel_loglevel);
 			if (loglevel) {
 				char *end = loglevel;
 				while ((char)*end != '\0' && (char)*end != ' ') end ++;
@@ -361,7 +475,7 @@ static void config_system_console(void) {
 
 static void config_cmm_size(void) {
 	int cmm_size = -1;
-	if (0 != read_cmm_size_from_boot(&cmm_size)) {
+	if (0 != read_cmm_size_from_configs(&cmm_size)) {
 		cmm_size = -1;	// if failed, use default cmm_size
 	}
 	printf("user config cmm from sd boot: %d\n", cmm_size);
@@ -477,6 +591,212 @@ static void config_console_for_nanoagent(void)
 	env_set("bootargs", new_bootargs);
 	printf("set nanoagent console to ttyS3\n");
 }
+
+static bool is_nanokvm_go_board(void)
+{
+	int board_id = get_board_id();
+
+	return board_id == PHY_AX620QE_LP4_NANOAGENT_512M ||
+	       board_id == PHY_AX620QF_LP4_NANOAGENT_256M;
+}
+
+static void remove_boot_key_arg(char *bootargs)
+{
+	char *pos = NULL;
+	char *pos2 = NULL;
+
+	if (!bootargs)
+		return;
+
+	while ((pos = strstr(bootargs, "boot_key=")) != NULL) {
+		pos2 = strstr(pos + strlen("boot_key="), " ");
+		if (pos2) {
+			strcpy(pos, pos2 + 1);
+		} else {
+			*pos = '\0';
+		}
+	}
+}
+
+static int set_recovery_bootargs(void)
+{
+	char new_bootargs[1024] = {0};
+	char *bootargs = env_get("bootargs");
+	size_t bootargs_len = 0;
+	size_t remain = 0;
+	int ret = 0;
+
+	if (!bootargs)
+		bootargs = "";
+
+	ret = snprintf(new_bootargs, sizeof(new_bootargs), "%s", bootargs);
+	if (ret < 0 || (size_t)ret >= sizeof(new_bootargs)) {
+		printf("set recovery bootargs failed\n");
+		return -1;
+	}
+
+	remove_boot_key_arg(new_bootargs);
+
+	bootargs_len = strlen(new_bootargs);
+	remain = sizeof(new_bootargs) - bootargs_len;
+	ret = snprintf(new_bootargs + bootargs_len, remain, "%sboot_key=1",
+		       bootargs_len ? " " : "");
+	if (ret < 0 || (size_t)ret >= remain) {
+		printf("append recovery bootargs failed\n");
+		return -1;
+	}
+
+	printf("new_bootargs[%d]: %s\n", (int)strlen(new_bootargs), new_bootargs);
+	env_set("bootargs", new_bootargs);
+
+	return 0;
+}
+
+static int run_sd_load_cmd(const char *fs_cmd, int part, const char *filename,
+			   u32 size, u32 offset)
+{
+	char boot_cmd[SD_BOOT_CMD_LEN] = {0};
+	int ret = 0;
+
+	ret = snprintf(boot_cmd, sizeof(boot_cmd),
+		       "%s mmc 1:%d 0x%x %s 0x%x 0x%x",
+		       fs_cmd, part, (unsigned int)SD_BOOT_IMAGE_ADDR,
+		       filename, size, offset);
+	if (ret < 0 || (size_t)ret >= sizeof(boot_cmd)) {
+		printf("sd boot: load command too long for %s\n", filename);
+		return -1;
+	}
+
+	printf("sd boot: %s\n", boot_cmd);
+	ret = run_command_list(boot_cmd, -1, 0);
+	if (ret != 0) {
+		printf("sd boot: load %s from mmc 1:%d failed, ret=%d\n",
+		       filename, part, ret);
+		return -1;
+	}
+
+	return 0;
+}
+
+static int load_sd_boot_image(const char *fs_cmd, int part,
+			      const char *filename, char *image_addr,
+			      u64 *image_size)
+{
+	struct img_header *boot_img_header = NULL;
+	u32 img_size = 0;
+	u32 read_size = 0;
+	u32 offset = 0;
+	int cnt = 0;
+	int last_size = 0;
+	int j = 0;
+
+	memset((void *)SD_BOOT_IMAGE_ADDR, 0, SECBOOT_HEADER_SIZE);
+	if (run_sd_load_cmd(fs_cmd, part, filename, SECBOOT_HEADER_SIZE, 0) != 0)
+		return -1;
+
+	boot_img_header = (struct img_header *)SD_BOOT_IMAGE_ADDR;
+	img_size = boot_img_header->img_size;
+	if (img_size == 0 || img_size > SD_BOOT_MAX_IMAGE_SIZE) {
+		printf("sd boot: invalid %s image size %u bytes\n",
+		       filename, img_size);
+		return -1;
+	}
+
+	if (image_size)
+		*image_size = img_size;
+
+	printf("sd boot: %s image size is %u bytes\n", filename, img_size);
+	memset((void *)image_addr, 0, img_size);
+
+	cnt = img_size / READ_IMG_SIZE;
+	last_size = img_size % READ_IMG_SIZE;
+
+	for (j = 0; j < cnt; j++) {
+		read_size = READ_IMG_SIZE;
+		offset = SECBOOT_HEADER_SIZE + READ_IMG_SIZE * j;
+		memset((void *)SD_BOOT_IMAGE_ADDR, 0, read_size);
+		if (run_sd_load_cmd(fs_cmd, part, filename, read_size, offset) != 0)
+			return -1;
+
+		memmove((void *)(image_addr + READ_IMG_SIZE * j),
+			(void *)SD_BOOT_IMAGE_ADDR, read_size);
+	}
+
+	if (last_size) {
+		read_size = last_size;
+		offset = SECBOOT_HEADER_SIZE + READ_IMG_SIZE * j;
+		memset((void *)SD_BOOT_IMAGE_ADDR, 0, read_size);
+		if (run_sd_load_cmd(fs_cmd, part, filename, read_size, offset) != 0)
+			return -1;
+
+		memmove((void *)(image_addr + READ_IMG_SIZE * j),
+			(void *)SD_BOOT_IMAGE_ADDR, read_size);
+	}
+
+	printf("sd boot: %s read %u finish from %s mmc 1:%d\n",
+	       filename, img_size, fs_cmd, part);
+
+	return 0;
+}
+
+static int load_nanokvm_go_boot_images(int recovery_boot,
+						       char *img_addr, char *dtb_addr,
+						       u64 *kernel_image_size,
+						       u64 *dtb_image_size,
+						       int *final_recovery_boot)
+{
+	int ret = 0;
+
+	if (final_recovery_boot)
+		*final_recovery_boot = recovery_boot ? 1 : 0;
+
+	if (!recovery_boot) {
+		printf("sd boot: try normal boot from ext4 mmc 1:%d\n",
+		       SD_BOOT_NORMAL_PART);
+		ret = load_sd_boot_image("ext4load", SD_BOOT_NORMAL_PART,
+					 SD_BOOT_NORMAL_KERNEL, img_addr,
+					 kernel_image_size);
+		if (ret == 0) {
+			ret = load_sd_boot_image("ext4load", SD_BOOT_NORMAL_PART,
+						 SD_BOOT_NORMAL_DTB, dtb_addr,
+						 dtb_image_size);
+		}
+
+		if (ret != 0) {
+			printf("sd boot: normal boot failed, fallback to recovery boot\n");
+			if (set_recovery_bootargs() != 0)
+				return -1;
+			recovery_boot = 1;
+			if (final_recovery_boot)
+				*final_recovery_boot = 1;
+		}
+	}
+
+	if (recovery_boot) {
+		printf("sd boot: try recovery boot from fat mmc 1:%d\n",
+		       SD_BOOT_RECOVERY_PART);
+		ret = load_sd_boot_image("fatload", SD_BOOT_RECOVERY_PART,
+					 SD_BOOT_RECOVERY_KERNEL, img_addr,
+					 kernel_image_size);
+		if (ret != 0) {
+			printf("sd boot: recovery kernel load failed\n");
+			return -1;
+		}
+
+		ret = load_sd_boot_image("fatload", SD_BOOT_RECOVERY_PART,
+					 SD_BOOT_RECOVERY_DTB, dtb_addr,
+					 dtb_image_size);
+		if (ret != 0) {
+			printf("sd boot: recovery dtb load failed\n");
+			return -1;
+		}
+	}
+
+	if (final_recovery_boot)
+		*final_recovery_boot = recovery_boot ? 1 : 0;
+
+	return 0;
+}
 // ### SIPEED EDIT END ###
 
 int do_sd_boot(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
@@ -485,6 +805,10 @@ int do_sd_boot(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 	int cnt, last_size;
 	int j;
 	struct img_header *boot_img_header = NULL;
+	// ### SIPEED EDIT ###
+	int recovery_boot = 0;
+	int final_recovery_boot = 0;
+	// ### SIPEED EDIT END ###
 #if defined(CONFIG_CMD_AXERA_GZIPD) || defined(CONFIG_CMD_AXERA_KERNEL_LZMA)
 	char *img_addr = (char *)KERNEL_IMAGE_COMPRESSED_ADDR;
 	char *dtb_addr = (char *)DTB_IMAGE_COMPRESSED_ADDR;
@@ -504,7 +828,33 @@ int do_sd_boot(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 	env_set("bootargs", BOOTARGS_SD);
 	// ### SIPEED EDIT ###
 	config_console_for_nanoagent();
-	check_and_config_upgrade();
+	recovery_boot = check_and_config_upgrade();
+
+	if (is_nanokvm_go_board()) {
+#if defined(CONFIG_CMD_AXERA_GZIPD) || defined(CONFIG_CMD_AXERA_KERNEL_LZMA)
+		if (load_nanokvm_go_boot_images(recovery_boot, img_addr, dtb_addr,
+							&kernel_image_size,
+							&dtb_image_size,
+							&final_recovery_boot) != 0) {
+			return -1;
+		}
+#else
+		if (load_nanokvm_go_boot_images(recovery_boot, img_addr, dtb_addr,
+							NULL, NULL,
+							&final_recovery_boot) != 0) {
+			return -1;
+		}
+#endif
+		sd_boot_config_source = final_recovery_boot ?
+			SD_BOOT_CONFIG_DEFAULT : SD_BOOT_CONFIG_P2_EXT4;
+		if (final_recovery_boot)
+			printf("sd boot: recovery boot uses default configs\n");
+		config_system_console();
+		config_cmm_size();
+		goto sd_boot_images_loaded;
+	}
+
+	sd_boot_config_source = SD_BOOT_CONFIG_P1_FAT;
 	config_system_console();
 	config_cmm_size();
 	// ### SIPEED EDIT END ###
@@ -558,6 +908,9 @@ int do_sd_boot(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 	memmove((void *)dtb_addr, (void *)(SD_BOOT_IMAGE_ADDR + SECBOOT_HEADER_SIZE), dtb_size);
 	printf("sd boot: dtb img read %d finish\n", dtb_size);
 
+	// ### SIPEED EDIT ###
+sd_boot_images_loaded:
+	// ### SIPEED EDIT END ###
 #ifdef CONFIG_CMD_AXERA_GZIPD
 	flush_dcache_all();
 	if (gzip_decompress_image((void *)KERNEL_IMAGE_COMPRESSED_ADDR, (void *)KERNEL_IMAGE_ADDR, kernel_image_size)) {

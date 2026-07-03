@@ -1,8 +1,6 @@
 [Unit]
 Description=WiFi kernel modules loader/unloader
 DefaultDependencies=no
-After=boot.mount
-Requires=boot.mount
 
 [Service]
 Type=oneshot

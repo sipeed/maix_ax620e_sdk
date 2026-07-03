@@ -665,7 +665,10 @@ static void config_system_console(void) {
 			char *loglevel = strstr(_bootargs, "loglevel=");
 			int ret;
 
-			sprintf(loglevel_config, "loglevel=%d", kernel_loglevel);
+			if (kernel_loglevel == 0)
+				sprintf(loglevel_config, "loglevel=%d quiet", kernel_loglevel);
+			else
+				sprintf(loglevel_config, "loglevel=%d", kernel_loglevel);
 			if (loglevel) {
 				char *end = loglevel;
 				while ((char)*end != '\0' && (char)*end != ' ') end ++;

@@ -1,8 +1,8 @@
 [Unit]
 Description=Run udhcpc service for %I
 DefaultDependencies=no
-After=boot.mount wifi-modules.service
-Requires=boot.mount wifi-modules.service
+After=wifi-modules.service
+Requires=wifi-modules.service
 
 [Service]
 Type=simple

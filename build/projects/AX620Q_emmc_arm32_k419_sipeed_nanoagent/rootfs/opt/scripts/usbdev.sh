@@ -377,10 +377,10 @@ hid_start() {
     mkdir functions/hid.GS2
     echo 1 > functions/hid.GS2/no_out_endpoint
     enable_hid_wakeup_on_write "hid.GS2"
-    echo 2 > functions/hid.GS2/protocol
-    echo 1 > functions/hid.GS2/subclass
-    echo 6 > functions/hid.GS2/report_length
-    echo -ne \\x05\\x01\\x09\\x02\\xa1\\x01\\x09\\x01\\xa1\\x00\\x05\\x09\\x19\\x01\\x29\\x05\\x15\\x00\\x25\\x01\\x95\\x05\\x75\\x01\\x81\\x02\\x95\\x01\\x75\\x03\\x81\\x01\\x05\\x01\\x09\\x30\\x09\\x31\\x15\\x00\\x26\\xff\\x7f\\x35\\x00\\x46\\xff\\x7f\\x75\\x10\\x95\\x02\\x81\\x02\\x05\\x01\\x09\\x38\\x15\\x81\\x25\\x7f\\x35\\x00\\x45\\x00\\x75\\x08\\x95\\x01\\x81\\x06\\xc0\\xc0 > functions/hid.GS2/report_desc
+    echo 0 > functions/hid.GS2/protocol
+    echo 0 > functions/hid.GS2/subclass
+    echo 7 > functions/hid.GS2/report_length
+    printf %s 05010902a10185010901a10005091901290515002501750195058102750395018103050109300931150026ff7f75109502810209381581257f750895018106c0c0050d0902a10185020920a100050d094209320944150025017501950381029505810305010930093116000026ff7f36000046ff7f751095028102050d0930150026ff00750895018102c0c0 | xxd -r -p > functions/hid.GS2/report_desc
     ln -s functions/hid.GS2 configs/c.1
 
     if [ -e /boot/usb.acm ]; then
@@ -545,10 +545,10 @@ hid_only_start() {
     mkdir functions/hid.GS2
     echo 1 > functions/hid.GS2/no_out_endpoint
     enable_hid_wakeup_on_write "hid.GS2"
-    echo 2 > functions/hid.GS2/protocol
-    echo 1 > functions/hid.GS2/subclass
-    echo 6 > functions/hid.GS2/report_length
-    echo -ne \\x05\\x01\\x09\\x02\\xa1\\x01\\x09\\x01\\xa1\\x00\\x05\\x09\\x19\\x01\\x29\\x03\\x15\\x00\\x25\\x01\\x95\\x03\\x75\\x01\\x81\\x02\\x95\\x01\\x75\\x05\\x81\\x01\\x05\\x01\\x09\\x30\\x09\\x31\\x15\\x00\\x26\\xff\\x7f\\x35\\x00\\x46\\xff\\x7f\\x75\\x10\\x95\\x02\\x81\\x02\\x05\\x01\\x09\\x38\\x15\\x81\\x25\\x7f\\x35\\x00\\x45\\x00\\x75\\x08\\x95\\x01\\x81\\x06\\xc0\\xc0 > functions/hid.GS2/report_desc
+    echo 0 > functions/hid.GS2/protocol
+    echo 0 > functions/hid.GS2/subclass
+    echo 7 > functions/hid.GS2/report_length
+    printf %s 05010902a10185010901a10005091901290515002501750195058102750395018103050109300931150026ff7f75109502810209381581257f750895018106c0c0050d0902a10185020920a100050d094209320944150025017501950381029505810305010930093116000026ff7f36000046ff7f751095028102050d0930150026ff00750895018102c0c0 | xxd -r -p > functions/hid.GS2/report_desc
     ln -s functions/hid.GS2 configs/c.1
 
     ls /sys/class/udc/ | cat > UDC

@@ -59,7 +59,7 @@ use_debian_rootfs           := yes
 #SIGN_USE_RSA3072            := FALSE
 
 SUPPORT_DDRINIT_PART         := TRUE
-AX_SYSDUMP_EMMC              := TRUE
+AX_SYSDUMP_EMMC              := FALSE
 ifeq ($(strip $(buildin_prvdrv)),yes)
 KERNEL_BUILDIN_PRVDRV := TRUE
 endif

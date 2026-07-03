@@ -13,6 +13,7 @@
 #include <asm/arch/boot_mode.h>
 #include <asm/arch-axera/dma.h>
 #include <fat.h>
+#include <fs.h>
 #include <string.h>
 #include <ubi_uboot.h>
 #include <ubifs_uboot.h>
@@ -342,15 +343,40 @@ static void parse_uboot_autoboot_key_config(char *buffer)
 }
 
 extern int get_part_info(struct blk_desc *dev_desc, const char *name, disk_partition_t *info);
+int read_file_from_boot_p2(const char *filename, char *buffer, int bufsize);
 static int read_cmm_size_from_boot(int *cmm_size) {
 	struct blk_desc *mmc_desc = NULL;
 	char *partition = "boot";
 	char *filename = "configs";
 	disk_partition_t fs_partition;
+	int board_id = get_board_id();
 
 	bool mmc_ready = false, nand_ready = false;
 	char *buffer = NULL;
 	int ret = -1;
+
+	if (boot_info_data.mode == SD_UPDATE_MODE &&
+	    (board_id == PHY_AX620QE_LP4_NANOAGENT_512M ||
+	     board_id == PHY_AX620QF_LP4_NANOAGENT_256M)) {
+		int buffer_size = 15 * 1024 * 1024;
+
+		buffer = malloc(buffer_size);
+		if (buffer == NULL) {
+			printf("[error] malloc buffer failed\n");
+			return -1;
+		}
+
+		ret = read_file_from_boot_p2(filename, buffer, buffer_size);
+		if (ret >= 0) {
+			ret = parse_cmm_config(buffer, cmm_size);
+			if (ret != 0) {
+				printf("[error] maix_memory_cmm parse failed\n");
+			}
+		}
+		free(buffer);
+
+		return ret;
+	}
 
 	mmc_desc = blk_get_dev("mmc", EMMC_DEV_ID);
 	if (mmc_desc == NULL) {
@@ -544,158 +570,70 @@ read_file:
 	return read_size;
 }
 
-int read_int_from_boot(const char* filename, int* ovalue)
+int read_file_from_boot_p2(const char *filename, char *buffer, int bufsize)
 {
-	if (!ovalue) {
+	char filepath[256] = {0};
+	loff_t read_size = 0;
+	int ret;
+
+	if (!filename || !buffer || bufsize <= 1) {
 		printf("[error] invalid argument\n");
 		return -EINVAL;
 	}
 
-	char tmp_buf[512];
-	int ret = read_file_from_boot(filename, tmp_buf, sizeof(tmp_buf));
-	if (ret < 0)
-		return ret;
-
-	char* p = tmp_buf;
-	while (*p && ((*p <= 0x20) || (*p == 0x7F)))
-		p++;
-
-	if (*p == '-' || (*p >= '0' && *p <= '9'))
-		*ovalue = simple_strtol(p, NULL, 10);
-	else {
-		printf("[warn] no valid number found in %s\n", filename);
-		*ovalue = -1;
+	ret = snprintf(filepath, sizeof(filepath), "/boot/%s", filename);
+	if (ret < 0 || (size_t)ret >= sizeof(filepath)) {
+		printf("[error] p2 boot file path too long: %s\n", filename);
+		return -ENAMETOOLONG;
 	}
 
-	return 0;
-}
-
-int read_string_from_boot(const char *filename, char *buffer, int buffer_len)
-{
-	char tmp_buf[512];
-	int ret = read_file_from_boot(filename, tmp_buf, sizeof(tmp_buf));
-	if (ret < 0)
+	ret = fs_set_blk_dev("mmc", "1:2", FS_TYPE_EXT);
+	if (ret != 0) {
+		printf("[error] fs_set_blk_dev mmc 1:2 ext4 failed, ret=%d\n", ret);
 		return ret;
+	}
 
-	char *p = tmp_buf;
-	while (*p && ((*p <= 0x20) || (*p == 0x7F)))
-		p++;
+	ret = fs_read(filepath, (ulong)buffer, 0, bufsize - 1, &read_size);
+	if (ret != 0 || read_size <= 0) {
+		printf("[error] read %s from mmc 1:2 failed, ret=%d, size=%lld\n",
+		       filepath, ret, (long long)read_size);
+		return ret ? ret : -EIO;
+	}
 
-	memset(buffer, '\0', buffer_len);
-	strncpy(buffer, p, buffer_len - 1);
-	buffer[buffer_len - 1] = '\0';
-	return 0;
+	buffer[min((int)read_size, bufsize - 1)] = '\0';
+	printf("read %s from mmc 1:2 success, size=%lld\n",
+	       filepath, (long long)read_size);
+
+	return (int)read_size;
 }
 
 static void config_uboot_autoboot_key_from_boot(void)
 {
+	int board_id = get_board_id();
 	int buffer_size = 15 * 1024 * 1024;
 	char *buffer = malloc(buffer_size);
+	int ret = -1;
 
 	if (buffer == NULL) {
 		printf("[error] malloc configs buffer failed\n");
 		return;
 	}
 
-	if (read_file_from_boot("configs", buffer, buffer_size) >= 0) {
+	if (boot_info_data.mode == SD_UPDATE_MODE &&
+	    (board_id == PHY_AX620QE_LP4_NANOAGENT_512M ||
+	     board_id == PHY_AX620QF_LP4_NANOAGENT_256M)) {
+		ret = read_file_from_boot_p2("configs", buffer, buffer_size);
+	} else {
+		ret = read_file_from_boot("configs", buffer, buffer_size);
+	}
+
+	if (ret >= 0) {
 		parse_uboot_autoboot_key_config(buffer);
 	}
 
 	free(buffer);
 }
 
-int read_nanokvm_logo_index_from_boot(int* logo_index)
-{
-	int ret = 0;
-	struct blk_desc *mmc_desc = NULL;
-	const char *parttiton = "boot";
-	const char *filename = "bootmode";
-	disk_partition_t fs_partition;
-
-	mmc_desc = blk_get_dev("mmc", EMMC_DEV_ID);
-	if (NULL == mmc_desc) {
-		mmc_desc = blk_get_dev("mmc", SD_DEV_ID);
-		if (NULL == mmc_desc) {
-			printf("[error] memory dump: emmc/sd is not present, exit dump!\n");
-			return -1;
-		}
-
-		ret = fat_register_device(mmc_desc, 1);
-		if (ret != 0) {
-			printf("[error] fat_register_device failed\n");
-			return -1;
-		}
-	}
-
-	ret = get_part_info(mmc_desc, parttiton, &fs_partition);
-	if(ret < 0) {
-		printf("[error] memory dump get %s partition error, ret:%d\n", parttiton, ret);
-		return ret;
-	}
-
-	if (fat_set_blk_dev(mmc_desc, &fs_partition) != 0) {
-		mmc_desc = blk_get_dev("mmc", SD_DEV_ID);
-		if (NULL == mmc_desc) {
-			printf("[error] memory dump: emmc/sd is not present, exit dump!\n");
-			return -1;
-		}
-
-		ret = fat_register_device(mmc_desc, 1);
-		if (ret != 0) {
-			printf("[error] fat_register_device failed\n");
-			return -1;
-		}
-	}
-
-	if (!fat_exists(filename)) {
-		printf("%s file is not exist\n", filename);
-		return -1;
-	}
-
-	int buffer_size = 4 * 1024; // 4KB
-	char *buffer = malloc(buffer_size);
-	if (buffer == NULL) {
-		printf("malloc buffer failed\n");
-		return -1;
-	}
-	if (file_fat_read(filename, buffer, buffer_size) <= 0) {
-		printf("file_fat_read failed, ret:%d\n", ret);
-		free(buffer);
-		return -1;
-	}
-
-	int value = -1;
-	const char *key = "logo";
-	char *line = strtok(buffer, "\n");
-	while (NULL != line) {
-		char *key_value_str = strstr(line, key);
-		if (key_value_str != NULL) {
-			char *p = line;
-			bool key_is_valid = true;
-			while (p != key_value_str) {
-				if (*p == '#') {
-					key_is_valid = false;
-					printf("%s is invalid\r\n", key);
-					break;
-				}
-				p ++;
-			}
-
-			if (key_is_valid) {
-				char *value_str = strstr(key_value_str, "=") + 1;
-				value = __atoi(value_str);
-			}
-			break;
-		}
-		line = strtok(NULL, "\n");
-	}
-
-	if (logo_index) {
-		*logo_index = value;
-	}
-	free(buffer);
-	return ret;
-}
 // ### SIPEED EDIT END ###
 int board_late_init(void)
 {

@@ -1,7 +1,10 @@
 #include <asm/gpio.h>
+#include <asm/arch/ax620e.h>
+#include <asm/arch/boot_mode.h>
 #include <common.h>
 #include <dm.h>
 #include <errno.h>
+#include <fs.h>
 #include <hexdump.h>
 #include <malloc.h>
 #include <spi.h>
@@ -20,6 +23,7 @@ struct Image {
 #include "bootlogo/bootlogo_fix.c"
 #include "bootlogo/bootlogo_pikvm.c"
 #include "bootlogo/bootlogo_nanokvm_go.c"
+#include "bootlogo/bootlogo_nanokvm_go_plus.c"
 #else
 static const unsigned char sipeed_logo[] = {0};
 #define sipeed_logo_len 0
@@ -31,13 +35,11 @@ static const unsigned char bootlogo_pikvm[] = {0};
 #define bootlogo_pikvm_len 0
 static const unsigned char bootlogo_nanokvm_go[] = {0};
 #define bootlogo_nanokvm_go_len 0
+static const unsigned char bootlogo_nanokvm_go_plus[] = {0};
+#define bootlogo_nanokvm_go_plus_len 0
 #endif
 
 #define msleep(a) udelay(a * 1000)
-
-extern int read_nanokvm_logo_index_from_boot(int *);
-extern int read_int_from_boot(const char *, int *);
-extern int read_string_from_boot(const char *, char *, int);
 
 static int safe_strncmp(const char *a, size_t a_len, const char *b,
                         size_t b_len, int ignore_case) {
@@ -73,9 +75,79 @@ static const struct Image IMAGES[] = {
     {bootlogo_pikvm, bootlogo_pikvm_len, "pikvm"},
     {bootlogo_fix, bootlogo_fix_len, "fix"},
     {bootlogo_nanokvm_go, bootlogo_nanokvm_go_len, "go"},
+    {bootlogo_nanokvm_go_plus, bootlogo_nanokvm_go_plus_len, "go_plus"},
     {bird, bird_len, "example"},
 };
 static const int IMAGES_SIZE = sizeof(IMAGES) / sizeof(IMAGES[0]);
+
+static int panel_spi_find_image_index(const char *expected) {
+  int i;
+
+  for (i = 0; i < IMAGES_SIZE; ++i) {
+    if (strcmp(IMAGES[i].expected, expected) == 0)
+      return i;
+  }
+
+  return 0;
+}
+
+static bool panel_spi_get_fixed_image_index(int *image_index) {
+  int board_id = get_board_id();
+
+  if (!image_index)
+    return false;
+
+  switch (board_id) {
+  case PHY_AX620QF_LP4_NANOAGENT_256M:
+    *image_index = panel_spi_find_image_index("go");
+    return true;
+  case PHY_AX620QE_LP4_NANOAGENT_512M:
+    *image_index = panel_spi_find_image_index("go_plus");
+    return true;
+  default:
+    return false;
+  }
+}
+
+static int panel_spi_read_server_file_from_mmc(const char *dev_part,
+                                               int fs_type,
+                                               const char *filename,
+                                               char *buffer,
+                                               int buffer_len) {
+  char tmp_buf[32];
+  loff_t read_size = 0;
+  char *p;
+  int ret;
+
+  if (!dev_part || !filename || !buffer || buffer_len <= 1)
+    return -EINVAL;
+
+  memset(tmp_buf, 0, sizeof(tmp_buf));
+  ret = fs_set_blk_dev("mmc", dev_part, fs_type);
+  if (ret != 0)
+    return ret;
+
+  ret = fs_read(filename, (ulong)tmp_buf, 0, sizeof(tmp_buf) - 1, &read_size);
+  if (ret != 0)
+    return ret;
+  if (read_size <= 0)
+    return -EIO;
+
+  if (read_size >= sizeof(tmp_buf))
+    tmp_buf[sizeof(tmp_buf) - 1] = '\0';
+  else
+    tmp_buf[read_size] = '\0';
+
+  p = tmp_buf;
+  while (*p && ((*p <= 0x20) || (*p == 0x7F)))
+    p++;
+
+  memset(buffer, 0, buffer_len);
+  strncpy(buffer, p, buffer_len - 1);
+  buffer[buffer_len - 1] = '\0';
+
+  return 0;
+}
 
 struct ugpiodev {
   int num;
@@ -239,6 +311,8 @@ int panel_spi_init(void) {
   struct spi_slave *slave;
   struct panel_spi_device *panel_spi;
   int image_index = -1;
+  bool fixed_image = false;
+  char server_buf[32];
 
   ret = uclass_first_device_err(UCLASS_PANEL_SPI, &dev);
   if (ret) {
@@ -297,19 +371,23 @@ int panel_spi_init(void) {
   }
 
   image_index = 0;
-  char server_buf[32];
-  if (read_string_from_boot(".server.txt", server_buf, sizeof(server_buf)) >=
-      0) {
-    for (i = 0; i < IMAGES_SIZE; ++i) {
-      if (safe_strncmp(server_buf, sizeof(server_buf), IMAGES[i].expected,
-                       strlen(IMAGES[i].expected) + 1, 1) == 0) {
-        image_index = i;
-        break;
+  fixed_image = panel_spi_get_fixed_image_index(&image_index);
+
+  if (!fixed_image) {
+    if (panel_spi_read_server_file_from_mmc("1:1", FS_TYPE_FAT, ".server.txt",
+                                            server_buf, sizeof(server_buf)) ==
+        0) {
+      for (i = 0; i < IMAGES_SIZE; ++i) {
+        if (safe_strncmp(server_buf, sizeof(server_buf), IMAGES[i].expected,
+                         strlen(IMAGES[i].expected) + 1, 1) == 0) {
+          image_index = i;
+          break;
+        }
       }
     }
   }
 
-  if (strcmp(IMAGES[image_index].expected, "go") != 0) {
+  if (!fixed_image && strcmp(IMAGES[image_index].expected, "go") != 0) {
     struct ugpiodev boot_btn;
     if (!ugpiodev_in_init(&boot_btn, 98, 0)) {
       printf("[E] boot_btn init failed!\n");

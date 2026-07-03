@@ -36,8 +36,8 @@ Notes:
   1) Requires tools: parted, losetup, mkfs.vfat, mkfs.ext4, rsync, mount, umount
   2) Usually needs root privileges to setup loop device and mount filesystems
   3) Partition layout (MBR):
-     - p1: FAT32, ${BOOT_PART_SIZE_MIB}MiB, contains sd_boot_pack + boot.bin
-     - p2: ext4, remaining size, contains full rootfs
+     - p1: FAT32, ${BOOT_PART_SIZE_MIB}MiB, contains recovery sd_boot_pack + boot.bin
+     - p2: ext4, remaining size, contains full rootfs + /boot/kernel.img + /boot/dtb.img + /boot/configs
 EOF
 }
 
@@ -99,6 +99,13 @@ if [[ ! -d "${BOOT_PACK_DIR}" ]]; then
     echo "        Please build project first."
     exit 1
 fi
+for boot_image in kernel.img dtb.img; do
+    if [[ ! -f "${BOOT_PACK_DIR}/${boot_image}" ]]; then
+        echo "[ERROR] Missing ${boot_image} in sd boot pack dir: ${BOOT_PACK_DIR}"
+        echo "        Please build project first."
+        exit 1
+    fi
+done
 
 if [[ ! -d "${ROOTFS_DIR}" ]]; then
     echo "[ERROR] rootfs dir does not exist: ${ROOTFS_DIR}"
@@ -170,13 +177,18 @@ mount "${ROOTFS_PART}" "${ROOTFS_MNT}"
 
 rsync -rltD --delete "${BOOT_PACK_DIR}/" "${BOOT_MNT}/"
 cp -f "${SPL_BIN}" "${BOOT_MNT}/boot.bin"
+
+rsync -aHAX --no-owner --no-group "${ROOTFS_DIR}/" "${ROOTFS_MNT}/"
+
+ROOTFS_BOOT_DIR="${ROOTFS_MNT}/boot"
+mkdir -p "${ROOTFS_BOOT_DIR}"
 if [[ -d "${EXTRA_BOOTFS_DIR}" ]]; then
-    rsync -rltD "${EXTRA_BOOTFS_DIR}/" "${BOOT_MNT}/"
+    rsync -rltD --delete "${EXTRA_BOOTFS_DIR}/" "${ROOTFS_BOOT_DIR}/"
 else
     echo "[WARN] extra bootfs dir not found, skip: ${EXTRA_BOOTFS_DIR}"
 fi
-
-rsync -aHAX --no-owner --no-group "${ROOTFS_DIR}/" "${ROOTFS_MNT}/"
+cp -f "${BOOT_PACK_DIR}/kernel.img" "${ROOTFS_BOOT_DIR}/kernel.img"
+cp -f "${BOOT_PACK_DIR}/dtb.img" "${ROOTFS_BOOT_DIR}/dtb.img"
 
 find "${ROOTFS_MNT}" -xdev -uid 1000 -exec chown -h 0 {} +
 find "${ROOTFS_MNT}" -xdev -gid 1000 -exec chgrp -h 0 {} +
@@ -191,5 +203,6 @@ sync
 
 echo "[OK] SD image generated: ${OUTPUT_IMG}"
 echo "[INFO] boot.bin source: ${SPL_BIN}"
-echo "[INFO] extra bootfs source: ${EXTRA_BOOTFS_DIR}"
+echo "[INFO] p1 recovery boot source: ${BOOT_PACK_DIR}"
+echo "[INFO] p2 /boot source: ${BOOT_PACK_DIR}/kernel.img, ${BOOT_PACK_DIR}/dtb.img, ${EXTRA_BOOTFS_DIR}"
 echo "[INFO] rootfs source: ${ROOTFS_DIR}"
