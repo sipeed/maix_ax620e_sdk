@@ -1,0 +1,22 @@
+[Unit]
+Description=Monitor network and fallback system clock from RTC
+DefaultDependencies=no
+Wants=systemd-udev-settle.service
+After=systemd-udev-settle.service
+Before=time-sync.target
+
+[Service]
+Type=simple
+Environment=NETWORK_INTERFACE=wlan0
+Environment=CHECK_INTERVAL=30
+Environment=OFFLINE_CONFIRM_CHECKS=2
+Environment=RTC_SYNC_INTERVAL=3600
+Environment=MAX_CLOCK_DRIFT=5
+Environment=ALLOW_BACKWARD_STEP=0
+Environment=RUNTIME_RECHECK_INTERVAL=10
+ExecStart=/opt/scripts/rtc-time-sync.sh --monitor
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

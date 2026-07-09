@@ -137,8 +137,8 @@ function wpa_supplicant_start()
 		echo "wifi mode: mon"
 		airmon-ng start wlan0
     else
-        default_wifi_ssid="Sipeed_Guest"
-        default_wifi_passwd="qwert123"
+        default_wifi_ssid="SBC_test_mgr"
+        default_wifi_passwd="Sipeed123.."
         ifconfig wlan0 up
         if [ -e /etc/wpa_supplicant.conf ]; then
             wpa_supplicant_run
