@@ -5,7 +5,7 @@ MAIX AX620E 系统构建
 
 初次使用可以先看一遍[官方文档](https://github.com/sipeed/maix_ax620e_sdk/tree/main/docs)，这里提供了更完整的系统使用说明，目前只有中文版。
 
-本仓库存放的是AX620E平台的系统源码, 主要用于构建`MaixCam2`, `KVM Pro`等基础系统镜像。
+本仓库存放的是AX620E平台的系统源码, 主要用于构建`MaixCam2`, `KVM Pro`, `NanoKVM-Go`等基础系统镜像。
 
 本仓库还依赖了子仓库[maix_ax620e_sdk_msp](https://github.com/sipeed/maix_ax620e_sdk_msp)和[maix_ax620e_sdk_kernel](https://github.com/sipeed/maix_ax620e_sdk_kernel), 确保构造镜像前通过`git submodule`命令拉取了依赖的子仓库。
 
@@ -57,21 +57,22 @@ which arm-none-linux-gnueabihf-gcc
 ```shell
 sudo dpkg-reconfigure dash # 然后选择No
 
-sudo apt install make libc6:i386 lib32stdc++6 zlib1g-dev libncurses5-dev ncurses-term libncursesw5-dev g++ u-boot-tools texinfo texlive gawk libssl-dev openssl bc bison flex gcc libgcc1 gdb build-essential lib32z1 u-boot-tools device-tree-compiler qemu qemu-user-static fusefat patchelf libpcre3
+sudo apt install make libc6:i386 lib32stdc++6 zlib1g-dev libncurses5-dev ncurses-term libncursesw5-dev g++ u-boot-tools texinfo texlive gawk libssl-dev openssl bc bison flex gcc libgcc1 gdb build-essential lib32z1 u-boot-tools device-tree-compiler qemu qemu-user-static fusefat patchelf libpcre3 debootstrap
 
 sudo python3 -m pip install --upgrade pip
-sudo pip3 install lxml pyelftools
+sudo pip3 install lxml axp-tools pyelftools
 ```
 
-* 构建 buildroot rootfs (AX620Q)
+* 构建 Debian rootfs (NanoKVM-Go / AX620Q)
 
-对于AX620Q的工程, 需要编译buildroot根文件系统
+构建 Debian rootfs 时会用到 `qemu-user-static`。
 
 ```shell
-cd rootfs/arm/glibc/buildroot/buildroot-2025.11
-make sipeed_maix_nanokvm_defconfig
-make
+cd rootfs/arm/glibc/debian
+./mk_debian_base.sh .
 ```
+
+生成 `rootfs/arm/glibc/debian/debian_rootfs_base.tar.gz`。
 
 * 构建 ubuntu rootfs (AX630C)
 
@@ -101,13 +102,16 @@ make p=AX630C_emmc_arm64_k419_sipeed_maixcam2 clean all install axp -j8
 
 # KVM Pro
 make p=AX630C_emmc_arm64_k419_sipeed_nanokvm clean all install axp -j8
+
+# NanoKVM-Go
+make p=AX620Q_emmc_arm32_k419_sipeed_nanoagent clean all install axp -j8
 ```
 
 * 在 `build/out`目录下就会有 `axp` 格式的包了。
 
-## 定制rootfs (AX620Q)
+## 定制 Debian rootfs (NanoKVM-Go / AX620Q)
 
-参考[buildroot](https://buildroot.org/downloads/manual/manual.html)文档
+Debian 基础 rootfs 由 `rootfs/arm/glibc/debian/mk_debian_base.sh` 生成。需要定制通用 Debian 基础系统时，可以修改该脚本。
 
 ## 定制rootfs (AX630C)
 
@@ -133,10 +137,11 @@ make p=AX630C_emmc_arm64_k419_sipeed_nanokvm clean all install axp -j8
 
 这一步是基于已经打包后的`rootfs`进行二次修改， 用来减少每次修改`rootfs`都需要重新打包`rootfs`的时间。
 
-| 平台     | 工程目录                                              |
-| -------- | ----------------------------------------------------- |
-| MaixCam2 | build/projects/AX630C_emmc_arm64_k419_sipeed_maixcam2 |
-| KVM Pro  | build/projects/AX630C_emmc_arm64_k419_sipeed_nanokvm  |
+| 平台       | Rootfs | 工程目录                                                      |
+| ---------- | ------ | ------------------------------------------------------------- |
+| MaixCam2   | Ubuntu | build/projects/AX630C_emmc_arm64_k419_sipeed_maixcam2         |
+| KVM Pro    | Ubuntu | build/projects/AX630C_emmc_arm64_k419_sipeed_nanokvm          |
+| NanoKVM-Go | Debian | build/projects/AX620Q_emmc_arm32_k419_sipeed_nanoagent        |
 
 在工程目录下通过修改`bootfs.filelist`来指定更新`/boot`的内容， 修改`rootfs.filelist`来指定更新到`/`目录下的内容。
 
@@ -158,6 +163,45 @@ make p=AX630C_emmc_arm64_k419_sipeed_nanokvm clean all install axp -j8
   * 使用 etcher 或者 dd 命令将 `.img.xz` 写入 虚拟U盘。
 
 ## 制作SD启动卡
+
+### NanoKVM-Go 脚本
+
+构建 NanoKVM-Go 后，使用脚本生成 SD 镜像：
+
+```shell
+cd build/projects/AX620Q_emmc_arm32_k419_sipeed_nanoagent
+sudo ./gen_sd_image.sh
+```
+
+默认输出是 `build/out` 下的完整 SD 卡镜像，文件名类似：
+
+```text
+build/out/AX620Q_emmc_arm32_k419_sipeed_nanoagent_sdcard_<时间>.img
+```
+
+这是带 MBR 分区表的完整 SD 卡镜像，应写入整张 SD 卡设备，不要写入某个分区：
+
+```shell
+sudo dd if=<sdcard.img> of=/dev/<sd卡整盘设备> bs=4M status=progress conv=fsync
+```
+
+脚本默认优先使用 `build/out/AX620Q_emmc_arm32_k419_sipeed_nanoagent/objs/debian_rootfs` 作为 rootfs 来源。
+
+如果要生成 initramfs USB 恢复模式使用的更新镜像：
+
+```shell
+sudo ./gen_sd_image.sh --update
+```
+
+该命令会生成 raw ext4 rootfs 分区镜像，文件名类似：
+
+```text
+build/out/AX620Q_emmc_arm32_k419_sipeed_nanoagent_sd_update_<时间>.img
+```
+
+这个镜像只用于写入 initramfs 以 USB Mass Storage 暴露出来的 `/dev/mmcblk1p2` rootfs 分区。不要把 `sd_update_*.img` 写入整张空 SD 卡，也不要把完整的 `sdcard_*.img` 写入恢复模式暴露出来的 rootfs 分区。
+
+### 手动 SD 卡分区流程
 
 1. 插入SD卡
 2. 格式化SD卡，并创建MBR格式分区表(一定要是MBR格式分区表)
@@ -181,4 +225,3 @@ make p=AX630C_emmc_arm64_k419_sipeed_nanokvm clean all install axp -j8
 **分配CMM和SYSTEM内存时修改点**
 1. 默认值，修改partition.mak/partition_ab.mak中BOARD_xxx_OS_MEM_SIZE的大小
 2. 烧录之后修改： 修改 /boot/configs 中的 `maix_memory_cmm` 大小即可，会在 uboot和开机加载驱动时自动读取。
-
