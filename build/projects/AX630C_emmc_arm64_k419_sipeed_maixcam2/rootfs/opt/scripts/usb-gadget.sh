@@ -150,7 +150,11 @@ get_rndis_ipv4_prefix()
     then
         id2=252
     fi
-    if [ "$id3" -ge 255 ]
+    if [ "$id3" = 254 ]
+    then
+        # Keep the RNDIS subnet lower than NCM when the original id3 is 254.
+        id3=253
+    elif [ "$id3" -ge 255 ]
     then
         id3=251
     fi
