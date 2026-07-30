@@ -48,11 +48,7 @@ msc() {
     mkdir -p functions/mass_storage.disk0/lun.0
     ln -s functions/mass_storage.disk0 configs/c.1/
     echo 1 > functions/mass_storage.disk0/lun.0/removable
-    if [ "$boot_from_sd" -eq 0 ]; then
-        echo /dev/mmcblk0 > functions/mass_storage.disk0/lun.0/file
-    else
-        echo "$root_dev" > functions/mass_storage.disk0/lun.0/file
-    fi
+    echo /dev/mmcblk1p2 > functions/mass_storage.disk0/lun.0/file
 
     ls /sys/class/udc/ | cat > UDC
 
