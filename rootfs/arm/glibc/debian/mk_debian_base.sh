@@ -37,6 +37,7 @@ fi
 
 sudo cp /usr/bin/qemu-arm-static "${TARGET_ROOTFS_DIR}/usr/bin/"
 sudo cp /etc/resolv.conf "${TARGET_ROOTFS_DIR}/etc/"
+sudo cp requirements.txt "${TARGET_ROOTFS_DIR}/requirements.txt"
 
 finish() {
     bash "${WORKING_DIR}/ch-mount.sh" -u "${TARGET_ROOTFS_DIR}"
@@ -70,11 +71,23 @@ apt-get install -y --no-install-recommends \
     tzdata udhcpc udhcpd wpasupplicant rsync evtest usbutils binutils e2fsprogs \
     iw htop fdisk fastfetch file python-is-python3 xxd hostapd i2c-tools \
     etherwake arping exfatprogs libevdev2 python3-pip python3-dbus libavformat61 \
-    libcurl4t64
+    libcurl4t64 dirmngr gnupg gnupg-l10n gnupg-utils gpg gpg-agent gpg-wks-client \
+    gpgconf gpgsm gpgv libassuan9 libgcrypt20 libgpg-error-l10n libgpg-error0 \
+    libksba8 libnpth0t64 pinentry-curses libffi8 libssl3t64 libsrtp2-1
 
-wget -O /tmp/tailscale.deb https://pkgs.tailscale.com/stable/debian/pool/tailscale_1.98.5_armhf.deb
+wget -O /tmp/tailscale.deb https://pkgs.tailscale.com/stable/debian/pool/tailscale_1.98.10_armhf.deb
 apt-get install -y --no-install-recommends /tmp/tailscale.deb
 rm -f /tmp/tailscale.deb
+
+apt-get install -y --no-install-recommends \
+    gcc python3-dev pkg-config libssl-dev libffi-dev libsrtp2-dev
+
+pip install --break-system-packages --no-cache-dir -i https://pypi.mirrors.ustc.edu.cn/simple -r /requirements.txt
+rm -f /requirements.txt
+
+apt-get purge -y --auto-remove \
+    -o APT::AutoRemove::RecommendsImportant=false \
+    gcc python3-dev pkg-config libssl-dev libffi-dev libsrtp2-dev
 
 ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 echo "Asia/Shanghai" > /etc/timezone
