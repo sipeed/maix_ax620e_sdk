@@ -1,8 +1,11 @@
 [Unit]
 Description=Run udhcpc service
 DefaultDependencies=no
-After=boot.mount
+After=boot.mount wifi.service
 Requires=boot.mount wifi.service
+PartOf=wifi.service
+ConditionPathExists=!/boot/wifi.ap
+ConditionPathExists=!/boot/wifi.mon
 
 [Service]
 Type=simple

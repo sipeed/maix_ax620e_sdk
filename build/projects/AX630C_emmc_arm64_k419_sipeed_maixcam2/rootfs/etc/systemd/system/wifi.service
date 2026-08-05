@@ -3,6 +3,7 @@ Description=Run wifi.sh
 DefaultDependencies=no
 After=boot.mount
 Requires=boot.mount
+Wants=udhcpc.service
 
 [Service]
 Type=simple
