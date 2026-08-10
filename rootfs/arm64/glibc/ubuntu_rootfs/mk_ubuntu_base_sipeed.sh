@@ -141,7 +141,7 @@ apt install -y --allow-unauthenticated vim bash-completion systemd sudo kmod net
         alsa-utils udhcpd wpasupplicant avahi-daemon systemd-timesyncd \
         i2c-tools spi-tools portaudio19-dev udhcpc \
         hostapd rsync neovim arp-scan ripgrep picocom etherwake netcat-traditional\
-        bluez evtest usbutils fdisk
+        bluez evtest usbutils fdisk iw
 
 if [ -L "/etc/systemd/system/multi-user.target.wants/hostapd.service" ]; then
     unlink "/etc/systemd/system/multi-user.target.wants/hostapd.service"
