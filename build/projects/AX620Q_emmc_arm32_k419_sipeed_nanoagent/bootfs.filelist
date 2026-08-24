@@ -1,3 +1,2 @@
 @dir: build/projects/$(PROJECT)/bootfs
 *
-.server.txt
