@@ -6,6 +6,11 @@
 #include <linux/bitops.h>
 #include <asm/arch-axera/ax620e.h>
 #include <asm/arch/boot_mode.h>
+// ### SIPEED EDIT ###
+#include <init.h>
+#include <linux/delay.h>
+// ### SIPEED EDIT END ###
+
 
 #define DPHYTX_BASE           0x230A000UL
 #define DPHY_REG_LEN          0x1000
@@ -97,11 +102,60 @@ int pinmux_init(void)
 	int index = get_board_id();
 	u8 is_dphytx;
 
+	// ### SIPEED EDIT ###
+	int match_count = 0;
+	int uart3_short = 0;
+	int rx_high = 0;
+	int rx_low = 0;
+	u32 val;
+
+	misc_info_t *info = (misc_info_t *)MISC_INFO_ADDR;
+	if ((info->chip_type == 0x8 && info->board_id == 0x3 &&
+	     info->phy_board_id == 0x3) ||
+	    (info->chip_type == 0x9 && info->board_id == 0x1 &&
+	     info->phy_board_id == 0x1)) {
+		timer_init();
+
+		val = readl(0x0480100C);
+		val = (val | BIT(1)) & ~BIT(0);
+		writel(val, 0x0480100C);
+		clrbits_le32(0x04801010, BIT(1));
+
+		writel(0x00060043, 0x02304090);
+		writel(0x00060003, 0x02304084);
+
+		for (i = 0; i < 3; i++) {
+			clrbits_le32(0x0480100C, BIT(0));
+			udelay(10);
+			rx_low = !(readl(0x0480108C) & BIT(3));
+			setbits_le32(0x0480100C, BIT(0));
+			udelay(10);
+			rx_high = !!(readl(0x0480108C) & BIT(3));
+			if (rx_low && rx_high)
+				match_count++;
+			clrbits_le32(0x0480100C, BIT(0));
+			if (i < 2)
+				udelay(30000);
+		}
+		writel(0x00060043, 0x02304084);
+		writel(0x00060043, 0x02304090);
+		clrbits_le32(0x0480100C, BIT(1));
+		uart3_short = match_count == 3;
+	}
+	// ### SIPEED EDIT END ###
+
 	if (index < 0 || index > AX620E_BOARD_MAX - 1)
 		return 0;
 	index = ax_pinmux_index_conv(index);
 
 	for (i = 0; i < ax620E_pinmux_tbl[index].size; i += 2) {
+		// ### SIPEED EDIT ###
+		if (uart3_short &&
+		    (ax620E_pinmux_tbl[index].data[i] == 0x02304084 ||
+		     ax620E_pinmux_tbl[index].data[i] == 0x02304090))
+			continue;
+		// ### SIPEED EDIT END ###
+
 		is_dphytx = ax620E_pinmux_tbl[index].data[i] - DPHYTX_BASE < DPHY_REG_LEN ? 1 : 0;
 		//when dphytx select gpio func 1.set reset 2.mipi disable 3.func sel & config
 		if (is_dphytx && (ax620E_pinmux_tbl[index].data[i + 1] & PINMUX_FUNC_SEL)) {
