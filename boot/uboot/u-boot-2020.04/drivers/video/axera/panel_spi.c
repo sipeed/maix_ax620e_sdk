@@ -24,6 +24,8 @@ struct Image {
 #include "bootlogo/bootlogo_pikvm.c"
 #include "bootlogo/bootlogo_nanokvm_go.c"
 #include "bootlogo/bootlogo_nanokvm_go_plus.c"
+#include "bootlogo/bootlogo_nanokvm_go_fix.c"
+#include "bootlogo/bootlogo_nanokvm_go_plus_fix.c"
 #else
 static const unsigned char sipeed_logo[] = {0};
 #define sipeed_logo_len 0
@@ -37,6 +39,10 @@ static const unsigned char bootlogo_nanokvm_go[] = {0};
 #define bootlogo_nanokvm_go_len 0
 static const unsigned char bootlogo_nanokvm_go_plus[] = {0};
 #define bootlogo_nanokvm_go_plus_len 0
+static const unsigned char bootlogo_nanokvm_go_fix[] = {0};
+#define bootlogo_nanokvm_go_fix_len 0
+static const unsigned char bootlogo_nanokvm_go_plus_fix[] = {0};
+#define bootlogo_nanokvm_go_plus_fix_len 0
 #endif
 
 #define msleep(a) udelay(a * 1000)
@@ -414,6 +420,64 @@ int panel_spi_init(void) {
 release:
   spi_release_bus(slave);
   return 0;
+}
+
+int panel_spi_show_recovery_logo(void)
+{
+	const unsigned char *image_data = NULL;
+	unsigned int image_len = 0;
+	struct udevice *dev = NULL;
+	struct spi_slave *slave;
+	struct panel_spi_device *panel_spi;
+	unsigned char cmd = 0x2C;
+	int ret;
+
+	switch (get_board_id()) {
+	case PHY_AX620QF_LP4_NANOAGENT_256M:
+		image_data = bootlogo_nanokvm_go_fix;
+		image_len = bootlogo_nanokvm_go_fix_len;
+		break;
+	case PHY_AX620QE_LP4_NANOAGENT_512M:
+		image_data = bootlogo_nanokvm_go_plus_fix;
+		image_len = bootlogo_nanokvm_go_plus_fix_len;
+		break;
+	default:
+		return -ENODEV;
+	}
+
+	if (!image_len)
+		return -ENOENT;
+
+	ret = uclass_first_device_err(UCLASS_PANEL_SPI, &dev);
+	if (ret)
+		return ret;
+
+	slave = dev_get_parent_priv(dev);
+	panel_spi = dev_get_uclass_priv(dev);
+
+	ret = spi_claim_bus(slave);
+	if (ret)
+		return ret;
+
+	if (!lcd_command(panel_spi)) {
+		ret = -EIO;
+		goto release;
+	}
+
+	ret = spi_xfer(slave, 8, &cmd, NULL, SPI_XFER_ONCE);
+	if (ret)
+		goto release;
+
+	if (!lcd_data(panel_spi)) {
+		ret = -EIO;
+		goto release;
+	}
+
+	ret = spi_xfer(slave, image_len * 8, image_data, NULL, SPI_XFER_ONCE);
+
+release:
+	spi_release_bus(slave);
+	return ret;
 }
 
 static int panel_spi_dts_parse(struct panel_spi_device *panel) {

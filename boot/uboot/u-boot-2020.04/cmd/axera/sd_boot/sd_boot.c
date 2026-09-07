@@ -30,6 +30,10 @@ extern int gzip_decompress_image(void *src, void *dest, u32 size);
 
 extern struct boot_mode_info boot_info_data;
 
+// ### SIPEED EDIT ###
+extern int panel_spi_show_recovery_logo(void);
+// ### SIPEED EDIT END ###
+
 #define READ_IMG_SIZE (5 * 1024 *1024)
 
 // ### SIPEED EDIT ###
@@ -773,6 +777,9 @@ static int load_nanokvm_go_boot_images(int recovery_boot,
 	}
 
 	if (recovery_boot) {
+		if (panel_spi_show_recovery_logo() != 0)
+			printf("sd boot: show recovery logo failed\n");
+
 		printf("sd boot: try recovery boot from fat mmc 1:%d\n",
 		       SD_BOOT_RECOVERY_PART);
 		ret = load_sd_boot_image("fatload", SD_BOOT_RECOVERY_PART,
