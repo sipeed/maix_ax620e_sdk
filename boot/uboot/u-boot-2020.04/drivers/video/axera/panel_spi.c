@@ -98,21 +98,24 @@ static int panel_spi_find_image_index(const char *expected) {
 }
 
 static bool panel_spi_get_fixed_image_index(int *image_index) {
-  int board_id = get_board_id();
+  const misc_info_t *misc_info = (const misc_info_t *)MISC_INFO_ADDR;
 
   if (!image_index)
     return false;
 
-  switch (board_id) {
-  case PHY_AX620QF_LP4_NANOAGENT_256M:
+  if (misc_info->chip_type == AX620QF_CHIP &&
+      misc_info->phy_board_id == PHY_AX620QF_LP4_NANOAGENT_256M) {
     *image_index = panel_spi_find_image_index("go");
     return true;
-  case PHY_AX620QE_LP4_NANOAGENT_512M:
+  }
+
+  if (misc_info->chip_type == AX620QE_CHIP &&
+      misc_info->phy_board_id == PHY_AX620QE_LP4_NANOAGENT_512M) {
     *image_index = panel_spi_find_image_index("go_plus");
     return true;
-  default:
-    return false;
   }
+
+  return false;
 }
 
 static int panel_spi_read_server_file_from_mmc(const char *dev_part,

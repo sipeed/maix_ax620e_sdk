@@ -563,6 +563,16 @@ static void config_cmm_size(void) {
 	}
 }
 
+static bool is_nanokvm_go_board(void)
+{
+	const misc_info_t *misc_info = (const misc_info_t *)MISC_INFO_ADDR;
+
+	return (misc_info->chip_type == AX620QE_CHIP &&
+		misc_info->phy_board_id == PHY_AX620QE_LP4_NANOAGENT_512M) ||
+	       (misc_info->chip_type == AX620QF_CHIP &&
+		misc_info->phy_board_id == PHY_AX620QF_LP4_NANOAGENT_256M);
+}
+
 static void config_console_for_nanoagent(void)
 {
 	const char *old_console = "console=ttyS0,115200n8 earlycon=uart8250,mmio32,0x4880000";
@@ -570,10 +580,9 @@ static void config_console_for_nanoagent(void)
 	char new_bootargs[1024] = {0};
 	char *bootargs = NULL;
 	char *console_pos = NULL;
-	int board_id = get_board_id();
 	int ret;
 
-	if (board_id != PHY_AX620QE_LP4_NANOAGENT_512M && board_id != PHY_AX620QF_LP4_NANOAGENT_256M)
+	if (!is_nanokvm_go_board())
 		return;
 
 	bootargs = env_get("bootargs");
@@ -594,14 +603,6 @@ static void config_console_for_nanoagent(void)
 
 	env_set("bootargs", new_bootargs);
 	printf("set nanoagent console to ttyS3\n");
-}
-
-static bool is_nanokvm_go_board(void)
-{
-	int board_id = get_board_id();
-
-	return board_id == PHY_AX620QE_LP4_NANOAGENT_512M ||
-	       board_id == PHY_AX620QF_LP4_NANOAGENT_256M;
 }
 
 static void remove_boot_key_arg(char *bootargs)
