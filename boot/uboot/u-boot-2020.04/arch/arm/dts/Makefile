@@ -80,7 +80,8 @@ dtb-$(CONFIG_TARGET_AX620E_NAND) += \
 dtb-$(CONFIG_TARGET_AX620E_NOR) += \
 	AX620E_nor.dtb
 dtb-$(CONFIG_TARGET_AX620E_QNAND) += \
-	AX620Q_nand_arm32_k419.dtb
+	AX620Q_nand_arm32_k419.dtb \
+	AX620Q_nand_arm32_k419_sipeed_maixstereo.dtb
 
 dtb-$(CONFIG_ROCKCHIP_PX30) += \
 	px30-evb.dtb \

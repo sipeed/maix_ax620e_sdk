@@ -1,0 +1,18 @@
+[Unit]
+Description=ifup for %I
+After=local-fs.target network-pre.target systemd-sysctl.service
+Before=network.target shutdown.target
+Conflicts=shutdown.target
+BindsTo=sys-subsystem-net-devices-%i.device
+After=sys-subsystem-net-devices-%i.device
+DefaultDependencies=no
+IgnoreOnIsolate=yes
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c 'ifup --allow=hotplug %I; ifup --allow=auto %I'
+RemainAfterExit=yes
+TimeoutStartSec=5min
+
+[Install]
+WantedBy=multi-user.target

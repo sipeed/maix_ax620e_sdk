@@ -1,0 +1,35 @@
+/**:
+  ros__parameters:
+    model_path: /opt/maix_stereo_depth/data/620E.axmodel
+    calibration_path: /opt/maix_stereo_depth/data/stereo_calib.ini
+    left_mesh_path: /opt/maix_stereo_depth/data/stereo_calib_left_mesh.bin
+    right_mesh_path: /opt/maix_stereo_depth/data/stereo_calib_right_mesh.bin
+    capture_dir: /tmp/maix_stereo_depth
+
+    virtual_npu: false
+    pair_pipeline: true
+    max_disparity: 128.0
+    disparity_offset: 0.3
+    # Reject low-confidence disparity before UVC/ROS depth products are generated.
+    confidence_threshold: 0.5
+    rtsp_enabled: false
+    uvc_enabled: false
+
+    camera_namespace: stereo
+    camera_name: maix_stereo_depth
+    camera_link_frame: stereo_camera_link
+    left_raw_frame: left_camera_optical_frame
+    right_raw_frame: right_camera_optical_frame
+    left_rect_frame: left_rect_optical_frame
+    right_rect_frame: right_rect_optical_frame
+    depth_frame: depth_optical_frame
+
+    publish_raw: true
+    publish_rectified: true
+    publish_depth: true
+    publish_disparity: true
+    # 默认由 Host depth_image_proc 从 depth + CameraInfo 生成；true 仅启用板端 fallback。
+    publish_pointcloud: false
+    publish_tf: true
+    qos_depth: 2
+    pointcloud_max_rate: 10.0

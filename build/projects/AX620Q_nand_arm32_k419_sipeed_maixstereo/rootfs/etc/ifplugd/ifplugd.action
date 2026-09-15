@@ -1,0 +1,22 @@
+#!/bin/sh
+set -e
+
+case "$2" in
+up)
+    ip link set "$1" up
+
+    pkill -f "udhcpc.*-i.*$1" || true
+
+    udhcpc -i "$1" -b -p "/var/run/udhcpc.$1.pid"
+    ;;
+down)
+    if [ -f "/var/run/udhcpc.$1.pid" ]; then
+        kill $(cat "/var/run/udhcpc.$1.pid") || true
+    else
+        pkill -f "udhcpc.*-i.*$1" || true
+    fi
+
+    ip addr flush dev "$1"
+    ip link set "$1" down
+    ;;
+esac
